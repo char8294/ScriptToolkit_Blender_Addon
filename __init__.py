@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 2, 0),
+    "version": (0, 3, 0),
     "blender": (5, 1, 0),
     "location": "3D View > Sidebar > Script Toolkit",
     "description": "FBX batch tools in an isolated Blender worker plus selected-object cleanup tools.",
@@ -10,9 +10,12 @@ bl_info = {
 
 import json
 import os
+import re
 import subprocess
 import tempfile
 import textwrap
+import urllib.error
+import urllib.request
 import uuid
 
 import bmesh
@@ -21,6 +24,24 @@ from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, St
 from bpy.types import Operator, Panel, PropertyGroup
 
 from . import biped_names, hair_check
+
+
+# GitHub update configuration — follows the Turntable Camera updater pattern.
+GITHUB_OWNER = "char8294"
+GITHUB_REPO = "Pack_Blender_Add-on"
+GITHUB_ADDON_FOLDER = "script_toolkit"
+GITHUB_RAW_URL = f"https://raw.githubusercontent.com/{GITHUB_OWNER}/{GITHUB_REPO}/main/{GITHUB_ADDON_FOLDER}/__init__.py"
+GITHUB_API_CONTENTS = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/contents/{GITHUB_ADDON_FOLDER}"
+GITHUB_CHANGELOG_URL = f"https://raw.githubusercontent.com/{GITHUB_OWNER}/{GITHUB_REPO}/main/{GITHUB_ADDON_FOLDER}/CHANGELOG.md"
+
+_update_info = {
+    "checked": False,
+    "has_update": False,
+    "current_version": (0, 0, 0),
+    "latest_version": (0, 0, 0),
+    "error": "",
+    "changelog": [],
+}
 
 
 BATCH_TOOLS = {"REEXPORT", "OVERLAP", "MATERIAL_CLEANUP", "SEPARATE"}
@@ -364,6 +385,125 @@ class ST_OT_clear_properties(Operator):
         return {"FINISHED"}
 
 
+class ST_OT_check_update(Operator):
+    bl_idname = "script_toolkit.check_update"
+    bl_label = "Check for Updates"
+
+    def execute(self, context):
+        _update_info.update({
+            "checked": False,
+            "has_update": False,
+            "current_version": bl_info["version"],
+            "latest_version": (0, 0, 0),
+            "error": "",
+            "changelog": [],
+        })
+        try:
+            request = urllib.request.Request(GITHUB_RAW_URL, headers={"User-Agent": "Blender-Script-Toolkit-Updater"})
+            with urllib.request.urlopen(request, timeout=10) as response:
+                content = response.read().decode("utf-8")
+            match = re.search(r'"version"\s*:\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)', content)
+            if not match:
+                raise RuntimeError("ไม่สามารถอ่านเวอร์ชันจาก GitHub ได้")
+            latest = tuple(int(match.group(index)) for index in range(1, 4))
+            _update_info["latest_version"] = latest
+            _update_info["has_update"] = latest > bl_info["version"]
+            _update_info["checked"] = True
+
+            if _update_info["has_update"]:
+                try:
+                    request = urllib.request.Request(GITHUB_CHANGELOG_URL, headers={"User-Agent": "Blender-Script-Toolkit-Updater"})
+                    with urllib.request.urlopen(request, timeout=5) as response:
+                        changelog = response.read().decode("utf-8")
+                    lines = []
+                    for line in changelog.splitlines():
+                        line = line.strip()
+                        if line:
+                            lines.extend(textwrap.wrap(line, width=46, break_long_words=False) or [line])
+                    _update_info["changelog"] = lines[:15]
+                except Exception:
+                    pass
+        except urllib.error.URLError as exc:
+            _update_info["error"] = f"ไม่สามารถเชื่อมต่อ: {exc.reason}"
+            _update_info["checked"] = True
+        except Exception as exc:
+            _update_info["error"] = str(exc)
+            _update_info["checked"] = True
+
+        bpy.ops.script_toolkit.update_popup("INVOKE_DEFAULT")
+        return {"FINISHED"}
+
+
+class ST_OT_update_popup(Operator):
+    bl_idname = "script_toolkit.update_popup"
+    bl_label = "Script Toolkit — Update"
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=330)
+
+    def draw(self, context):
+        layout = self.layout
+        if _update_info["error"]:
+            layout.label(text="เกิดข้อผิดพลาด", icon="ERROR")
+            for line in textwrap.wrap(_update_info["error"], width=48):
+                layout.label(text=line)
+            return
+        if not _update_info["checked"]:
+            layout.label(text="ยังไม่ได้ตรวจสอบ", icon="INFO")
+            return
+        current = ".".join(str(value) for value in _update_info["current_version"])
+        latest = ".".join(str(value) for value in _update_info["latest_version"])
+        layout.label(text=f"เวอร์ชันปัจจุบัน: v{current}", icon="PACKAGE")
+        layout.label(text=f"เวอร์ชันล่าสุด: v{latest}", icon="WORLD")
+        layout.separator()
+        if _update_info["has_update"]:
+            box = layout.box()
+            box.label(text="มีเวอร์ชันใหม่!", icon="INFO")
+            if _update_info["changelog"]:
+                box.separator()
+                box.label(text="What's New:", icon="TEXT")
+                for line in _update_info["changelog"]:
+                    box.label(text=line)
+            box.separator()
+            box.label(text="อัปเดตเสร็จแล้วให้ Restart Blender", icon="ERROR")
+            box.label(text="หรือกด F3 แล้วเลือก Reload Scripts")
+            box.operator("script_toolkit.do_update", text="Update Now", icon="IMPORT")
+        else:
+            layout.label(text="เป็นเวอร์ชันล่าสุดแล้ว", icon="CHECKMARK")
+
+    def execute(self, context):
+        return {"FINISHED"}
+
+
+class ST_OT_do_update(Operator):
+    bl_idname = "script_toolkit.do_update"
+    bl_label = "Update Script Toolkit"
+    bl_options = {"REGISTER"}
+
+    def execute(self, context):
+        try:
+            request = urllib.request.Request(GITHUB_API_CONTENTS, headers={"User-Agent": "Blender-Script-Toolkit-Updater"})
+            with urllib.request.urlopen(request, timeout=15) as response:
+                files = json.loads(response.read().decode("utf-8"))
+            addon_path = os.path.join(bpy.utils.user_resource("SCRIPTS"), "addons", GITHUB_ADDON_FOLDER)
+            os.makedirs(addon_path, exist_ok=True)
+            updated_count = 0
+            for file_info in files:
+                if file_info.get("type") != "file" or not file_info.get("download_url"):
+                    continue
+                request = urllib.request.Request(file_info["download_url"], headers={"User-Agent": "Blender-Script-Toolkit-Updater"})
+                with urllib.request.urlopen(request, timeout=15) as response:
+                    content = response.read()
+                with open(os.path.join(addon_path, file_info["name"]), "wb") as handle:
+                    handle.write(content)
+                updated_count += 1
+            self.report({"INFO"}, f"อัปเดตเสร็จ! ({updated_count} ไฟล์) กรุณา Restart Blender หรือ Reload Scripts")
+            return {"FINISHED"}
+        except Exception as exc:
+            self.report({"ERROR"}, f"อัปเดตล้มเหลว: {exc}")
+            return {"CANCELLED"}
+
+
 class ST_PT_panel(Panel):
     bl_label = "Script Toolkit"
     bl_idname = "ST_PT_script_toolkit"
@@ -374,7 +514,9 @@ class ST_PT_panel(Panel):
     def draw(self, context):
         layout = self.layout
         props = context.scene.script_toolkit
-        layout.prop(props, "tool")
+        tool_row = layout.row(align=True)
+        tool_row.prop(props, "tool")
+        tool_row.operator("script_toolkit.check_update", text="", icon="WORLD")
         help_box = layout.box()
         description_lines = textwrap.wrap(
             _tool_description(props.tool),
@@ -472,6 +614,9 @@ CLASSES = (
     ST_OT_refresh_status,
     ST_OT_delete_faces,
     ST_OT_clear_properties,
+    ST_OT_check_update,
+    ST_OT_update_popup,
+    ST_OT_do_update,
     ST_PT_panel,
 )
 
