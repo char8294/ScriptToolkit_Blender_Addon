@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 3, 0),
+    "version": (0, 3, 1),
     "blender": (5, 1, 0),
     "location": "3D View > Sidebar > Script Toolkit",
     "description": "FBX batch tools in an isolated Blender worker plus selected-object cleanup tools.",
@@ -26,22 +26,6 @@ from bpy.types import Operator, Panel, PropertyGroup
 from . import biped_names, hair_check
 
 
-# GitHub update configuration — follows the Turntable Camera updater pattern.
-GITHUB_OWNER = "char8294"
-GITHUB_REPO = "Pack_Blender_Add-on"
-GITHUB_ADDON_FOLDER = "script_toolkit"
-GITHUB_RAW_URL = f"https://raw.githubusercontent.com/{GITHUB_OWNER}/{GITHUB_REPO}/main/{GITHUB_ADDON_FOLDER}/__init__.py"
-GITHUB_API_CONTENTS = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/contents/{GITHUB_ADDON_FOLDER}"
-GITHUB_CHANGELOG_URL = f"https://raw.githubusercontent.com/{GITHUB_OWNER}/{GITHUB_REPO}/main/{GITHUB_ADDON_FOLDER}/CHANGELOG.md"
-
-_update_info = {
-    "checked": False,
-    "has_update": False,
-    "current_version": (0, 0, 0),
-    "latest_version": (0, 0, 0),
-    "error": "",
-    "changelog": [],
-}
 
 
 BATCH_TOOLS = {"REEXPORT", "OVERLAP", "MATERIAL_CLEANUP", "SEPARATE"}
@@ -385,123 +369,233 @@ class ST_OT_clear_properties(Operator):
         return {"FINISHED"}
 
 
+# -------------------- GitHub Update Operators --------------------
+
+import tempfile
+import shutil
+from pathlib import Path
+
+try:
+    from . import update_utils
+except ImportError:
+    import update_utils
+
+GITHUB_OWNER = "char8294"
+GITHUB_REPO = "ScriptToolkit_Blender_Addon"
+GITHUB_RELEASES_URL = f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/releases"
+GITHUB_LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
+GITHUB_TAGS_API = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/tags"
+GITHUB_ARCHIVE_BASE_URL = f"https://codeload.github.com/{GITHUB_OWNER}/{GITHUB_REPO}/zip/refs/tags/"
+GITHUB_USER_AGENT = "scripttoolkit-Blender-Updater/1.0"
+
+_update_info = {
+    "checked": False,
+    "busy": False,
+    "phase": "",
+    "error": "",
+    "has_update": False,
+    "installed": False,
+    "current_version": bl_info["version"],
+    "latest_version": bl_info["version"],
+    "release_notes": "",
+    "release_url": GITHUB_RELEASES_URL,
+    "metadata": None,
+}
+
+def _format_version(version):
+    return ".".join(str(value) for value in version)
+
+def _wrap_update_notes(content, width=70, max_lines=20):
+    lines = []
+    for source_line in (content or "").splitlines():
+        source_line = source_line.strip()
+        if not source_line:
+            continue
+        while len(source_line) > width:
+            split_at = source_line.rfind(" ", 0, width)
+            split_at = split_at if split_at > 0 else width
+            lines.append(source_line[:split_at])
+            source_line = source_line[split_at:].strip()
+        if source_line:
+            lines.append(source_line)
+    return lines[:max_lines]
+
+def _github_request(url, timeout=15):
+    import urllib.request
+    import json
+    request = urllib.request.Request(
+        url,
+        headers={
+            "Accept": "application/vnd.github+json",
+            "User-Agent": GITHUB_USER_AGENT,
+        },
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+def _download_archive(url, destination, timeout=60):
+    import urllib.request
+    request = urllib.request.Request(
+        url,
+        headers={"Accept": "application/zip", "User-Agent": GITHUB_USER_AGENT},
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        with open(destination, "wb") as output:
+            shutil.copyfileobj(response, output)
+
+def _fetch_update_metadata():
+    return update_utils.fetch_update_metadata(
+        _github_request,
+        release_api_url=GITHUB_LATEST_RELEASE_API,
+        tags_api_url=GITHUB_TAGS_API,
+        archive_base_url=GITHUB_ARCHIVE_BASE_URL,
+        fallback_release_url=GITHUB_RELEASES_URL,
+    )
+
+def _check_for_updates():
+    current_version = update_utils.parse_version(bl_info["version"])
+    try:
+        metadata = _fetch_update_metadata()
+    except Exception as error:
+        _update_info.update(
+            checked=True,
+            busy=False,
+            phase="",
+            error=f"Could not check GitHub for updates: {error}",
+            has_update=False,
+            metadata=None,
+            current_version=current_version,
+            latest_version=current_version,
+        )
+        return
+
+    _update_info.update(
+        checked=True,
+        busy=False,
+        phase="",
+        error="",
+        has_update=metadata.version > current_version,
+        installed=False,
+        current_version=current_version,
+        latest_version=metadata.version,
+        release_notes=metadata.release_notes,
+        release_url=metadata.release_url,
+        metadata=metadata,
+    )
+
 class ST_OT_check_update(Operator):
     bl_idname = "script_toolkit.check_update"
     bl_label = "Check for Updates"
-
     def execute(self, context):
-        _update_info.update({
-            "checked": False,
-            "has_update": False,
-            "current_version": bl_info["version"],
-            "latest_version": (0, 0, 0),
-            "error": "",
-            "changelog": [],
-        })
-        try:
-            request = urllib.request.Request(GITHUB_RAW_URL, headers={"User-Agent": "Blender-Script-Toolkit-Updater"})
-            with urllib.request.urlopen(request, timeout=10) as response:
-                content = response.read().decode("utf-8")
-            match = re.search(r'"version"\s*:\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)', content)
-            if not match:
-                raise RuntimeError("ไม่สามารถอ่านเวอร์ชันจาก GitHub ได้")
-            latest = tuple(int(match.group(index)) for index in range(1, 4))
-            _update_info["latest_version"] = latest
-            _update_info["has_update"] = latest > bl_info["version"]
-            _update_info["checked"] = True
-
-            if _update_info["has_update"]:
-                try:
-                    request = urllib.request.Request(GITHUB_CHANGELOG_URL, headers={"User-Agent": "Blender-Script-Toolkit-Updater"})
-                    with urllib.request.urlopen(request, timeout=5) as response:
-                        changelog = response.read().decode("utf-8")
-                    lines = []
-                    for line in changelog.splitlines():
-                        line = line.strip()
-                        if line:
-                            lines.extend(textwrap.wrap(line, width=46, break_long_words=False) or [line])
-                    _update_info["changelog"] = lines[:15]
-                except Exception:
-                    pass
-        except urllib.error.URLError as exc:
-            _update_info["error"] = f"ไม่สามารถเชื่อมต่อ: {exc.reason}"
-            _update_info["checked"] = True
-        except Exception as exc:
-            _update_info["error"] = str(exc)
-            _update_info["checked"] = True
-
-        bpy.ops.script_toolkit.update_popup("INVOKE_DEFAULT")
-        return {"FINISHED"}
-
+        if _update_info["busy"]:
+            self.report({'WARNING'}, "Update is already running")
+            return {'CANCELLED'}
+        _update_info.update(
+            checked=False, busy=True, phase="Checking GitHub...",
+            error="", installed=False, metadata=None,
+        )
+        _check_for_updates()
+        bpy.ops.script_toolkit.update_popup('INVOKE_DEFAULT')
+        return {'FINISHED'}
 
 class ST_OT_update_popup(Operator):
     bl_idname = "script_toolkit.update_popup"
     bl_label = "Script Toolkit — Update"
-
     def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self, width=330)
-
+        return context.window_manager.invoke_props_dialog(self, width=480)
     def draw(self, context):
         layout = self.layout
-        if _update_info["error"]:
-            layout.label(text="เกิดข้อผิดพลาด", icon="ERROR")
-            for line in textwrap.wrap(_update_info["error"], width=48):
+        info = _update_info
+        if info["busy"]:
+            layout.label(text=info["phase"] or "Working...", icon='TIME')
+            return
+        if info["installed"]:
+            layout.label(text="Update installed successfully", icon='CHECKMARK')
+            layout.label(text="Use F3 > Reload Scripts or restart Blender.")
+            return
+        if info["error"]:
+            layout.label(text="Update check failed", icon='ERROR')
+            for line in _wrap_update_notes(info["error"], width=65, max_lines=8):
                 layout.label(text=line)
+            operator = layout.operator("wm.url_open", text="Open GitHub Releases", icon='URL')
+            operator.url = GITHUB_RELEASES_URL
             return
-        if not _update_info["checked"]:
-            layout.label(text="ยังไม่ได้ตรวจสอบ", icon="INFO")
+        if not info["checked"]:
+            layout.label(text="No update check has been performed yet", icon='INFO')
             return
-        current = ".".join(str(value) for value in _update_info["current_version"])
-        latest = ".".join(str(value) for value in _update_info["latest_version"])
-        layout.label(text=f"เวอร์ชันปัจจุบัน: v{current}", icon="PACKAGE")
-        layout.label(text=f"เวอร์ชันล่าสุด: v{latest}", icon="WORLD")
+        layout.label(text=f"Current version: v{_format_version(info['current_version'])}", icon='PACKAGE')
+        layout.label(text=f"Latest version: v{_format_version(info['latest_version'])}", icon='WORLD')
         layout.separator()
-        if _update_info["has_update"]:
+        if info["has_update"]:
             box = layout.box()
-            box.label(text="มีเวอร์ชันใหม่!", icon="INFO")
-            if _update_info["changelog"]:
-                box.separator()
-                box.label(text="What's New:", icon="TEXT")
-                for line in _update_info["changelog"]:
+            box.label(text="A new version is available", icon='INFO')
+            if info["release_notes"]:
+                box.label(text="Release notes:", icon='TEXT')
+                for line in _wrap_update_notes(info["release_notes"]):
                     box.label(text=line)
             box.separator()
-            box.label(text="อัปเดตเสร็จแล้วให้ Restart Blender", icon="ERROR")
-            box.label(text="หรือกด F3 แล้วเลือก Reload Scripts")
-            box.operator("script_toolkit.do_update", text="Update Now", icon="IMPORT")
+            box.label(text="Blender will need Reload Scripts or a restart after install.")
+            box.operator("script_toolkit.do_update", text="Update Now", icon='IMPORT')
         else:
-            layout.label(text="เป็นเวอร์ชันล่าสุดแล้ว", icon="CHECKMARK")
-
+            layout.label(text="Up to date", icon='CHECKMARK')
     def execute(self, context):
-        return {"FINISHED"}
-
+        return {'FINISHED'}
 
 class ST_OT_do_update(Operator):
     bl_idname = "script_toolkit.do_update"
-    bl_label = "Update Script Toolkit"
-    bl_options = {"REGISTER"}
-
+    bl_label = "Update Add-on"
     def execute(self, context):
+        import shutil
+        from pathlib import Path
+        metadata = _update_info.get("metadata")
+        if _update_info["busy"] or not metadata or not _update_info["has_update"]:
+            self.report({'WARNING'}, "No installable update is selected")
+            return {'CANCELLED'}
+        work_dir = Path(tempfile.mkdtemp(prefix="scripttoolkit-update-"))
+        keep_work_dir = False
+        _update_info.update(busy=True, phase="Downloading update archive...", error="")
         try:
-            request = urllib.request.Request(GITHUB_API_CONTENTS, headers={"User-Agent": "Blender-Script-Toolkit-Updater"})
-            with urllib.request.urlopen(request, timeout=15) as response:
-                files = json.loads(response.read().decode("utf-8"))
-            addon_path = os.path.join(bpy.utils.user_resource("SCRIPTS"), "addons", GITHUB_ADDON_FOLDER)
-            os.makedirs(addon_path, exist_ok=True)
-            updated_count = 0
-            for file_info in files:
-                if file_info.get("type") != "file" or not file_info.get("download_url"):
-                    continue
-                request = urllib.request.Request(file_info["download_url"], headers={"User-Agent": "Blender-Script-Toolkit-Updater"})
-                with urllib.request.urlopen(request, timeout=15) as response:
-                    content = response.read()
-                with open(os.path.join(addon_path, file_info["name"]), "wb") as handle:
-                    handle.write(content)
-                updated_count += 1
-            self.report({"INFO"}, f"อัปเดตเสร็จ! ({updated_count} ไฟล์) กรุณา Restart Blender หรือ Reload Scripts")
-            return {"FINISHED"}
-        except Exception as exc:
-            self.report({"ERROR"}, f"อัปเดตล้มเหลว: {exc}")
-            return {"CANCELLED"}
+            archive_path = work_dir / "update.zip"
+            extraction_dir = work_dir / "extract"
+            self.report({'INFO'}, "Downloading update archive...")
+            _download_archive(metadata.archive_url, archive_path)
+            _update_info["phase"] = "Extracting and validating update..."
+            self.report({'INFO'}, _update_info["phase"])
+            
+            required_runtime_files = (
+                "__init__.py",
+                "update_utils.py",
+                "biped_names.py",
+                "hair_check.py",
+                "worker_entry.py",
+                "worker_jobs.py",
+            )
+            package_root = update_utils.extract_and_validate_archive(
+                archive_path, extraction_dir, expected_version=metadata.version, required_runtime_files=required_runtime_files
+            )
+            target_dir = Path(__file__).resolve().parent
+            if not target_dir.is_dir():
+                raise RuntimeError("The running add-on is not installed in a writable directory")
+            if (target_dir / ".git").exists():
+                raise RuntimeError("Automatic update is disabled for a Git working tree; install the add-on in Blender first")
+            _update_info["phase"] = "Installing update..."
+            self.report({'INFO'}, _update_info["phase"])
+            update_utils.install_package(package_root, target_dir, work_dir)
+            _update_info.update(busy=False, phase="", error="", installed=True, has_update=False)
+            self.report({'INFO'}, "Update installed; reload scripts or restart Blender")
+        except update_utils.InstallTransactionError as error:
+            keep_work_dir = bool(error.backup_path)
+            message = str(error)
+            if error.backup_path:
+                message += f" Backup preserved at: {error.backup_path}"
+            _update_info.update(busy=False, phase="", error=message, installed=False)
+        except Exception as error:
+            _update_info.update(busy=False, phase="", error=f"Update installation failed: {error}", installed=False)
+        finally:
+            if not keep_work_dir:
+                shutil.rmtree(work_dir, ignore_errors=True)
+        return {'FINISHED'}
+
 
 
 class ST_PT_panel(Panel):
