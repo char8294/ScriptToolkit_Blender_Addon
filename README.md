@@ -1,3 +1,17 @@
-# ScriptToolkit_Blender_Addon
+# Script Toolkit 🛠️
 
-Standalone repository for the ScriptToolkit Blender Add-on.
+A collection of handy scripts and utilities for Rigging, Animation, and Workflow optimization in Blender.
+
+![Script Toolkit Screenshot](screenshot.png)
+
+## Features
+- **Advanced Symmetry Weight Mirror**: Mirror vertex weights perfectly across the X-axis, supporting prefix renaming (e.g. `Bip001 R` to `Bip001 L`).
+- **Biped Names Helper**: Temporarily convert Biped bone names to standard Blender `.L`/`.R` suffixes for easy mirroring, then restore them.
+- **Clear Custom Properties**: Strip all custom properties/metadata from selected objects to clean up imported models (like from 3ds Max/Maya).
+- **Built-in Auto Updater**: Keep your add-on up to date directly from Blender.
+
+## Installation
+1. Download the latest `.zip` from the [Releases page](https://github.com/char8294/ScriptToolkit_Blender_Addon/releases).
+2. In Blender, go to `Edit > Preferences > Add-ons`.
+3. Click `Install...` and select the `.zip` file.
+4. Check the box to enable **Script Toolkit**.
