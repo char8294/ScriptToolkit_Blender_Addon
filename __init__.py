@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 3, 2),
+    "version": (0, 3, 5),
     "blender": (5, 1, 0),
     "location": "3D View > Sidebar > Script Toolkit",
     "description": "FBX batch tools in an isolated Blender worker plus selected-object cleanup tools.",
@@ -19,11 +19,19 @@ import urllib.request
 import uuid
 
 import bmesh
-import bpy
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, StringProperty
 from bpy.types import Operator, Panel, PropertyGroup
 
-from . import biped_names, hair_check
+if "bpy" in locals():
+    import importlib
+    importlib.reload(biped_names)
+    importlib.reload(hair_check)
+    importlib.reload(empty_to_bone)
+    importlib.reload(align_bones)
+else:
+    from . import biped_names, hair_check, empty_to_bone, align_bones
+
+import bpy
 
 
 
@@ -66,7 +74,34 @@ def _tool_description(tool):
         "CLEAR_PROPS": "ลบ custom properties จาก object ที่เลือกในไฟล์ปัจจุบัน.",
         "HAIR_CHECK": "Cycle hair objects ทีละชิ้น โดยตรึง Hat Object ให้แสดงอยู่ ตามรูปแบบ Check Hair And Cap เดิม.",
         "BIPED_NAMES": "เปลี่ยนชื่อ Biped bones/vertex groups เพื่อใช้ Symmetry และคืนชื่อเดิม ตามรูปแบบ Biped Names Helper เดิม.",
+        "ALIGN_BONES": "เครื่องมือจัดเรียงแกนกระดูกและ Snapping หางกระดูก",
+        "EMPTY_TO_BONE": "เครื่องมือแปลง Empty ให้กลายเป็น Bone พร้อมจัด Hierarchy",
     }[tool]
+
+
+class STBN_PreviewItem(PropertyGroup):
+    old_name: StringProperty()
+    new_name: StringProperty()
+
+
+def update_target_armature(self, context):
+    armature = self.target_armature
+    self.bone_hierarchy.clear()
+    self.bone_hierarchy_index = 0
+    
+    if not armature or armature.type != 'ARMATURE':
+        return
+    
+    def add_bone_recursive(bone, indent_level):
+        item = self.bone_hierarchy.add()
+        item.name = bone.name
+        item.indent = indent_level
+        for child in bone.children:
+            add_bone_recursive(child, indent_level + 1)
+
+    for bone in armature.data.bones:
+        if bone.parent is None:
+            add_bone_recursive(bone, 0)
 
 
 class ST_Properties(PropertyGroup):
@@ -81,6 +116,8 @@ class ST_Properties(PropertyGroup):
             ("CLEAR_PROPS", "Clear Custom Properties", "ลบ metadata จาก selection"),
             ("HAIR_CHECK", "Check Hair And Cap", "Cycle hair objects while keeping the hat visible"),
             ("BIPED_NAMES", "Biped Names Helper", "Convert Biped names for symmetry and restore them"),
+            ("ALIGN_BONES", "Align Bones", "Align and snap bones"),
+            ("EMPTY_TO_BONE", "Empty to Bone", "Convert empties to bones"),
         ],
         default="REEXPORT",
     )
@@ -140,6 +177,65 @@ class ST_Properties(PropertyGroup):
     delete_remove_slots: BoolProperty(name="Remove Matching Material Slots", default=True)
     clear_object_properties: BoolProperty(name="Clear Object Properties", default=True)
     clear_data_properties: BoolProperty(name="Clear Mesh Data Properties", default=True)
+
+    # Batch Rename
+    rename_target: EnumProperty(
+        name="Target",
+        items=[
+            ("BONE", "Bone", "Rename Bones in selected armatures"),
+            ("VERTEX_GROUP", "Vertex Group", "Rename Vertex Groups in selected meshes"),
+        ],
+        default="BONE",
+    )
+    rename_find_1: StringProperty(name="Find", default="L")
+    rename_replace_1: StringProperty(name="Replace", default="")
+    rename_suffix_1: StringProperty(name="Suffix", default=".L")
+    rename_find_2: StringProperty(name="Find", default="R")
+    rename_replace_2: StringProperty(name="Replace", default="")
+    rename_suffix_2: StringProperty(name="Suffix", default=".R")
+    vg_prefix: StringProperty(name="Prefix", default="DEF-")
+    
+    preview_items: bpy.props.CollectionProperty(type=STBN_PreviewItem)
+    preview_index: IntProperty()
+    preview_summary: StringProperty(default="")
+
+    # Empty to Bone
+    target_armature: bpy.props.PointerProperty(
+        name="Target Armature",
+        type=bpy.types.Object,
+        poll=lambda self, obj: obj.type == 'ARMATURE',
+        update=update_target_armature
+    )
+    bone_length: FloatProperty(name="Bone Length", default=0.1, min=0.001)
+    bone_relation: EnumProperty(
+        name="Relation",
+        items=[
+            ("CHILD", "Child", "New bone becomes a child of the selected bone"),
+            ("PARENT", "Parent", "New bone becomes the parent of the selected bone"),
+        ],
+        default="CHILD"
+    )
+    align_axis: EnumProperty(
+        name="Align Axis",
+        items=[
+            ("X", "+X Axis", "Align tail to local +X axis"),
+            ("Y", "+Y Axis", "Align tail to local +Y axis"),
+            ("Z", "+Z Axis", "Align tail to local +Z axis"),
+            ("-X", "-X Axis", "Align tail to local -X axis"),
+            ("-Y", "-Y Axis", "Align tail to local -Y axis"),
+            ("-Z", "-Z Axis", "Align tail to local -Z axis"),
+        ],
+        default="Z"
+    )
+    snap_radius: FloatProperty(
+        name="Snap Radius", 
+        description="Search radius for snapping Tail to nearest Head",
+        default=0.1, 
+        min=0.001
+    )
+    bone_hierarchy: bpy.props.CollectionProperty(type=empty_to_bone.ST_BoneHierarchyItem)
+    bone_hierarchy_index: IntProperty()
+    last_hierarchy_hash: StringProperty(options={"HIDDEN"})
 
     # Runtime status
     last_job_path: StringProperty(options={"HIDDEN"})
@@ -637,8 +733,12 @@ class ST_PT_panel(Panel):
             box.operator("script_toolkit.clear_custom_properties", icon="TRASH")
         elif props.tool == "HAIR_CHECK":
             hair_check.draw_ui(layout, context)
-        else:
+        elif props.tool == "BIPED_NAMES":
             biped_names.draw_ui(layout, context)
+        elif props.tool == "ALIGN_BONES":
+            align_bones.draw_ui(layout, context)
+        elif props.tool == "EMPTY_TO_BONE":
+            empty_to_bone.draw_ui(layout, context)
 
         status = layout.box()
         status.label(text="Status", icon="INFO")
@@ -702,6 +802,7 @@ class ST_PT_panel(Panel):
 
 
 CLASSES = (
+    STBN_PreviewItem,
     ST_Properties,
     ST_OT_validate_batch,
     ST_OT_start_batch,
@@ -716,19 +817,23 @@ CLASSES = (
 
 
 def register():
+    biped_names.register()
+    hair_check.register()
+    empty_to_bone.register()
+    align_bones.register()
     for cls in CLASSES:
         bpy.utils.register_class(cls)
     bpy.types.Scene.script_toolkit = bpy.props.PointerProperty(type=ST_Properties)
-    hair_check.register()
-    biped_names.register()
 
 
 def unregister():
-    biped_names.unregister()
-    hair_check.unregister()
     del bpy.types.Scene.script_toolkit
     for cls in reversed(CLASSES):
         bpy.utils.unregister_class(cls)
+    biped_names.unregister()
+    hair_check.unregister()
+    empty_to_bone.unregister()
+    align_bones.unregister()
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
 import json
 
 import bpy
-from bpy.types import Operator
+from bpy.types import Operator, UIList
 
 
 def _all_fcurves(action):
@@ -153,13 +153,177 @@ class STBN_OT_restore_names(Operator):
         return {"FINISHED"}
 
 
-def draw_ui(layout, _context):
+class STBN_OT_batch_rename(Operator):
+    bl_idname = "script_toolkit.biped_batch_rename"
+    bl_label = "Batch Rename"
+    bl_description = "Rename Bones or Vertex Groups based on Find/Replace/Suffix"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        props = context.scene.script_toolkit
+        armatures, meshes = _related_objects(context)
+        
+        rules = []
+        if props.rename_find_1:
+            rules.append((props.rename_find_1, props.rename_replace_1, props.rename_suffix_1))
+        if props.rename_find_2:
+            rules.append((props.rename_find_2, props.rename_replace_2, props.rename_suffix_2))
+            
+        if not rules:
+            return {"FINISHED"}
+            
+        if props.rename_target == "BONE":
+            for arm in armatures:
+                for bone in arm.data.bones:
+                    for fnd, rep, suf in rules:
+                        if fnd in bone.name:
+                            bone.name = bone.name.replace(fnd, rep) + suf
+                            break
+                            
+        elif props.rename_target == "VERTEX_GROUP":
+            for mesh in meshes:
+                for vg in mesh.vertex_groups:
+                    for fnd, rep, suf in rules:
+                        if fnd in vg.name:
+                            try:
+                                vg.name = vg.name.replace(fnd, rep) + suf
+                            except Exception:
+                                pass
+                            break
+                            
+        return {"FINISHED"}
+
+
+class STBN_OT_add_vg_prefix(Operator):
+    bl_idname = "script_toolkit.biped_add_vg_prefix"
+    bl_label = "Add Prefix to Vertex Groups"
+    bl_description = "Add Prefix to all Vertex Groups in selected meshes"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        props = context.scene.script_toolkit
+        _, meshes = _related_objects(context)
+        prefix = props.vg_prefix
+        
+        if not prefix:
+            return {"FINISHED"}
+            
+        for mesh in meshes:
+            for vg in mesh.vertex_groups:
+                if not vg.name.startswith(prefix):
+                    try:
+                        vg.name = prefix + vg.name
+                    except Exception:
+                        pass
+                    
+        return {"FINISHED"}
+
+
+class STBN_UL_preview_list(UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        split = layout.split(factor=0.5)
+        split.label(text=item.old_name, icon="FORWARD")
+        split.label(text=item.new_name)
+
+
+class STBN_OT_generate_preview(Operator):
+    bl_idname = "script_toolkit.biped_generate_preview"
+    bl_label = "Generate Preview"
+    bl_description = "Preview name changes before applying"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        props = context.scene.script_toolkit
+        armatures, meshes = _related_objects(context)
+        
+        rules = []
+        if props.rename_find_1:
+            rules.append((props.rename_find_1, props.rename_replace_1, props.rename_suffix_1))
+        if props.rename_find_2:
+            rules.append((props.rename_find_2, props.rename_replace_2, props.rename_suffix_2))
+            
+        props.preview_items.clear()
+        count = 0
+        
+        if props.rename_target == "BONE":
+            for arm in armatures:
+                for bone in arm.data.bones:
+                    for fnd, rep, suf in rules:
+                        if fnd in bone.name:
+                            new_name = bone.name.replace(fnd, rep) + suf
+                            if new_name != bone.name:
+                                item = props.preview_items.add()
+                                item.old_name = bone.name
+                                item.new_name = new_name
+                                count += 1
+                            break
+                            
+        elif props.rename_target == "VERTEX_GROUP":
+            prefix = props.vg_prefix
+            for mesh in meshes:
+                for vg in mesh.vertex_groups:
+                    new_name = vg.name
+                    # Apply batch rename rules
+                    for fnd, rep, suf in rules:
+                        if fnd in new_name:
+                            new_name = new_name.replace(fnd, rep) + suf
+                            break
+                    # Apply prefix
+                    if prefix and not new_name.startswith(prefix):
+                        new_name = prefix + new_name
+                        
+                    if new_name != vg.name:
+                        item = props.preview_items.add()
+                        item.old_name = vg.name
+                        item.new_name = new_name
+                        count += 1
+                        
+        props.preview_summary = f"{count} items will be changed"
+        return {"FINISHED"}
+
+
+def draw_ui(layout, context):
+    props = context.scene.script_toolkit
+    
     col = layout.column(align=True)
     col.operator("script_toolkit.biped_setup_mirror", icon="MOD_MIRROR")
     col.operator("script_toolkit.biped_restore_names", icon="LOOP_BACK")
+    
+    layout.separator()
+    
+    box = layout.box()
+    box.prop(props, "rename_target")
+    row = box.row()
+    col1 = row.column(align=True)
+    col1.prop(props, "rename_find_2")
+    col1.prop(props, "rename_replace_2")
+    col1.prop(props, "rename_suffix_2")
+    
+    col2 = row.column(align=True)
+    col2.prop(props, "rename_find_1")
+    col2.prop(props, "rename_replace_1")
+    col2.prop(props, "rename_suffix_1")
+    
+    box.operator("script_toolkit.biped_batch_rename", icon="FONT_DATA")
+    
+    layout.separator()
+    
+    box_vg = layout.box()
+    row_vg = box_vg.row(align=True)
+    row_vg.prop(props, "vg_prefix")
+    row_vg.operator("script_toolkit.biped_add_vg_prefix", icon="GROUP_VERTEX", text="Add Prefix")
+
+    layout.separator()
+    
+    box_prev = layout.box()
+    box_prev.operator("script_toolkit.biped_generate_preview", icon="FILE_TICK")
+    if props.preview_summary:
+        box_prev.label(text=props.preview_summary, icon="INFO")
+    if len(props.preview_items) > 0:
+        box_prev.template_list("STBN_UL_preview_list", "", props, "preview_items", props, "preview_index", rows=15)
 
 
-CLASSES = (STBN_OT_setup_mirror, STBN_OT_restore_names)
+CLASSES = (STBN_OT_setup_mirror, STBN_OT_restore_names, STBN_OT_batch_rename, STBN_OT_add_vg_prefix, STBN_UL_preview_list, STBN_OT_generate_preview)
 
 
 def register():
