@@ -7,6 +7,7 @@ A collection of handy scripts and utilities for Rigging, Animation, and Workflow
 ## Features
 - **Advanced Symmetry Weight Mirror**: Mirror vertex weights perfectly across the X-axis, supporting prefix renaming (e.g. `Bip001 R` to `Bip001 L`).
 - **Biped Names Helper**: Temporarily convert Biped bone names to standard Blender `.L`/`.R` suffixes for easy mirroring, then restore them.
+- **ARP Retarget Preset**: Build complete source/target bone mappings, multi-select rows by clicking, swap or mirror mappings, and import/export Auto-Rig Pro `.bmap` presets.
 - **Clear Custom Properties**: Strip all custom properties/metadata from selected objects to clean up imported models (like from 3ds Max/Maya).
 - **Built-in Auto Updater**: Keep your add-on up to date directly from Blender.
 

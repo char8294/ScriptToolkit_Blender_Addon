@@ -23,6 +23,7 @@ _SCENE_PROPERTIES = (
     "arp_retarget_target_armature",
     "arp_retarget_mapping_items",
     "arp_retarget_mapping_index",
+    "arp_retarget_selection_anchor",
     "arp_retarget_find",
     "arp_retarget_replace",
 )
@@ -41,59 +42,11 @@ def _armature_poll(_self, obj):
     return obj.type == "ARMATURE"
 
 
-def _is_arp_armature(obj):
-    if not obj or obj.type != "ARMATURE":
-        return False
-    return bool(obj.data.bones.get("c_traj") and obj.data.bones.get("c_pos"))
-
-
-def _bone_base_name(name):
-    return re.sub(r"\.\d{3}$", "", name)
-
-
-def _is_excluded_arp_bone(name):
-    excluded_prefixes = ("c_p_", "c_foot_bank_")
-    excluded_names = {
-        "c_foot_fk_scale_fix",
-        "c_hand_fk_scale_fix",
-        "c_foot_roll",
-        "c_foot_heel",
-        "c_toes_track",
-        "c_toes_end",
-        "c_toes_end_01",
-        "c_thumb1_rot",
-        "c_thumb2_rot",
-        "c_thumb3_rot",
-        "c_index1_rot",
-        "c_index2_rot",
-        "c_index3_rot",
-        "c_middle1_rot",
-        "c_middle2_rot",
-        "c_middle3_rot",
-        "c_ring1_rot",
-        "c_ring2_rot",
-        "c_ring3_rot",
-        "c_pinky1_rot",
-        "c_pinky2_rot",
-        "c_pinky3_rot",
-    }
-    return name.startswith(excluded_prefixes) or _bone_base_name(name) in excluded_names
-
-
 def _included_bones(obj, is_source=False):
-    bones = list(obj.data.bones)
-    if not _is_arp_armature(obj):
-        return bones
-
-    if is_source:
-        return [bone for bone in bones if not _is_excluded_arp_bone(bone.name)]
-
-    result = []
-    for bone in bones:
-        has_custom_controller = getattr(bone, "get", lambda _key: None)("cc") is not None
-        if (bone.name.startswith("c_") or has_custom_controller) and not _is_excluded_arp_bone(bone.name):
-            result.append(bone)
-    return result
+    # Keep every data bone visible. ARP's own filters are useful while binding,
+    # but this editor is also used to repair unusual or helper-bone mappings.
+    del is_source
+    return list(obj.data.bones)
 
 
 def _tokens(name):
@@ -177,6 +130,55 @@ def _selected_or_active(scene):
     return []
 
 
+def _toggle_mapping_selection(scene, index, select_range=False):
+    items = scene.arp_retarget_mapping_items
+    if not (0 <= index < len(items)):
+        return False
+
+    anchor = scene.arp_retarget_selection_anchor
+    if select_range and 0 <= anchor < len(items):
+        start, end = sorted((anchor, index))
+        for item_index in range(start, end + 1):
+            items[item_index].selected = True
+    else:
+        items[index].selected = not items[index].selected
+        scene.arp_retarget_selection_anchor = index
+
+    scene.arp_retarget_mapping_index = index
+    return True
+
+
+def _mirror_name(name, mirror_dir):
+    if not name:
+        return ""
+
+    sides = {"l": "r", "left": "right"}
+    if mirror_dir == "RIGHT_TO_LEFT":
+        sides = {value: key for key, value in sides.items()}
+
+    def mirror_word(word):
+        for source, target in sides.items():
+            if word == source:
+                return target
+            if word == source.upper():
+                return target.upper()
+            if word == source.title():
+                return target.title()
+        return ""
+
+    parts = re.split(r"([._ \-])", name)
+    word_indices = [index for index in range(0, len(parts), 2) if parts[index]]
+    if not word_indices:
+        return ""
+    search_order = (word_indices[-1], word_indices[0], *word_indices[1:-1])
+    for word_index in dict.fromkeys(search_order):
+        mirrored = mirror_word(parts[word_index])
+        if mirrored:
+            parts[word_index] = mirrored
+            return "".join(parts)
+    return ""
+
+
 def _parse_bool(value):
     return str(value).strip().lower() in {"true", "1", "yes"}
 
@@ -224,13 +226,40 @@ class STARP_MappingItem(PropertyGroup):
     loc_mult: FloatProperty(name="Location Multiplier", default=1.0)
 
 
+class STARP_OT_toggle_mapping_selection(Operator):
+    bl_idname = "script_toolkit.arp_toggle_mapping_selection"
+    bl_label = "Select Mapping Row"
+    bl_description = "Click to toggle this row; Shift-click selects a continuous range"
+    bl_options = {"INTERNAL"}
+
+    index: IntProperty()
+
+    def invoke(self, context, event):
+        if not _toggle_mapping_selection(context.scene, self.index, select_range=event.shift):
+            return {"CANCELLED"}
+        return {"FINISHED"}
+
+    def execute(self, context):
+        if not _toggle_mapping_selection(context.scene, self.index):
+            return {"CANCELLED"}
+        return {"FINISHED"}
+
+
 class STARP_UL_mapping(UIList):
     def draw_item(self, _context, layout, _data, item, _icon, _active_data, _active_property, _index):
-        row = layout.row(align=True)
-        row.prop(item, "selected", text="")
-        split = row.split(factor=0.52, align=True)
-        split.label(text=item.source_name)
-        split.label(text=item.target_name or "None")
+        split = layout.split(factor=0.5, align=True)
+        source = split.operator(
+            STARP_OT_toggle_mapping_selection.bl_idname,
+            text=item.source_name,
+            depress=item.selected,
+        )
+        source.index = _index
+        target = split.operator(
+            STARP_OT_toggle_mapping_selection.bl_idname,
+            text=item.target_name or "None",
+            depress=item.selected,
+        )
+        target.index = _index
 
 
 class STARP_OT_build_list(Operator):
@@ -268,6 +297,7 @@ class STARP_OT_build_list(Operator):
                 matched += 1
 
         scene.arp_retarget_mapping_index = 0
+        scene.arp_retarget_selection_anchor = -1
         self.report({"INFO"}, f"Built {len(source_names)} source bones; matched {matched} target bones")
         return {"FINISHED"}
 
@@ -291,6 +321,7 @@ class STARP_OT_select_none(Operator):
     def execute(self, context):
         for item in context.scene.arp_retarget_mapping_items:
             item.selected = False
+        context.scene.arp_retarget_selection_anchor = -1
         return {"FINISHED"}
 
 
@@ -322,6 +353,97 @@ class STARP_OT_clear_target(Operator):
         return {"FINISHED"}
 
 
+class STARP_OT_swap_source_target(Operator):
+    bl_idname = "script_toolkit.arp_swap_source_target"
+    bl_label = "Swap Source / Target"
+    bl_description = "Swap Source Bone and Target Bone names for selected rows"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        items = _selected_or_active(context.scene)
+        if not items:
+            self.report({"WARNING"}, "Select at least one mapping row")
+            return {"CANCELLED"}
+
+        swapped = 0
+        skipped = 0
+        for item in items:
+            if not item.target_name:
+                skipped += 1
+                continue
+            item.source_name, item.target_name = item.target_name, item.source_name
+            swapped += 1
+
+        self.report({"INFO"}, f"Swapped {swapped} mappings; skipped {skipped} empty targets")
+        return {"FINISHED"}
+
+
+class STARP_OT_mirror_bone_list(Operator):
+    bl_idname = "script_toolkit.arp_mirror_bone_list"
+    bl_label = "Mirror Bone List"
+    bl_description = "Mirror the mapping list from left to right or right to left like Auto-Rig Pro"
+    bl_options = {"REGISTER", "UNDO"}
+
+    mirror_dir: EnumProperty(
+        name="Direction",
+        items=(
+            ("LEFT_TO_RIGHT", "Left to Right", "Copy left mappings to their right-side partners"),
+            ("RIGHT_TO_LEFT", "Right to Left", "Copy right mappings to their left-side partners"),
+        ),
+        default="LEFT_TO_RIGHT",
+    )
+
+    def invoke(self, context, _event):
+        return context.window_manager.invoke_props_dialog(self, width=450)
+
+    def draw(self, _context):
+        self.layout.prop(self, "mirror_dir", expand=True)
+
+    def execute(self, context):
+        scene = context.scene
+        source = scene.arp_retarget_source_armature
+        target = scene.arp_retarget_target_armature
+        if not source or not target:
+            self.report({"ERROR"}, "Choose Source and Target Armatures first")
+            return {"CANCELLED"}
+
+        by_source = {item.source_name: item for item in scene.arp_retarget_mapping_items}
+        assignments = {}
+        for item in scene.arp_retarget_mapping_items:
+            mirrored_source = _mirror_name(item.source_name, self.mirror_dir)
+            mirrored_target = _mirror_name(item.target_name, self.mirror_dir)
+            if not mirrored_source or not mirrored_target:
+                continue
+            if mirrored_source not in by_source:
+                continue
+            if not source.data.bones.get(mirrored_source):
+                continue
+            if not target.data.bones.get(item.target_name) or not target.data.bones.get(mirrored_target):
+                continue
+
+            mirrored_pole = _mirror_name(item.ik_pole, self.mirror_dir)
+            if not target.data.bones.get(mirrored_pole):
+                mirrored_pole = item.ik_pole
+            assignments[mirrored_source] = {
+                "target_name": mirrored_target,
+                "location": item.location,
+                "ik": item.ik,
+                "ik_pole": mirrored_pole,
+                "ik_world": item.ik_world,
+                "ik_auto_pole": item.ik_auto_pole,
+                "ik_create_constraints": item.ik_create_constraints,
+                "ik_axis_correction": item.ik_axis_correction,
+            }
+
+        for source_name, values in assignments.items():
+            destination = by_source[source_name]
+            for property_name, value in values.items():
+                setattr(destination, property_name, value)
+
+        self.report({"INFO"}, f"Mirrored {len(assignments)} mappings")
+        return {"FINISHED"}
+
+
 class STARP_OT_rename_source_to_target(Operator):
     bl_idname = "script_toolkit.arp_rename_source_to_target"
     bl_label = "Rename to Target"
@@ -348,34 +470,6 @@ class STARP_OT_rename_source_to_target(Operator):
                 item.target_name = new_name
                 changed += 1
         self.report({"INFO"}, f"Renamed {changed} target names from source names")
-        return {"FINISHED"}
-
-
-class STARP_OT_rename_target(Operator):
-    bl_idname = "script_toolkit.arp_rename_target"
-    bl_label = "Rename Target Bone"
-    bl_description = "Set the target mapping name for the active row"
-    bl_options = {"REGISTER", "UNDO"}
-
-    new_name: StringProperty(name="Target Bone")
-
-    def invoke(self, context, _event):
-        scene = context.scene
-        if not (0 <= scene.arp_retarget_mapping_index < len(scene.arp_retarget_mapping_items)):
-            self.report({"WARNING"}, "Select a mapping row first")
-            return {"CANCELLED"}
-        self.new_name = scene.arp_retarget_mapping_items[scene.arp_retarget_mapping_index].target_name
-        return context.window_manager.invoke_props_dialog(self, width=520)
-
-    def draw(self, _context):
-        self.layout.prop(self, "new_name", text="Target Bone")
-
-    def execute(self, context):
-        scene = context.scene
-        if not (0 <= scene.arp_retarget_mapping_index < len(scene.arp_retarget_mapping_items)):
-            self.report({"WARNING"}, "Select a mapping row first")
-            return {"CANCELLED"}
-        scene.arp_retarget_mapping_items[scene.arp_retarget_mapping_index].target_name = self.new_name.strip()
         return {"FINISHED"}
 
 
@@ -507,12 +601,13 @@ class STARP_OT_import_bmap(Operator):
         return {"FINISHED"}
 
 
-def _draw_mapping_options(layout, item):
+def _draw_mapping_options(layout, item, target):
     box = layout.box()
     box.label(text=f"Selected: {item.source_name}", icon="BONE_DATA")
-    row = box.row(align=True)
-    row.prop(item, "target_name", text="Target Bone")
-    row.operator(STARP_OT_rename_target.bl_idname, text="Rename Target")
+    if target and target.type == "ARMATURE":
+        box.prop_search(item, "target_name", target.data, "bones", text="Target Bone")
+    else:
+        box.prop(item, "target_name", text="Target Bone")
     row = box.row(align=True)
     row.prop(item, "set_as_root")
     row.prop(item, "location")
@@ -531,6 +626,7 @@ def draw_ui(layout, context):
     scene = context.scene
     source = scene.arp_retarget_source_armature
     target = scene.arp_retarget_target_armature
+    items = scene.arp_retarget_mapping_items
 
     inputs = layout.box()
     inputs.label(text="Auto-Rig Pro Remap Preset", icon="ARMATURE_DATA")
@@ -540,8 +636,11 @@ def draw_ui(layout, context):
 
     mapping_box = layout.box()
     header = mapping_box.row(align=True)
-    header.label(text="Source Bones")
-    header.label(text="Target Bones")
+    source_total = len(source.data.bones) if source and source.type == "ARMATURE" else 0
+    target_total = len(target.data.bones) if target and target.type == "ARMATURE" else 0
+    mapped_total = sum(bool(item.target_name) for item in items)
+    header.label(text=f"Source Bones ({len(items)}/{source_total})")
+    header.label(text=f"Target Bones ({mapped_total}/{target_total})")
     list_row = mapping_box.row()
     list_row.template_list(
         STARP_UL_mapping.__name__,
@@ -558,7 +657,11 @@ def draw_ui(layout, context):
     controls.operator(STARP_OT_select_none.bl_idname, text="None")
     controls.operator(STARP_OT_select_invert.bl_idname, text="Invert")
     controls.operator(STARP_OT_clear_target.bl_idname, icon="X")
-    mapping_box.label(text="Checked rows are multi-selected; with none checked, actions use the active row.", icon="INFO")
+    actions = mapping_box.row(align=True)
+    actions.operator(STARP_OT_swap_source_target.bl_idname, icon="ARROW_LEFTRIGHT")
+    actions.operator(STARP_OT_mirror_bone_list.bl_idname, icon="MOD_MIRROR")
+    mapping_box.label(text="Click rows to toggle selection; Shift-click selects a range.", icon="INFO")
+    mapping_box.label(text="With no highlighted rows, actions use the active row.")
 
     rename_box = layout.box()
     rename_box.label(text="Rename Source to Target", icon="SORTALPHA")
@@ -566,9 +669,8 @@ def draw_ui(layout, context):
     rename_box.prop(scene, "arp_retarget_replace", text="Replace")
     rename_box.operator(STARP_OT_rename_source_to_target.bl_idname, icon="FONT_DATA")
 
-    items = scene.arp_retarget_mapping_items
     if 0 <= scene.arp_retarget_mapping_index < len(items):
-        _draw_mapping_options(layout, items[scene.arp_retarget_mapping_index])
+        _draw_mapping_options(layout, items[scene.arp_retarget_mapping_index], target)
 
     presets = layout.box()
     presets.label(text="Mapping Preset")
@@ -584,14 +686,16 @@ def draw_ui(layout, context):
 
 CLASSES = (
     STARP_MappingItem,
+    STARP_OT_toggle_mapping_selection,
     STARP_UL_mapping,
     STARP_OT_build_list,
     STARP_OT_select_all,
     STARP_OT_select_none,
     STARP_OT_select_invert,
     STARP_OT_clear_target,
+    STARP_OT_swap_source_target,
+    STARP_OT_mirror_bone_list,
     STARP_OT_rename_source_to_target,
-    STARP_OT_rename_target,
     STARP_OT_export_bmap,
     STARP_OT_import_bmap,
 )
@@ -609,6 +713,7 @@ def register():
     )
     bpy.types.Scene.arp_retarget_mapping_items = CollectionProperty(type=STARP_MappingItem)
     bpy.types.Scene.arp_retarget_mapping_index = IntProperty(default=0)
+    bpy.types.Scene.arp_retarget_selection_anchor = IntProperty(default=-1)
     bpy.types.Scene.arp_retarget_find = StringProperty(name="Find", default="")
     bpy.types.Scene.arp_retarget_replace = StringProperty(name="Replace", default="")
 
