@@ -52,6 +52,7 @@ def run():
     class FakeListLayout:
         def __init__(self, calls=None):
             self.calls = [] if calls is None else calls
+            self.alignment = "EXPAND"
 
         def split(self, **_kwargs):
             return self
@@ -77,6 +78,7 @@ def run():
         addon.STARP_OT_target_mapping_cell.bl_idname,
     ]
     assert [call[2]["text"] for call in operator_calls] == ["Source", "Target"]
+    assert fake_layout.alignment == "LEFT"
     assert not any(call[0] == "row" for call in fake_layout.calls)
 
     class FakeWindowManager:
