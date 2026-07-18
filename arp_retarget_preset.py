@@ -241,11 +241,22 @@ def _select_mapping_row(scene, index, select_range=False, extend=False, deselect
 
     anchor = scene.arp_retarget_selection_anchor
     if deselect:
+        previous_active = scene.arp_retarget_mapping_index
         items[index].selected = False
-        if not any(item.selected for item in items):
+        remaining = [item_index for item_index, item in enumerate(items) if item.selected]
+        if not remaining:
             scene.arp_retarget_selection_anchor = -1
             scene.arp_retarget_mapping_index = -1
             return True
+
+        nearest_selected = min(remaining, key=lambda item_index: (abs(item_index - index), item_index))
+        if previous_active == index or not (0 <= previous_active < len(items)):
+            scene.arp_retarget_mapping_index = nearest_selected
+        else:
+            scene.arp_retarget_mapping_index = previous_active
+        if anchor == index:
+            scene.arp_retarget_selection_anchor = nearest_selected
+        return True
     elif extend:
         items[index].selected = True
         scene.arp_retarget_selection_anchor = index

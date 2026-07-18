@@ -192,10 +192,14 @@ def run():
     addon._select_mapping_row(scene, 3, extend=True)
     addon._select_mapping_row(scene, 5, extend=True)
     assert [index for index, item in enumerate(scene.arp_retarget_mapping_items) if item.selected] == [1, 3, 5]
+    assert scene.arp_retarget_mapping_index == 5
     addon._select_mapping_row(scene, 3, deselect=True)
     assert [index for index, item in enumerate(scene.arp_retarget_mapping_items) if item.selected] == [1, 5]
-    addon._select_mapping_row(scene, 1, deselect=True)
+    assert scene.arp_retarget_mapping_index == 5
     addon._select_mapping_row(scene, 5, deselect=True)
+    assert [index for index, item in enumerate(scene.arp_retarget_mapping_items) if item.selected] == [1]
+    assert scene.arp_retarget_mapping_index == 1
+    addon._select_mapping_row(scene, 1, deselect=True)
     assert not any(item.selected for item in scene.arp_retarget_mapping_items)
     assert scene.arp_retarget_mapping_index == -1
     assert addon._selected_or_active(scene) == []

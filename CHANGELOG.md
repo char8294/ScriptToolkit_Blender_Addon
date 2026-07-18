@@ -1,5 +1,9 @@
 # Script Toolkit Changelog
 
+## v0.3.12
+
+- Fixed Alt-click deselection activating the row being removed instead of preserving the previous active row.
+
 ## v0.3.11
 
 - Added Ctrl-click to extend mapping-row selection and Alt-click to remove individual rows from it.
