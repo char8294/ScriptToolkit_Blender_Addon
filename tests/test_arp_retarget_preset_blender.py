@@ -49,6 +49,19 @@ def run():
     assert len(scene.arp_retarget_mapping_items) == len(source.data.bones)
     assert {item.source_name for item in scene.arp_retarget_mapping_items} == set(source_names)
 
+    bpy.context.view_layer.objects.active = target
+    target.select_set(True)
+    scene.arp_retarget_source_armature = None
+    assert bpy.ops.script_toolkit.arp_pick_selected_armature(armature_slot="SOURCE") == {"FINISHED"}
+    assert scene.arp_retarget_source_armature == target
+    bpy.context.view_layer.objects.active = source
+    source.select_set(True)
+    scene.arp_retarget_target_armature = None
+    assert bpy.ops.script_toolkit.arp_pick_selected_armature(armature_slot="TARGET") == {"FINISHED"}
+    assert scene.arp_retarget_target_armature == source
+    scene.arp_retarget_source_armature = source
+    scene.arp_retarget_target_armature = target
+
     class FakeListLayout:
         def __init__(self, calls=None):
             self.calls = [] if calls is None else calls
@@ -74,6 +87,7 @@ def run():
     fake_draw_context = SimpleNamespace(
         preferences=SimpleNamespace(system=SimpleNamespace(ui_scale=1.25)),
         region=SimpleNamespace(width=600),
+        scene=scene,
     )
     addon.STARP_UL_mapping.draw_item(None, fake_draw_context, fake_layout, None, fake_item, None, None, None, 0)
     operator_calls = [call for call in fake_layout.calls if call[0] == "operator"]
@@ -85,6 +99,45 @@ def run():
     assert [text.rstrip("\u00a0") for text in operator_texts] == ["Source", "Target"]
     assert all(text.endswith("\u00a0") for text in operator_texts)
     assert not any(call[0] == "row" for call in fake_layout.calls)
+
+    scene.arp_retarget_mapping_index = 0
+    scene.arp_retarget_mapping_items[0].selected = True
+    inline_layout = FakeListLayout()
+    addon.STARP_UL_mapping.draw_item(
+        None,
+        fake_draw_context,
+        inline_layout,
+        None,
+        scene.arp_retarget_mapping_items[0],
+        None,
+        None,
+        None,
+        0,
+    )
+    inline_props = [call for call in inline_layout.calls if call[0] == "prop"]
+    assert len(inline_props) == 1
+    assert inline_props[0][2] == "target_name_inline"
+    assert inline_props[0][3]["emboss"] is False
+    scene.arp_retarget_mapping_items[0].target_name_inline = "Inline Edited Target"
+    assert scene.arp_retarget_mapping_items[0].target_name == "Inline Edited Target"
+    assert scene.arp_retarget_mapping_items[0].target_manual
+    scene.arp_retarget_mapping_items[1].selected = True
+    multi_layout = FakeListLayout()
+    addon.STARP_UL_mapping.draw_item(
+        None,
+        fake_draw_context,
+        multi_layout,
+        None,
+        scene.arp_retarget_mapping_items[0],
+        None,
+        None,
+        None,
+        0,
+    )
+    assert len([call for call in multi_layout.calls if call[0] == "operator"]) == 2
+    assert not any(call[0] == "prop" for call in multi_layout.calls)
+    scene.arp_retarget_mapping_items[0].selected = False
+    scene.arp_retarget_mapping_items[1].selected = False
 
     narrow_context = SimpleNamespace(
         preferences=SimpleNamespace(system=SimpleNamespace(ui_scale=1.25)),
@@ -119,31 +172,26 @@ def run():
         )
     assert len(file_selector.operators) == 2
 
-    addon._reset_target_click_state()
-    target_operator = SimpleNamespace(index=0, new_name="", editing=False)
+    target_operator = SimpleNamespace(index=0)
     target_event = SimpleNamespace(shift=False, ctrl=False, alt=False, value="PRESS")
     target_context = SimpleNamespace(scene=scene, window_manager=file_selector)
     assert addon.STARP_OT_target_mapping_cell.invoke(target_operator, target_context, target_event) == {"FINISHED"}
     assert [index for index, item in enumerate(scene.arp_retarget_mapping_items) if item.selected] == [0]
 
-    double_click_operator = SimpleNamespace(index=0, new_name="", editing=False)
+    double_click_operator = SimpleNamespace(index=0)
     double_click_event = SimpleNamespace(shift=False, ctrl=False, alt=False, value="DOUBLE_CLICK")
     assert addon.STARP_OT_target_mapping_cell.invoke(
         double_click_operator, target_context, double_click_event
-    ) == {"RUNNING_MODAL"}
-    double_click_operator.new_name = "Edited Target"
-    assert addon.STARP_OT_target_mapping_cell.execute(double_click_operator, target_context) == {"FINISHED"}
-    assert scene.arp_retarget_mapping_items[0].target_name == "Edited Target"
-    assert scene.arp_retarget_mapping_items[0].target_manual
+    ) == {"FINISHED"}
+    assert not file_selector.dialogs
 
-    addon._reset_target_click_state()
     ctrl_event = SimpleNamespace(shift=False, ctrl=True, alt=False, value="PRESS")
     alt_event = SimpleNamespace(shift=False, ctrl=False, alt=True, value="PRESS")
     for index in (2, 4):
-        operator = SimpleNamespace(index=index, new_name="", editing=False)
+        operator = SimpleNamespace(index=index)
         assert addon.STARP_OT_target_mapping_cell.invoke(operator, target_context, ctrl_event) == {"FINISHED"}
     assert [index for index, item in enumerate(scene.arp_retarget_mapping_items) if item.selected] == [0, 2, 4]
-    operator = SimpleNamespace(index=2, new_name="", editing=False)
+    operator = SimpleNamespace(index=2)
     assert addon.STARP_OT_target_mapping_cell.invoke(operator, target_context, alt_event) == {"FINISHED"}
     assert [index for index, item in enumerate(scene.arp_retarget_mapping_items) if item.selected] == [0, 4]
 

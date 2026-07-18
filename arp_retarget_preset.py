@@ -3,7 +3,6 @@
 import difflib
 import os
 import re
-import time
 from typing import NamedTuple
 
 import blf
@@ -79,10 +78,6 @@ def _left_aligned_operator_text(context, text):
     space_width = max(1.0, blf.dimensions(0, _LIST_LABEL_SPACE)[0])
     padding_width = max(0.0, content_width - text_width)
     return text + (_LIST_LABEL_SPACE * int(padding_width / space_width))
-
-_TARGET_DOUBLE_CLICK_SECONDS = 0.4
-_last_target_click_index = -1
-_last_target_click_time = 0.0
 
 _MAPPING_STATE_PROPERTIES = (
     "target_name",
@@ -243,36 +238,6 @@ def _rename_selected_target_names(scene, derive_from_source):
     return changed, skipped
 
 
-def _reset_target_click_state():
-    global _last_target_click_index, _last_target_click_time
-    _last_target_click_index = -1
-    _last_target_click_time = 0.0
-
-
-def _is_target_double_click(index, event, now=None):
-    global _last_target_click_index, _last_target_click_time
-    current_time = time.monotonic() if now is None else now
-    has_modifier = bool(event.shift or event.ctrl or event.alt)
-    is_double = (
-        not has_modifier
-        and (
-            event.value == "DOUBLE_CLICK"
-            or (
-                index == _last_target_click_index
-                and current_time - _last_target_click_time <= _TARGET_DOUBLE_CLICK_SECONDS
-            )
-        )
-    )
-    if is_double:
-        _reset_target_click_state()
-    elif has_modifier:
-        _reset_target_click_state()
-    else:
-        _last_target_click_index = index
-        _last_target_click_time = current_time
-    return is_double
-
-
 def _select_mapping_row(scene, index, select_range=False, extend=False, deselect=False):
     items = scene.arp_retarget_mapping_items
     if not (0 <= index < len(items)):
@@ -364,9 +329,23 @@ def _vector_text(value):
     return ",".join(f"{float(part):g}" for part in value)
 
 
+def _get_target_name_inline(item):
+    return item.target_name
+
+
+def _set_target_name_inline(item, value):
+    item.target_name = value
+    item.target_manual = True
+
+
 class STARP_MappingItem(PropertyGroup):
     source_name: StringProperty(name="Source Bone")
     target_name: StringProperty(name="Target Bone", default="")
+    target_name_inline: StringProperty(
+        name="Target Bone",
+        get=_get_target_name_inline,
+        set=_set_target_name_inline,
+    )
     target_manual: BoolProperty(name="Target Manually Edited", default=True, options={"HIDDEN"})
     selected: BoolProperty(name="Selected", default=False)
     set_as_root: BoolProperty(name="Set as Root", default=False)
@@ -422,28 +401,14 @@ class STARP_OT_select_mapping_row(Operator):
 class STARP_OT_target_mapping_cell(Operator):
     bl_idname = "script_toolkit.arp_target_mapping_cell"
     bl_label = "Target Bone"
-    bl_description = "Click selects one; Shift selects a range; Ctrl adds; Alt removes; double-click edits Target Bone"
-    bl_options = {"INTERNAL", "UNDO"}
+    bl_description = "Click selects one; Shift selects a range; Ctrl adds; Alt removes"
+    bl_options = {"INTERNAL"}
 
     index: IntProperty()
-    new_name: StringProperty(name="Target Bone")
-    editing: BoolProperty(default=False, options={"HIDDEN"})
 
     def invoke(self, context, event):
-        scene = context.scene
-        items = scene.arp_retarget_mapping_items
-        if not (0 <= self.index < len(items)):
-            return {"CANCELLED"}
-
-        if _is_target_double_click(self.index, event):
-            scene.arp_retarget_mapping_index = self.index
-            self.editing = True
-            self.new_name = items[self.index].target_name
-            return context.window_manager.invoke_props_dialog(self, width=520)
-
-        self.editing = False
         if not _select_mapping_row(
-            scene,
+            context.scene,
             self.index,
             select_range=event.shift,
             extend=event.ctrl,
@@ -452,18 +417,9 @@ class STARP_OT_target_mapping_cell(Operator):
             return {"CANCELLED"}
         return {"FINISHED"}
 
-    def draw(self, _context):
-        self.layout.prop(self, "new_name", text="Target Bone")
-
     def execute(self, context):
-        scene = context.scene
-        if not (0 <= self.index < len(scene.arp_retarget_mapping_items)):
+        if not _select_mapping_row(context.scene, self.index):
             return {"CANCELLED"}
-        if self.editing:
-            scene.arp_retarget_mapping_items[self.index].target_name = self.new_name.strip()
-            scene.arp_retarget_mapping_items[self.index].target_manual = True
-        else:
-            _select_mapping_row(scene, self.index)
         return {"FINISHED"}
 
 
@@ -477,13 +433,52 @@ class STARP_UL_mapping(UIList):
             depress=item.selected,
         )
         source.index = _index
-        target = split.operator(
-            STARP_OT_target_mapping_cell.bl_idname,
-            text=_left_aligned_operator_text(_context, item.target_name or "None"),
-            emboss=item.selected,
-            depress=item.selected,
+        scene = _context.scene
+        is_single_active = (
+            scene.arp_retarget_mapping_index == _index
+            and item.selected
+            and sum(mapping.selected for mapping in scene.arp_retarget_mapping_items) == 1
         )
-        target.index = _index
+        if is_single_active:
+            split.prop(item, "target_name_inline", text="", emboss=False)
+        else:
+            target = split.operator(
+                STARP_OT_target_mapping_cell.bl_idname,
+                text=_left_aligned_operator_text(_context, item.target_name or "None"),
+                emboss=item.selected,
+                depress=item.selected,
+            )
+            target.index = _index
+
+
+class STARP_OT_pick_selected_armature(Operator):
+    bl_idname = "script_toolkit.arp_pick_selected_armature"
+    bl_label = "Pick Selected Armature"
+    bl_description = "Use the active selected armature"
+    bl_options = {"INTERNAL", "UNDO"}
+
+    armature_slot: EnumProperty(
+        items=(
+            ("SOURCE", "Source", "Assign to Source Armature"),
+            ("TARGET", "Target", "Assign to Target Armature"),
+        )
+    )
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        return bool(obj and obj.type == "ARMATURE" and obj.select_get())
+
+    def execute(self, context):
+        obj = context.active_object
+        property_name = (
+            "arp_retarget_source_armature"
+            if self.armature_slot == "SOURCE"
+            else "arp_retarget_target_armature"
+        )
+        setattr(context.scene, property_name, obj)
+        self.report({"INFO"}, f"Picked {obj.name} as {self.armature_slot.title()} Armature")
+        return {"FINISHED"}
 
 
 class STARP_OT_build_list(Operator):
@@ -969,8 +964,14 @@ def draw_ui(layout, context):
 
     inputs = layout.box()
     inputs.label(text="Auto-Rig Pro Remap Preset", icon="ARMATURE_DATA")
-    inputs.prop(scene, "arp_retarget_source_armature", text="Source Armature")
-    inputs.prop(scene, "arp_retarget_target_armature", text="Target Armature")
+    row = inputs.row(align=True)
+    row.prop(scene, "arp_retarget_source_armature", text="Source Armature")
+    pickup = row.operator(STARP_OT_pick_selected_armature.bl_idname, text="", icon="EYEDROPPER")
+    pickup.armature_slot = "SOURCE"
+    row = inputs.row(align=True)
+    row.prop(scene, "arp_retarget_target_armature", text="Target Armature")
+    pickup = row.operator(STARP_OT_pick_selected_armature.bl_idname, text="", icon="EYEDROPPER")
+    pickup.armature_slot = "TARGET"
     row = inputs.row(align=True)
     row.operator(STARP_OT_build_list.bl_idname, icon="LINENUMBERS_ON")
     row.operator(STARP_OT_update_list.bl_idname, icon="FILE_REFRESH")
@@ -1032,6 +1033,7 @@ CLASSES = (
     STARP_MappingItem,
     STARP_OT_select_mapping_row,
     STARP_OT_target_mapping_cell,
+    STARP_OT_pick_selected_armature,
     STARP_UL_mapping,
     STARP_OT_build_list,
     STARP_OT_update_list,

@@ -1,5 +1,10 @@
 # Script Toolkit Changelog
 
+## v0.3.15
+
+- Replaced the Target Bone rename dialog with inline editing in the active mapping row.
+- Added Source and Target pickup buttons that assign the active selected armature.
+
 ## v0.3.14
 
 - Made mapping-list labels visibly left-aligned inside their full-width clickable cells, with right-side ellipsis for long names.
