@@ -52,7 +52,6 @@ def run():
     class FakeListLayout:
         def __init__(self, calls=None):
             self.calls = [] if calls is None else calls
-            self.alignment = "EXPAND"
 
         def split(self, **_kwargs):
             return self
@@ -72,13 +71,13 @@ def run():
     fake_layout = FakeListLayout()
     fake_item = SimpleNamespace(source_name="Source", target_name="Target", selected=False)
     addon.STARP_UL_mapping.draw_item(None, None, fake_layout, None, fake_item, None, None, None, 0)
-    assert any(
-        call[0] == "operator" and call[1] == addon.STARP_OT_target_mapping_cell.bl_idname
-        for call in fake_layout.calls
-    )
-    list_rows = [call[1] for call in fake_layout.calls if call[0] == "row"]
-    assert len(list_rows) == 2
-    assert all(row.alignment == "LEFT" for row in list_rows)
+    operator_calls = [call for call in fake_layout.calls if call[0] == "operator"]
+    assert [call[1] for call in operator_calls] == [
+        addon.STARP_OT_select_mapping_row.bl_idname,
+        addon.STARP_OT_target_mapping_cell.bl_idname,
+    ]
+    assert [call[2]["text"] for call in operator_calls] == ["Source", "Target"]
+    assert not any(call[0] == "row" for call in fake_layout.calls)
 
     class FakeWindowManager:
         def __init__(self):
