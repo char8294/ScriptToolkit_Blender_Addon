@@ -2,7 +2,7 @@
 
 ## v0.3.10
 
-- Made Target Bone names directly editable from the mapping list like Auto-Rig Pro.
+- Made Target Bone cells selectable like Auto-Rig Pro and editable by double-clicking them.
 - Added separate Rename Source to Target and Rename Target operations with shared Find, Replace, Prefix, and Suffix fields.
 - Removed the selection help text below the mapping controls.
 

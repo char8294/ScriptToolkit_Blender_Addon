@@ -3,6 +3,7 @@
 import difflib
 import os
 import re
+import time
 from typing import NamedTuple
 
 import bpy
@@ -39,6 +40,10 @@ _IK_AXES = (
     ("-Y", "-Y", "-Y"),
     ("-Z", "-Z", "-Z"),
 )
+
+_TARGET_DOUBLE_CLICK_SECONDS = 0.4
+_last_target_click_index = -1
+_last_target_click_time = 0.0
 
 
 def _armature_poll(_self, obj):
@@ -126,6 +131,61 @@ def _selected_or_active(scene):
 def _apply_rename_parts(name, find_text, replace_text, prefix, suffix):
     renamed = name.replace(find_text, replace_text) if find_text else name
     return f"{prefix}{renamed}{suffix}"
+
+
+def _rename_selected_target_names(scene, derive_from_source):
+    items = _selected_or_active(scene)
+    if not items:
+        return None
+
+    changed = 0
+    skipped = 0
+    for item in items:
+        base_name = item.source_name if derive_from_source else item.target_name
+        if not base_name:
+            skipped += 1
+            continue
+        new_name = _apply_rename_parts(
+            base_name,
+            scene.arp_retarget_find,
+            scene.arp_retarget_replace,
+            scene.arp_retarget_prefix,
+            scene.arp_retarget_suffix,
+        )
+        if new_name != item.target_name:
+            item.target_name = new_name
+            changed += 1
+    return changed, skipped
+
+
+def _reset_target_click_state():
+    global _last_target_click_index, _last_target_click_time
+    _last_target_click_index = -1
+    _last_target_click_time = 0.0
+
+
+def _is_target_double_click(index, event, now=None):
+    global _last_target_click_index, _last_target_click_time
+    current_time = time.monotonic() if now is None else now
+    has_modifier = bool(event.shift or event.ctrl or event.alt)
+    is_double = (
+        not has_modifier
+        and (
+            event.value == "DOUBLE_CLICK"
+            or (
+                index == _last_target_click_index
+                and current_time - _last_target_click_time <= _TARGET_DOUBLE_CLICK_SECONDS
+            )
+        )
+    )
+    if is_double:
+        _reset_target_click_state()
+    elif has_modifier:
+        _reset_target_click_state()
+    else:
+        _last_target_click_index = index
+        _last_target_click_time = current_time
+    return is_double
 
 
 def _select_mapping_row(scene, index, select_range=False):
@@ -246,6 +306,47 @@ class STARP_OT_select_mapping_row(Operator):
         return {"FINISHED"}
 
 
+class STARP_OT_target_mapping_cell(Operator):
+    bl_idname = "script_toolkit.arp_target_mapping_cell"
+    bl_label = "Target Bone"
+    bl_description = "Click to select; Shift-click selects a range; double-click edits the Target Bone name"
+    bl_options = {"INTERNAL", "UNDO"}
+
+    index: IntProperty()
+    new_name: StringProperty(name="Target Bone")
+    editing: BoolProperty(default=False, options={"HIDDEN"})
+
+    def invoke(self, context, event):
+        scene = context.scene
+        items = scene.arp_retarget_mapping_items
+        if not (0 <= self.index < len(items)):
+            return {"CANCELLED"}
+
+        if _is_target_double_click(self.index, event):
+            scene.arp_retarget_mapping_index = self.index
+            self.editing = True
+            self.new_name = items[self.index].target_name
+            return context.window_manager.invoke_props_dialog(self, width=520)
+
+        self.editing = False
+        if not _select_mapping_row(scene, self.index, select_range=event.shift):
+            return {"CANCELLED"}
+        return {"FINISHED"}
+
+    def draw(self, _context):
+        self.layout.prop(self, "new_name", text="Target Bone")
+
+    def execute(self, context):
+        scene = context.scene
+        if not (0 <= self.index < len(scene.arp_retarget_mapping_items)):
+            return {"CANCELLED"}
+        if self.editing:
+            scene.arp_retarget_mapping_items[self.index].target_name = self.new_name.strip()
+        else:
+            _select_mapping_row(scene, self.index)
+        return {"FINISHED"}
+
+
 class STARP_UL_mapping(UIList):
     def draw_item(self, _context, layout, _data, item, _icon, _active_data, _active_property, _index):
         split = layout.split(factor=0.5, align=True)
@@ -256,7 +357,13 @@ class STARP_UL_mapping(UIList):
             depress=item.selected,
         )
         source.index = _index
-        split.prop(item, "target_name", text="", emboss=False, translate=False)
+        target = split.operator(
+            STARP_OT_target_mapping_cell.bl_idname,
+            text=item.target_name or "None",
+            emboss=item.selected,
+            depress=item.selected,
+        )
+        target.index = _index
 
 
 class STARP_OT_build_list(Operator):
@@ -489,22 +596,11 @@ class STARP_OT_rename_source_to_target(Operator):
 
     def execute(self, context):
         scene = context.scene
-        find_text = scene.arp_retarget_find
-        replace_text = scene.arp_retarget_replace
-        prefix = scene.arp_retarget_prefix
-        suffix = scene.arp_retarget_suffix
-
-        items = _selected_or_active(scene)
-        if not items:
+        result = _rename_selected_target_names(scene, derive_from_source=True)
+        if result is None:
             self.report({"WARNING"}, "Select at least one mapping row")
             return {"CANCELLED"}
-
-        changed = 0
-        for item in items:
-            new_name = _apply_rename_parts(item.source_name, find_text, replace_text, prefix, suffix)
-            if new_name != item.target_name:
-                item.target_name = new_name
-                changed += 1
+        changed, _skipped = result
         self.report({"INFO"}, f"Renamed {changed} target names from source names")
         return {"FINISHED"}
 
@@ -517,27 +613,11 @@ class STARP_OT_rename_target(Operator):
 
     def execute(self, context):
         scene = context.scene
-        items = _selected_or_active(scene)
-        if not items:
+        result = _rename_selected_target_names(scene, derive_from_source=False)
+        if result is None:
             self.report({"WARNING"}, "Select at least one mapping row")
             return {"CANCELLED"}
-
-        changed = 0
-        skipped = 0
-        for item in items:
-            if not item.target_name:
-                skipped += 1
-                continue
-            new_name = _apply_rename_parts(
-                item.target_name,
-                scene.arp_retarget_find,
-                scene.arp_retarget_replace,
-                scene.arp_retarget_prefix,
-                scene.arp_retarget_suffix,
-            )
-            if new_name != item.target_name:
-                item.target_name = new_name
-                changed += 1
+        changed, skipped = result
         self.report({"INFO"}, f"Renamed {changed} target names; skipped {skipped} empty targets")
         return {"FINISHED"}
 
@@ -762,6 +842,7 @@ def draw_ui(layout, context):
 CLASSES = (
     STARP_MappingItem,
     STARP_OT_select_mapping_row,
+    STARP_OT_target_mapping_cell,
     STARP_UL_mapping,
     STARP_OT_build_list,
     STARP_OT_select_all,

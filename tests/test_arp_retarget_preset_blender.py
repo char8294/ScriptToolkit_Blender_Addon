@@ -66,14 +66,22 @@ def run():
     fake_layout = FakeListLayout()
     fake_item = SimpleNamespace(source_name="Source", target_name="Target", selected=False)
     addon.STARP_UL_mapping.draw_item(None, None, fake_layout, None, fake_item, None, None, None, 0)
-    assert any(call[0] == "prop" and call[2] == "target_name" for call in fake_layout.calls)
+    assert any(
+        call[0] == "operator" and call[1] == addon.STARP_OT_target_mapping_cell.bl_idname
+        for call in fake_layout.calls
+    )
 
     class FakeWindowManager:
         def __init__(self):
             self.operators = []
+            self.dialogs = []
 
         def fileselect_add(self, operator):
             self.operators.append(operator)
+
+        def invoke_props_dialog(self, operator, **kwargs):
+            self.dialogs.append((operator, kwargs))
+            return {"RUNNING_MODAL"}
 
     file_selector = FakeWindowManager()
     fake_context = SimpleNamespace(window_manager=file_selector)
@@ -85,6 +93,22 @@ def run():
             f"expected a set, got {type(result).__name__} ({result!r})"
         )
     assert len(file_selector.operators) == 2
+
+    addon._reset_target_click_state()
+    target_operator = SimpleNamespace(index=0, new_name="", editing=False)
+    target_event = SimpleNamespace(shift=False, ctrl=False, alt=False, value="PRESS")
+    target_context = SimpleNamespace(scene=scene, window_manager=file_selector)
+    assert addon.STARP_OT_target_mapping_cell.invoke(target_operator, target_context, target_event) == {"FINISHED"}
+    assert [index for index, item in enumerate(scene.arp_retarget_mapping_items) if item.selected] == [0]
+
+    double_click_operator = SimpleNamespace(index=0, new_name="", editing=False)
+    double_click_event = SimpleNamespace(shift=False, ctrl=False, alt=False, value="DOUBLE_CLICK")
+    assert addon.STARP_OT_target_mapping_cell.invoke(
+        double_click_operator, target_context, double_click_event
+    ) == {"RUNNING_MODAL"}
+    double_click_operator.new_name = "Edited Target"
+    assert addon.STARP_OT_target_mapping_cell.execute(double_click_operator, target_context) == {"FINISHED"}
+    assert scene.arp_retarget_mapping_items[0].target_name == "Edited Target"
 
     source_left = item_by_source(scene, "Arm.L")
     source_right = item_by_source(scene, "Arm.R")
