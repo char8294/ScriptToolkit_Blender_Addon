@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 3, 5),
+    "version": (0, 3, 6),
     "blender": (5, 1, 0),
     "location": "3D View > Sidebar > Script Toolkit",
     "description": "FBX batch tools in an isolated Blender worker plus selected-object cleanup tools.",
@@ -28,8 +28,9 @@ if "bpy" in locals():
     importlib.reload(hair_check)
     importlib.reload(empty_to_bone)
     importlib.reload(align_bones)
+    importlib.reload(arp_retarget_preset)
 else:
-    from . import biped_names, hair_check, empty_to_bone, align_bones
+    from . import biped_names, hair_check, empty_to_bone, align_bones, arp_retarget_preset
 
 import bpy
 
@@ -76,6 +77,7 @@ def _tool_description(tool):
         "BIPED_NAMES": "เปลี่ยนชื่อ Biped bones/vertex groups เพื่อใช้ Symmetry และคืนชื่อเดิม ตามรูปแบบ Biped Names Helper เดิม.",
         "ALIGN_BONES": "เครื่องมือจัดเรียงแกนกระดูกและ Snapping หางกระดูก",
         "EMPTY_TO_BONE": "เครื่องมือแปลง Empty ให้กลายเป็น Bone พร้อมจัด Hierarchy",
+        "ARP_REMAP_PRESET": "สร้างรายการ mapping แบบหลายรายการและ export เป็น Auto-Rig Pro .bmap preset.",
     }[tool]
 
 
@@ -118,6 +120,7 @@ class ST_Properties(PropertyGroup):
             ("BIPED_NAMES", "Biped Names Helper", "Convert Biped names for symmetry and restore them"),
             ("ALIGN_BONES", "Align Bones", "Align and snap bones"),
             ("EMPTY_TO_BONE", "Empty to Bone", "Convert empties to bones"),
+            ("ARP_REMAP_PRESET", "ARP Retarget Preset", "Build and export an Auto-Rig Pro mapping preset"),
         ],
         default="REEXPORT",
     )
@@ -739,6 +742,8 @@ class ST_PT_panel(Panel):
             align_bones.draw_ui(layout, context)
         elif props.tool == "EMPTY_TO_BONE":
             empty_to_bone.draw_ui(layout, context)
+        elif props.tool == "ARP_REMAP_PRESET":
+            arp_retarget_preset.draw_ui(layout, context)
 
         status = layout.box()
         status.label(text="Status", icon="INFO")
@@ -821,6 +826,7 @@ def register():
     hair_check.register()
     empty_to_bone.register()
     align_bones.register()
+    arp_retarget_preset.register()
     for cls in CLASSES:
         bpy.utils.register_class(cls)
     bpy.types.Scene.script_toolkit = bpy.props.PointerProperty(type=ST_Properties)
@@ -834,6 +840,7 @@ def unregister():
     hair_check.unregister()
     empty_to_bone.unregister()
     align_bones.unregister()
+    arp_retarget_preset.unregister()
 
 
 if __name__ == "__main__":

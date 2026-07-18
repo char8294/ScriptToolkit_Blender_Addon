@@ -1,5 +1,10 @@
 # Script Toolkit Changelog
 
+## v0.3.6
+
+- Added ARP Retarget Preset for building multi-select source/target bone mappings.
+- Added Find/Replace rename, target clearing, manual target rename, `.bmap` import and Auto-Rig Pro-compatible export.
+
 ## v0.3.0
 
 - Added GitHub update checker and one-click updater.
