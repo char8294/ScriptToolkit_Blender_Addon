@@ -46,10 +46,11 @@ _LIST_LABEL_SPACE = "\u00a0"
 _LIST_REGION_SIDE_PADDING = 32.0
 _LIST_LABEL_END_MARGIN = 40.0
 _LIST_FONT_SIZE = 11
+_LIST_LABEL_ELLIPSIS = "…"
 
 
 def _left_aligned_operator_text(context, text):
-    """Pad an operator label so Blender's centered text appears left-aligned."""
+    """Fit and pad an operator label so Blender draws it from the left edge."""
     text = text or "None"
     if context is None or context.region is None:
         return text
@@ -60,12 +61,23 @@ def _left_aligned_operator_text(context, text):
         80.0,
         (context.region.width - (_LIST_REGION_SIDE_PADDING * ui_scale)) * 0.5,
     )
+    content_width = max(24.0, cell_width - (_LIST_LABEL_END_MARGIN * ui_scale))
     text_width = blf.dimensions(0, text)[0]
+    if text_width > content_width:
+        ellipsis_width = blf.dimensions(0, _LIST_LABEL_ELLIPSIS)[0]
+        available_width = max(0.0, content_width - ellipsis_width)
+        low, high = 0, len(text)
+        while low < high:
+            middle = (low + high + 1) // 2
+            if blf.dimensions(0, text[:middle])[0] <= available_width:
+                low = middle
+            else:
+                high = middle - 1
+        text = text[:low] + _LIST_LABEL_ELLIPSIS
+        text_width = blf.dimensions(0, text)[0]
+
     space_width = max(1.0, blf.dimensions(0, _LIST_LABEL_SPACE)[0])
-    padding_width = max(
-        0.0,
-        cell_width - text_width - (_LIST_LABEL_END_MARGIN * ui_scale),
-    )
+    padding_width = max(0.0, content_width - text_width)
     return text + (_LIST_LABEL_SPACE * int(padding_width / space_width))
 
 _TARGET_DOUBLE_CLICK_SECONDS = 0.4

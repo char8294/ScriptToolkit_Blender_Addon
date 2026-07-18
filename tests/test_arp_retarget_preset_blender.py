@@ -72,7 +72,7 @@ def run():
     fake_layout = FakeListLayout()
     fake_item = SimpleNamespace(source_name="Source", target_name="Target", selected=False)
     fake_draw_context = SimpleNamespace(
-        preferences=bpy.context.preferences,
+        preferences=SimpleNamespace(system=SimpleNamespace(ui_scale=1.25)),
         region=SimpleNamespace(width=600),
     )
     addon.STARP_UL_mapping.draw_item(None, fake_draw_context, fake_layout, None, fake_item, None, None, None, 0)
@@ -85,6 +85,16 @@ def run():
     assert [text.rstrip("\u00a0") for text in operator_texts] == ["Source", "Target"]
     assert all(text.endswith("\u00a0") for text in operator_texts)
     assert not any(call[0] == "row" for call in fake_layout.calls)
+
+    narrow_context = SimpleNamespace(
+        preferences=SimpleNamespace(system=SimpleNamespace(ui_scale=1.25)),
+        region=SimpleNamespace(width=260),
+    )
+    long_name = "Very Long Source Bone Name That Must Keep Its Beginning"
+    fitted_name = addon._left_aligned_operator_text(narrow_context, long_name).rstrip("\u00a0")
+    assert fitted_name.endswith("…")
+    assert long_name.startswith(fitted_name[:-1])
+    assert len(fitted_name) < len(long_name)
 
     class FakeWindowManager:
         def __init__(self):

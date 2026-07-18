@@ -2,7 +2,7 @@
 
 ## v0.3.14
 
-- Made mapping-list labels visibly left-aligned inside their full-width clickable cells.
+- Made mapping-list labels visibly left-aligned inside their full-width clickable cells, with right-side ellipsis for long names.
 
 ## v0.3.13
 
