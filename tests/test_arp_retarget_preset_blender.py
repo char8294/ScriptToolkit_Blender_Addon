@@ -49,6 +49,25 @@ def run():
     assert len(scene.arp_retarget_mapping_items) == len(source.data.bones)
     assert {item.source_name for item in scene.arp_retarget_mapping_items} == set(source_names)
 
+    class FakeListLayout:
+        def __init__(self):
+            self.calls = []
+
+        def split(self, **_kwargs):
+            return self
+
+        def operator(self, operator_id, **kwargs):
+            self.calls.append(("operator", operator_id, kwargs))
+            return SimpleNamespace(index=-1)
+
+        def prop(self, item, property_name, **kwargs):
+            self.calls.append(("prop", item, property_name, kwargs))
+
+    fake_layout = FakeListLayout()
+    fake_item = SimpleNamespace(source_name="Source", target_name="Target", selected=False)
+    addon.STARP_UL_mapping.draw_item(None, None, fake_layout, None, fake_item, None, None, None, 0)
+    assert any(call[0] == "prop" and call[2] == "target_name" for call in fake_layout.calls)
+
     class FakeWindowManager:
         def __init__(self):
             self.operators = []
@@ -66,6 +85,28 @@ def run():
             f"expected a set, got {type(result).__name__} ({result!r})"
         )
     assert len(file_selector.operators) == 2
+
+    source_left = item_by_source(scene, "Arm.L")
+    source_right = item_by_source(scene, "Arm.R")
+    source_left.selected = True
+    source_right.selected = True
+    scene.arp_retarget_find = "Arm"
+    scene.arp_retarget_replace = "Hand"
+    scene.arp_retarget_prefix = "PRE_"
+    scene.arp_retarget_suffix = "_SUF"
+    assert bpy.ops.script_toolkit.arp_rename_source_to_target() == {"FINISHED"}
+    assert source_left.target_name == "PRE_Hand.L_SUF"
+    assert source_right.target_name == "PRE_Hand.R_SUF"
+
+    scene.arp_retarget_find = "Hand"
+    scene.arp_retarget_replace = "Forearm"
+    scene.arp_retarget_prefix = "T_"
+    scene.arp_retarget_suffix = "_X"
+    assert bpy.ops.script_toolkit.arp_rename_target() == {"FINISHED"}
+    assert source_left.target_name == "T_PRE_Forearm.L_SUF_X"
+    assert source_right.target_name == "T_PRE_Forearm.R_SUF_X"
+
+    bpy.ops.script_toolkit.arp_build_bone_list()
 
     addon._select_mapping_row(scene, 0)
     addon._select_mapping_row(scene, 2)
@@ -122,7 +163,7 @@ def run():
     assert addon._mirror_name("Bip001 L Arm", "LEFT_TO_RIGHT") == "Bip001 R Arm"
     assert addon._mirror_name("calf_left.001", "LEFT_TO_RIGHT") == "calf_right.001"
     assert addon._mirror_name("Hand-R", "RIGHT_TO_LEFT") == "Hand-L"
-    assert not hasattr(addon, "STARP_OT_rename_target")
+    assert hasattr(addon, "STARP_OT_rename_target")
 
     import_path = os.path.join(tempfile.gettempdir(), "script_toolkit_anchor_test.bmap")
     with open(import_path, "w", encoding="utf-8", newline="\n") as preset:

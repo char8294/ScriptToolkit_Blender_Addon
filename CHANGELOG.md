@@ -1,5 +1,11 @@
 # Script Toolkit Changelog
 
+## v0.3.10
+
+- Made Target Bone names directly editable from the mapping list like Auto-Rig Pro.
+- Added separate Rename Source to Target and Rename Target operations with shared Find, Replace, Prefix, and Suffix fields.
+- Removed the selection help text below the mapping controls.
+
 ## v0.3.9
 
 - Changed ARP mapping rows to native-style flat list entries: a normal click selects one row, while Shift-click selects an inclusive range from the previous row.

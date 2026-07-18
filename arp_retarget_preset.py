@@ -27,6 +27,8 @@ _SCENE_PROPERTIES = (
     "arp_retarget_selection_anchor",
     "arp_retarget_find",
     "arp_retarget_replace",
+    "arp_retarget_prefix",
+    "arp_retarget_suffix",
 )
 
 _IK_AXES = (
@@ -119,6 +121,11 @@ def _selected_or_active(scene):
     if 0 <= scene.arp_retarget_mapping_index < len(items):
         return [items[scene.arp_retarget_mapping_index]]
     return []
+
+
+def _apply_rename_parts(name, find_text, replace_text, prefix, suffix):
+    renamed = name.replace(find_text, replace_text) if find_text else name
+    return f"{prefix}{renamed}{suffix}"
 
 
 def _select_mapping_row(scene, index, select_range=False):
@@ -249,13 +256,7 @@ class STARP_UL_mapping(UIList):
             depress=item.selected,
         )
         source.index = _index
-        target = split.operator(
-            STARP_OT_select_mapping_row.bl_idname,
-            text=item.target_name or "None",
-            emboss=item.selected,
-            depress=item.selected,
-        )
-        target.index = _index
+        split.prop(item, "target_name", text="", emboss=False, translate=False)
 
 
 class STARP_OT_build_list(Operator):
@@ -482,17 +483,16 @@ class STARP_OT_mirror_bone_list(Operator):
 
 class STARP_OT_rename_source_to_target(Operator):
     bl_idname = "script_toolkit.arp_rename_source_to_target"
-    bl_label = "Rename to Target"
-    bl_description = "Replace text in each selected source name and write the result to Target Bone"
+    bl_label = "Rename Source to Target"
+    bl_description = "Build Target Bone names from selected Source Bone names"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         scene = context.scene
         find_text = scene.arp_retarget_find
         replace_text = scene.arp_retarget_replace
-        if not find_text:
-            self.report({"WARNING"}, "Find cannot be empty")
-            return {"CANCELLED"}
+        prefix = scene.arp_retarget_prefix
+        suffix = scene.arp_retarget_suffix
 
         items = _selected_or_active(scene)
         if not items:
@@ -501,11 +501,44 @@ class STARP_OT_rename_source_to_target(Operator):
 
         changed = 0
         for item in items:
-            new_name = item.source_name.replace(find_text, replace_text)
+            new_name = _apply_rename_parts(item.source_name, find_text, replace_text, prefix, suffix)
             if new_name != item.target_name:
                 item.target_name = new_name
                 changed += 1
         self.report({"INFO"}, f"Renamed {changed} target names from source names")
+        return {"FINISHED"}
+
+
+class STARP_OT_rename_target(Operator):
+    bl_idname = "script_toolkit.arp_rename_target"
+    bl_label = "Rename Target"
+    bl_description = "Apply Find/Replace and Prefix/Suffix directly to selected Target Bone names"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        scene = context.scene
+        items = _selected_or_active(scene)
+        if not items:
+            self.report({"WARNING"}, "Select at least one mapping row")
+            return {"CANCELLED"}
+
+        changed = 0
+        skipped = 0
+        for item in items:
+            if not item.target_name:
+                skipped += 1
+                continue
+            new_name = _apply_rename_parts(
+                item.target_name,
+                scene.arp_retarget_find,
+                scene.arp_retarget_replace,
+                scene.arp_retarget_prefix,
+                scene.arp_retarget_suffix,
+            )
+            if new_name != item.target_name:
+                item.target_name = new_name
+                changed += 1
+        self.report({"INFO"}, f"Renamed {changed} target names; skipped {skipped} empty targets")
         return {"FINISHED"}
 
 
@@ -699,14 +732,17 @@ def draw_ui(layout, context):
     actions = mapping_box.row(align=True)
     actions.operator(STARP_OT_swap_source_target.bl_idname, icon="ARROW_LEFTRIGHT")
     actions.operator(STARP_OT_mirror_bone_list.bl_idname, icon="MOD_MIRROR")
-    mapping_box.label(text="Click selects one row; Shift-click selects a range.", icon="INFO")
-    mapping_box.label(text="With no highlighted rows, actions use the active row.")
 
     rename_box = layout.box()
-    rename_box.label(text="Rename Source to Target", icon="SORTALPHA")
-    rename_box.prop(scene, "arp_retarget_find", text="Find")
-    rename_box.prop(scene, "arp_retarget_replace", text="Replace")
+    rename_box.label(text="Rename", icon="SORTALPHA")
+    row = rename_box.row(align=True)
+    row.prop(scene, "arp_retarget_find", text="Find")
+    row.prop(scene, "arp_retarget_replace", text="Replace")
+    row = rename_box.row(align=True)
+    row.prop(scene, "arp_retarget_prefix", text="Prefix")
+    row.prop(scene, "arp_retarget_suffix", text="Suffix")
     rename_box.operator(STARP_OT_rename_source_to_target.bl_idname, icon="FONT_DATA")
+    rename_box.operator(STARP_OT_rename_target.bl_idname, icon="SORTALPHA")
 
     if 0 <= scene.arp_retarget_mapping_index < len(items):
         _draw_mapping_options(layout, items[scene.arp_retarget_mapping_index], target)
@@ -735,6 +771,7 @@ CLASSES = (
     STARP_OT_swap_source_target,
     STARP_OT_mirror_bone_list,
     STARP_OT_rename_source_to_target,
+    STARP_OT_rename_target,
     STARP_OT_export_bmap,
     STARP_OT_import_bmap,
 )
@@ -755,6 +792,8 @@ def register():
     bpy.types.Scene.arp_retarget_selection_anchor = IntProperty(default=-1)
     bpy.types.Scene.arp_retarget_find = StringProperty(name="Find", default="")
     bpy.types.Scene.arp_retarget_replace = StringProperty(name="Replace", default="")
+    bpy.types.Scene.arp_retarget_prefix = StringProperty(name="Prefix", default="")
+    bpy.types.Scene.arp_retarget_suffix = StringProperty(name="Suffix", default="")
 
 
 def unregister():
