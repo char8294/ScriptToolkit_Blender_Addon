@@ -50,11 +50,17 @@ def run():
     assert {item.source_name for item in scene.arp_retarget_mapping_items} == set(source_names)
 
     class FakeListLayout:
-        def __init__(self):
-            self.calls = []
+        def __init__(self, calls=None):
+            self.calls = [] if calls is None else calls
+            self.alignment = "EXPAND"
 
         def split(self, **_kwargs):
             return self
+
+        def row(self, **_kwargs):
+            child = FakeListLayout(self.calls)
+            self.calls.append(("row", child))
+            return child
 
         def operator(self, operator_id, **kwargs):
             self.calls.append(("operator", operator_id, kwargs))
@@ -70,6 +76,9 @@ def run():
         call[0] == "operator" and call[1] == addon.STARP_OT_target_mapping_cell.bl_idname
         for call in fake_layout.calls
     )
+    list_rows = [call[1] for call in fake_layout.calls if call[0] == "row"]
+    assert len(list_rows) == 2
+    assert all(row.alignment == "LEFT" for row in list_rows)
 
     class FakeWindowManager:
         def __init__(self):

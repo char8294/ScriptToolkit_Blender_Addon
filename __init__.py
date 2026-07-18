@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 3, 12),
+    "version": (0, 3, 13),
     "blender": (5, 1, 0),
     "location": "3D View > Sidebar > Script Toolkit",
     "description": "FBX batch tools in an isolated Blender worker plus selected-object cleanup tools.",

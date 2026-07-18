@@ -1,5 +1,9 @@
 # Script Toolkit Changelog
 
+## v0.3.13
+
+- Left-aligned Source Bone and Target Bone text in mapping-list rows.
+
 ## v0.3.12
 
 - Fixed Alt-click deselection activating the row being removed instead of preserving the previous active row.

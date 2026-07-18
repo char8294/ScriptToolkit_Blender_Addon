@@ -431,14 +431,18 @@ class STARP_OT_target_mapping_cell(Operator):
 class STARP_UL_mapping(UIList):
     def draw_item(self, _context, layout, _data, item, _icon, _active_data, _active_property, _index):
         split = layout.split(factor=0.5, align=True)
-        source = split.operator(
+        source_cell = split.row(align=True)
+        source_cell.alignment = "LEFT"
+        source = source_cell.operator(
             STARP_OT_select_mapping_row.bl_idname,
             text=item.source_name,
             emboss=item.selected,
             depress=item.selected,
         )
         source.index = _index
-        target = split.operator(
+        target_cell = split.row(align=True)
+        target_cell.alignment = "LEFT"
+        target = target_cell.operator(
             STARP_OT_target_mapping_cell.bl_idname,
             text=item.target_name or "None",
             emboss=item.selected,
