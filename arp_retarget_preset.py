@@ -47,6 +47,7 @@ _last_target_click_time = 0.0
 
 _MAPPING_STATE_PROPERTIES = (
     "target_name",
+    "target_manual",
     "selected",
     "set_as_root",
     "location",
@@ -198,6 +199,7 @@ def _rename_selected_target_names(scene, derive_from_source):
         )
         if new_name != item.target_name:
             item.target_name = new_name
+            item.target_manual = True
             changed += 1
     return changed, skipped
 
@@ -242,6 +244,8 @@ def _select_mapping_row(scene, index, select_range=False, extend=False, deselect
         items[index].selected = False
         if not any(item.selected for item in items):
             scene.arp_retarget_selection_anchor = -1
+            scene.arp_retarget_mapping_index = -1
+            return True
     elif extend:
         items[index].selected = True
         scene.arp_retarget_selection_anchor = index
@@ -313,6 +317,7 @@ def _vector_text(value):
 class STARP_MappingItem(PropertyGroup):
     source_name: StringProperty(name="Source Bone")
     target_name: StringProperty(name="Target Bone", default="")
+    target_manual: BoolProperty(name="Target Manually Edited", default=True, options={"HIDDEN"})
     selected: BoolProperty(name="Selected", default=False)
     set_as_root: BoolProperty(name="Set as Root", default=False)
     location: BoolProperty(name="Location (Local)", default=False)
@@ -406,6 +411,7 @@ class STARP_OT_target_mapping_cell(Operator):
             return {"CANCELLED"}
         if self.editing:
             scene.arp_retarget_mapping_items[self.index].target_name = self.new_name.strip()
+            scene.arp_retarget_mapping_items[self.index].target_manual = True
         else:
             _select_mapping_row(scene, self.index)
         return {"FINISHED"}
@@ -456,6 +462,7 @@ class STARP_OT_build_list(Operator):
             item = scene.arp_retarget_mapping_items.add()
             item.source_name = source_name
             item.target_name = _find_target(_name_signature(source_name), target_signatures, assigned)
+            item.target_manual = False
             if item.target_name:
                 assigned.add(item.target_name)
                 matched += 1
@@ -517,7 +524,7 @@ class STARP_OT_update_list(Operator):
             state = existing.get(source_name)
             if state:
                 _restore_mapping_state(item, state)
-                if item.target_name in target_name_set:
+                if item.target_name in target_name_set or item.target_manual:
                     preserved += 1
                     continue
                 item.target_name = ""
@@ -525,6 +532,7 @@ class STARP_OT_update_list(Operator):
                 added += 1
 
             item.target_name = _find_target(_name_signature(source_name), target_signatures, assigned)
+            item.target_manual = False
             if item.target_name:
                 assigned.add(item.target_name)
                 matched += 1
@@ -590,6 +598,7 @@ class STARP_OT_clear_target(Operator):
             return {"CANCELLED"}
         for item in items:
             item.target_name = ""
+            item.target_manual = True
         self.report({"INFO"}, f"Cleared {len(items)} target names")
         return {"FINISHED"}
 
@@ -608,18 +617,10 @@ class STARP_OT_swap_source_target(Operator):
             self.report({"ERROR"}, "Choose Source and Target Armatures first")
             return {"CANCELLED"}
 
-        mapping_properties = (
-            "set_as_root",
-            "location",
-            "ik",
-            "ik_pole",
-            "ik_world",
-            "ik_auto_pole",
-            "ik_create_constraints",
-            "ik_axis_correction",
-            "rot_add",
-            "loc_add",
-            "loc_mult",
+        mapping_properties = tuple(
+            name
+            for name in _MAPPING_STATE_PROPERTIES
+            if name not in {"target_name", "target_manual", "selected"}
         )
         reverse_mapping = {}
         for item in scene.arp_retarget_mapping_items:
@@ -630,6 +631,7 @@ class STARP_OT_swap_source_target(Operator):
                 value = getattr(item, name)
                 values[name] = tuple(value) if name in {"rot_add", "loc_add"} else value
             values["target_name"] = item.source_name
+            values["target_manual"] = True
             reverse_mapping[item.target_name] = values
 
         scene.arp_retarget_source_armature = old_target
@@ -639,6 +641,7 @@ class STARP_OT_swap_source_target(Operator):
         for source_name in sorted((bone.name for bone in old_target.data.bones), key=str.casefold):
             item = scene.arp_retarget_mapping_items.add()
             item.source_name = source_name
+            item.target_manual = False
             values = reverse_mapping.get(source_name)
             if values:
                 for name, value in values.items():
@@ -702,6 +705,7 @@ class STARP_OT_mirror_bone_list(Operator):
                 mirrored_pole = item.ik_pole
             assignments[mirrored_source] = {
                 "target_name": mirrored_target,
+                "target_manual": True,
                 "location": item.location,
                 "ik": item.ik,
                 "ik_pole": mirrored_pole,
@@ -860,6 +864,7 @@ class STARP_OT_import_bmap(Operator):
                 by_source[source_name] = item
 
             item.target_name = target_name
+            item.target_manual = True
             if len(parts) >= 9:
                 item.location = _parse_bool(parts[1])
                 item.ik_auto_pole = parts[2] if parts[2] in {"ABSOLUTE", "RELATIVE_TARGET", "RELATIVE_CHAIN"} else "ABSOLUTE"

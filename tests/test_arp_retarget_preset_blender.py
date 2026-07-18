@@ -109,6 +109,7 @@ def run():
     double_click_operator.new_name = "Edited Target"
     assert addon.STARP_OT_target_mapping_cell.execute(double_click_operator, target_context) == {"FINISHED"}
     assert scene.arp_retarget_mapping_items[0].target_name == "Edited Target"
+    assert scene.arp_retarget_mapping_items[0].target_manual
 
     addon._reset_target_click_state()
     ctrl_event = SimpleNamespace(shift=False, ctrl=True, alt=False, value="PRESS")
@@ -145,10 +146,17 @@ def run():
     bpy.ops.script_toolkit.arp_build_bone_list()
     preserved = item_by_source(scene, "Arm.L")
     preserved.target_name = "CTRL.L"
+    preserved.target_manual = True
     preserved.location = True
     preserved.rot_add = (1.0, 2.0, 3.0)
+    bpy.ops.script_toolkit.arp_select_none()
+    manually_cleared = item_by_source(scene, "Arm.R")
+    manually_cleared.target_name = "CTRL.R"
+    manually_cleared.selected = True
+    assert bpy.ops.script_toolkit.arp_clear_target() == {"FINISHED"}
+    assert manually_cleared.target_manual
     source_updated = make_armature("SourceUpdated", source_names + ("Extra.L",))
-    target_updated = make_armature("TargetUpdated", target_names + ("Extra.L", "Center"))
+    target_updated = make_armature("TargetUpdated", target_names + ("Extra.L", "Center", "Arm.R"))
     scene.arp_retarget_source_armature = source_updated
     scene.arp_retarget_target_armature = target_updated
     assert bpy.ops.script_toolkit.arp_update_bone_list() == {"FINISHED"}
@@ -160,6 +168,8 @@ def run():
     assert tuple(preserved.rot_add) == (1.0, 2.0, 3.0)
     assert item_by_source(scene, "Extra.L").target_name == "Extra.L"
     assert item_by_source(scene, "Center").target_name == "Center"
+    assert item_by_source(scene, "Arm.R").target_name == ""
+    assert item_by_source(scene, "Arm.R").target_manual
 
     scene.arp_retarget_source_armature = source
     scene.arp_retarget_target_armature = target
@@ -184,6 +194,11 @@ def run():
     assert [index for index, item in enumerate(scene.arp_retarget_mapping_items) if item.selected] == [1, 3, 5]
     addon._select_mapping_row(scene, 3, deselect=True)
     assert [index for index, item in enumerate(scene.arp_retarget_mapping_items) if item.selected] == [1, 5]
+    addon._select_mapping_row(scene, 1, deselect=True)
+    addon._select_mapping_row(scene, 5, deselect=True)
+    assert not any(item.selected for item in scene.arp_retarget_mapping_items)
+    assert scene.arp_retarget_mapping_index == -1
+    assert addon._selected_or_active(scene) == []
 
     bpy.ops.script_toolkit.arp_select_none()
     swap_item = scene.arp_retarget_mapping_items[0]
