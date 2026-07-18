@@ -225,17 +225,6 @@ class STARP_MappingItem(PropertyGroup):
 
 
 class STARP_UL_mapping(UIList):
-    def filter_items(self, _context, data, property_name):
-        items = getattr(data, property_name)
-        filter_text = self.filter_name.strip().casefold()
-        if not filter_text:
-            return [0] * len(items), []
-        flags = []
-        for item in items:
-            haystack = f"{item.source_name} {item.target_name}".casefold()
-            flags.append(0 if filter_text in haystack else self.bitflag_filter_item)
-        return flags, []
-
     def draw_item(self, _context, layout, _data, item, _icon, _active_data, _active_property, _index):
         row = layout.row(align=True)
         row.prop(item, "selected", text="")

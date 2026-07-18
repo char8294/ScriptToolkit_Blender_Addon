@@ -1,5 +1,9 @@
 # Script Toolkit Changelog
 
+## v0.3.7
+
+- Fixed ARP Retarget Preset bone rows being hidden by the custom UIList filter.
+
 ## v0.3.6
 
 - Added ARP Retarget Preset for building multi-select source/target bone mappings.
