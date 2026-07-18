@@ -161,7 +161,7 @@ ik_pole
 
 ## ความเกี่ยวข้องกับ ScriptToolkit โปรเจกต์นี้
 
-โปรเจกต์นี้มี [biped_names.py](../../biped_names.py) ซึ่ง normalize ชื่อกระดูกเป็น suffix `.L`/`.R` และเก็บ mapping เดิมไว้ใน custom properties:
+โปรเจกต์นี้มี [features/biped_names.py](../../features/biped_names.py) ซึ่ง normalize ชื่อกระดูกเป็น suffix `.L`/`.R` และเก็บ mapping เดิมไว้ใน custom properties:
 
 - `Armature.data["biped_name_mapping"]`
 - `Object["biped_vg_mapping"]` สำหรับ vertex groups

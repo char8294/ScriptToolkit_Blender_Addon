@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 3, 15),
+    "version": (0, 4, 0),
     "blender": (5, 1, 0),
     "location": "3D View > Sidebar > Script Toolkit",
     "description": "FBX batch tools in an isolated Blender worker plus selected-object cleanup tools.",
@@ -22,6 +22,8 @@ import bmesh
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, StringProperty
 from bpy.types import Operator, Panel, PropertyGroup
 
+from .features import biped_names, hair_check, empty_to_bone, align_bones, arp_retarget_preset, kj_export
+
 if "bpy" in locals():
     import importlib
     importlib.reload(biped_names)
@@ -29,8 +31,7 @@ if "bpy" in locals():
     importlib.reload(empty_to_bone)
     importlib.reload(align_bones)
     importlib.reload(arp_retarget_preset)
-else:
-    from . import biped_names, hair_check, empty_to_bone, align_bones, arp_retarget_preset
+    importlib.reload(kj_export)
 
 import bpy
 
@@ -78,6 +79,7 @@ def _tool_description(tool):
         "ALIGN_BONES": "เครื่องมือจัดเรียงแกนกระดูกและ Snapping หางกระดูก",
         "EMPTY_TO_BONE": "เครื่องมือแปลง Empty ให้กลายเป็น Bone พร้อมจัด Hierarchy",
         "ARP_REMAP_PRESET": "สร้างรายการ mapping แบบหลายรายการและ export เป็น Auto-Rig Pro .bmap preset.",
+        "KJ_EXPORT": "Batch export meshes with a pinned armature using the Better FBX exporter.",
     }[tool]
 
 
@@ -121,6 +123,7 @@ class ST_Properties(PropertyGroup):
             ("ALIGN_BONES", "Align Bones", "Align and snap bones"),
             ("EMPTY_TO_BONE", "Empty to Bone", "Convert empties to bones"),
             ("ARP_REMAP_PRESET", "ARP Retarget Preset", "Build and export an Auto-Rig Pro mapping preset"),
+            ("KJ_EXPORT", "KJ Export", "Batch export meshes with a pinned armature using Better FBX"),
         ],
         default="REEXPORT",
     )
@@ -664,10 +667,15 @@ class ST_OT_do_update(Operator):
             required_runtime_files = (
                 "__init__.py",
                 "update_utils.py",
-                "biped_names.py",
-                "hair_check.py",
                 "worker_entry.py",
                 "worker_jobs.py",
+                "features/__init__.py",
+                "features/biped_names.py",
+                "features/hair_check.py",
+                "features/empty_to_bone.py",
+                "features/align_bones.py",
+                "features/arp_retarget_preset.py",
+                "features/kj_export.py",
             )
             package_root = update_utils.extract_and_validate_archive(
                 archive_path, extraction_dir, expected_version=metadata.version, required_runtime_files=required_runtime_files
@@ -744,6 +752,8 @@ class ST_PT_panel(Panel):
             empty_to_bone.draw_ui(layout, context)
         elif props.tool == "ARP_REMAP_PRESET":
             arp_retarget_preset.draw_ui(layout, context)
+        elif props.tool == "KJ_EXPORT":
+            kj_export.draw_ui(layout, context)
 
         status = layout.box()
         status.label(text="Status", icon="INFO")
@@ -827,6 +837,7 @@ def register():
     empty_to_bone.register()
     align_bones.register()
     arp_retarget_preset.register()
+    kj_export.register()
     for cls in CLASSES:
         bpy.utils.register_class(cls)
     bpy.types.Scene.script_toolkit = bpy.props.PointerProperty(type=ST_Properties)
@@ -840,6 +851,7 @@ def unregister():
     hair_check.unregister()
     empty_to_bone.unregister()
     align_bones.unregister()
+    kj_export.unregister()
     arp_retarget_preset.unregister()
 
 

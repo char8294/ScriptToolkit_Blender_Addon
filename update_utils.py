@@ -21,10 +21,15 @@ _BL_INFO_VERSION_PATTERN = re.compile(
 REQUIRED_RUNTIME_FILES = (
     "__init__.py",
     "update_utils.py",
-    "biped_names.py",
-    "hair_check.py",
     "worker_entry.py",
     "worker_jobs.py",
+    "features/__init__.py",
+    "features/biped_names.py",
+    "features/hair_check.py",
+    "features/empty_to_bone.py",
+    "features/align_bones.py",
+    "features/arp_retarget_preset.py",
+    "features/kj_export.py",
 )
 
 
@@ -285,6 +290,16 @@ def build_release_archive(
     runtime_files = sorted(
         path for path in source_dir.glob("*.py") if path.name != "build_release_zip.py"
     )
+    package_dirs = (source_dir / "features",)
+    for package_dir in package_dirs:
+        if package_dir.is_dir():
+            runtime_files.extend(
+                sorted(
+                    path
+                    for path in package_dir.rglob("*.py")
+                    if path.is_file()
+                )
+            )
     data_dir = source_dir / "data"
     if data_dir.is_dir():
         runtime_files.extend(sorted(path for path in data_dir.rglob("*") if path.is_file()))

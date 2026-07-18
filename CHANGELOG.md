@@ -1,5 +1,11 @@
 # Script Toolkit Changelog
 
+## v0.4.0
+
+- Integrated KJ Export into the Script Toolkit tool selector.
+- Grouped all feature modules, including KJ Export, under the bundled `features/` package.
+- Updated release packaging so feature submodules are included in the install ZIP.
+
 ## v0.3.15
 
 - Replaced the Target Bone rename dialog with inline editing in the active mapping row.
