@@ -45,6 +45,22 @@ _TARGET_DOUBLE_CLICK_SECONDS = 0.4
 _last_target_click_index = -1
 _last_target_click_time = 0.0
 
+_MAPPING_STATE_PROPERTIES = (
+    "target_name",
+    "selected",
+    "set_as_root",
+    "location",
+    "ik",
+    "ik_pole",
+    "ik_world",
+    "ik_auto_pole",
+    "ik_create_constraints",
+    "ik_axis_correction",
+    "rot_add",
+    "loc_add",
+    "loc_mult",
+)
+
 
 def _armature_poll(_self, obj):
     return obj.type == "ARMATURE"
@@ -128,6 +144,34 @@ def _selected_or_active(scene):
     return []
 
 
+def _mapping_state(item):
+    state = {}
+    for property_name in _MAPPING_STATE_PROPERTIES:
+        value = getattr(item, property_name)
+        state[property_name] = tuple(value) if property_name in {"rot_add", "loc_add"} else value
+    return state
+
+
+def _restore_mapping_state(item, state):
+    for property_name, value in state.items():
+        setattr(item, property_name, value)
+
+
+def _validated_armatures(operator, scene):
+    source = scene.arp_retarget_source_armature
+    target = scene.arp_retarget_target_armature
+    if not source or source.type != "ARMATURE":
+        operator.report({"ERROR"}, "Choose a Source Armature first")
+        return None
+    if not target or target.type != "ARMATURE":
+        operator.report({"ERROR"}, "Choose a Target Armature first")
+        return None
+    if source == target:
+        operator.report({"ERROR"}, "Source and Target Armature must be different")
+        return None
+    return source, target
+
+
 def _apply_rename_parts(name, find_text, replace_text, prefix, suffix):
     renamed = name.replace(find_text, replace_text) if find_text else name
     return f"{prefix}{renamed}{suffix}"
@@ -188,20 +232,28 @@ def _is_target_double_click(index, event, now=None):
     return is_double
 
 
-def _select_mapping_row(scene, index, select_range=False):
+def _select_mapping_row(scene, index, select_range=False, extend=False, deselect=False):
     items = scene.arp_retarget_mapping_items
     if not (0 <= index < len(items)):
         return False
 
-    for item in items:
-        item.selected = False
-
     anchor = scene.arp_retarget_selection_anchor
-    if select_range and 0 <= anchor < len(items):
+    if deselect:
+        items[index].selected = False
+        if not any(item.selected for item in items):
+            scene.arp_retarget_selection_anchor = -1
+    elif extend:
+        items[index].selected = True
+        scene.arp_retarget_selection_anchor = index
+    elif select_range and 0 <= anchor < len(items):
+        for item in items:
+            item.selected = False
         start, end = sorted((anchor, index))
         for item_index in range(start, end + 1):
             items[item_index].selected = True
     else:
+        for item in items:
+            item.selected = False
         items[index].selected = True
         scene.arp_retarget_selection_anchor = index
 
@@ -290,13 +342,19 @@ class STARP_MappingItem(PropertyGroup):
 class STARP_OT_select_mapping_row(Operator):
     bl_idname = "script_toolkit.arp_select_mapping_row"
     bl_label = "Select Mapping Row"
-    bl_description = "Click to select one row; Shift-click selects the range from the previous row"
+    bl_description = "Click selects one; Shift selects a range; Ctrl adds; Alt removes this row"
     bl_options = {"INTERNAL"}
 
     index: IntProperty()
 
     def invoke(self, context, event):
-        if not _select_mapping_row(context.scene, self.index, select_range=event.shift):
+        if not _select_mapping_row(
+            context.scene,
+            self.index,
+            select_range=event.shift,
+            extend=event.ctrl,
+            deselect=event.alt,
+        ):
             return {"CANCELLED"}
         return {"FINISHED"}
 
@@ -309,7 +367,7 @@ class STARP_OT_select_mapping_row(Operator):
 class STARP_OT_target_mapping_cell(Operator):
     bl_idname = "script_toolkit.arp_target_mapping_cell"
     bl_label = "Target Bone"
-    bl_description = "Click to select; Shift-click selects a range; double-click edits the Target Bone name"
+    bl_description = "Click selects one; Shift selects a range; Ctrl adds; Alt removes; double-click edits Target Bone"
     bl_options = {"INTERNAL", "UNDO"}
 
     index: IntProperty()
@@ -329,7 +387,13 @@ class STARP_OT_target_mapping_cell(Operator):
             return context.window_manager.invoke_props_dialog(self, width=520)
 
         self.editing = False
-        if not _select_mapping_row(scene, self.index, select_range=event.shift):
+        if not _select_mapping_row(
+            scene,
+            self.index,
+            select_range=event.shift,
+            extend=event.ctrl,
+            deselect=event.alt,
+        ):
             return {"CANCELLED"}
         return {"FINISHED"}
 
@@ -374,17 +438,10 @@ class STARP_OT_build_list(Operator):
 
     def execute(self, context):
         scene = context.scene
-        source = scene.arp_retarget_source_armature
-        target = scene.arp_retarget_target_armature
-        if not source or source.type != "ARMATURE":
-            self.report({"ERROR"}, "Choose a Source Armature first")
+        armatures = _validated_armatures(self, scene)
+        if armatures is None:
             return {"CANCELLED"}
-        if not target or target.type != "ARMATURE":
-            self.report({"ERROR"}, "Choose a Target Armature first")
-            return {"CANCELLED"}
-        if source == target:
-            self.report({"ERROR"}, "Source and Target Armature must be different")
-            return {"CANCELLED"}
+        source, target = armatures
 
         # Include every data bone. This editor must expose helper/controller
         # bones too, even when Auto-Rig Pro would filter them during binding.
@@ -406,6 +463,81 @@ class STARP_OT_build_list(Operator):
         scene.arp_retarget_mapping_index = 0
         scene.arp_retarget_selection_anchor = -1
         self.report({"INFO"}, f"Built {len(source_names)} source bones; matched {matched} target bones")
+        return {"FINISHED"}
+
+
+class STARP_OT_update_list(Operator):
+    bl_idname = "script_toolkit.arp_update_bone_list"
+    bl_label = "Update Bone List"
+    bl_description = "Merge current armature bones into the list while preserving compatible mappings and settings"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        scene = context.scene
+        armatures = _validated_armatures(self, scene)
+        if armatures is None:
+            return {"CANCELLED"}
+        source, target = armatures
+
+        items = scene.arp_retarget_mapping_items
+        active_source = (
+            items[scene.arp_retarget_mapping_index].source_name
+            if 0 <= scene.arp_retarget_mapping_index < len(items)
+            else ""
+        )
+        anchor_source = (
+            items[scene.arp_retarget_selection_anchor].source_name
+            if 0 <= scene.arp_retarget_selection_anchor < len(items)
+            else ""
+        )
+        existing = {}
+        for item in items:
+            existing.setdefault(item.source_name, _mapping_state(item))
+
+        source_names = sorted((bone.name for bone in source.data.bones), key=str.casefold)
+        source_name_set = set(source_names)
+        target_names = sorted((bone.name for bone in target.data.bones), key=str.casefold)
+        target_name_set = set(target_names)
+        target_signatures = {name: _name_signature(name) for name in target_names}
+
+        preserved_targets = set()
+        for source_name in source_names:
+            state = existing.get(source_name)
+            if state and state["target_name"] in target_name_set:
+                preserved_targets.add(state["target_name"])
+
+        scene.arp_retarget_mapping_items.clear()
+        added = 0
+        preserved = 0
+        matched = 0
+        assigned = set(preserved_targets)
+        for source_name in source_names:
+            item = scene.arp_retarget_mapping_items.add()
+            item.source_name = source_name
+            state = existing.get(source_name)
+            if state:
+                _restore_mapping_state(item, state)
+                if item.target_name in target_name_set:
+                    preserved += 1
+                    continue
+                item.target_name = ""
+            else:
+                added += 1
+
+            item.target_name = _find_target(_name_signature(source_name), target_signatures, assigned)
+            if item.target_name:
+                assigned.add(item.target_name)
+                matched += 1
+
+        removed = len(set(existing) - source_name_set)
+        scene.arp_retarget_mapping_index = source_names.index(active_source) if active_source in source_name_set else 0
+        scene.arp_retarget_selection_anchor = (
+            source_names.index(anchor_source) if anchor_source in source_name_set else -1
+        )
+        self.report(
+            {"INFO"},
+            f"Updated {len(source_names)} bones; preserved {preserved}, matched {matched}, added {added}, removed {removed}",
+        )
         return {"FINISHED"}
 
 
@@ -784,7 +916,9 @@ def draw_ui(layout, context):
     inputs.label(text="Auto-Rig Pro Remap Preset", icon="ARMATURE_DATA")
     inputs.prop(scene, "arp_retarget_source_armature", text="Source Armature")
     inputs.prop(scene, "arp_retarget_target_armature", text="Target Armature")
-    inputs.operator(STARP_OT_build_list.bl_idname, icon="LINENUMBERS_ON")
+    row = inputs.row(align=True)
+    row.operator(STARP_OT_build_list.bl_idname, icon="LINENUMBERS_ON")
+    row.operator(STARP_OT_update_list.bl_idname, icon="FILE_REFRESH")
 
     mapping_box = layout.box()
     header = mapping_box.row(align=True)
@@ -845,6 +979,7 @@ CLASSES = (
     STARP_OT_target_mapping_cell,
     STARP_UL_mapping,
     STARP_OT_build_list,
+    STARP_OT_update_list,
     STARP_OT_select_all,
     STARP_OT_select_none,
     STARP_OT_select_invert,

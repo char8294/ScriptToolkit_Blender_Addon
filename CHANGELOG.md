@@ -1,5 +1,10 @@
 # Script Toolkit Changelog
 
+## v0.3.11
+
+- Added Ctrl-click to extend mapping-row selection and Alt-click to remove individual rows from it.
+- Added Update Bone List to merge changed armatures while preserving compatible mappings, retarget settings, and selection.
+
 ## v0.3.10
 
 - Made Target Bone cells selectable like Auto-Rig Pro and editable by double-clicking them.

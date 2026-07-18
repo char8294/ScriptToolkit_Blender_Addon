@@ -110,6 +110,18 @@ def run():
     assert addon.STARP_OT_target_mapping_cell.execute(double_click_operator, target_context) == {"FINISHED"}
     assert scene.arp_retarget_mapping_items[0].target_name == "Edited Target"
 
+    addon._reset_target_click_state()
+    ctrl_event = SimpleNamespace(shift=False, ctrl=True, alt=False, value="PRESS")
+    alt_event = SimpleNamespace(shift=False, ctrl=False, alt=True, value="PRESS")
+    for index in (2, 4):
+        operator = SimpleNamespace(index=index, new_name="", editing=False)
+        assert addon.STARP_OT_target_mapping_cell.invoke(operator, target_context, ctrl_event) == {"FINISHED"}
+    assert [index for index, item in enumerate(scene.arp_retarget_mapping_items) if item.selected] == [0, 2, 4]
+    operator = SimpleNamespace(index=2, new_name="", editing=False)
+    assert addon.STARP_OT_target_mapping_cell.invoke(operator, target_context, alt_event) == {"FINISHED"}
+    assert [index for index, item in enumerate(scene.arp_retarget_mapping_items) if item.selected] == [0, 4]
+
+    bpy.ops.script_toolkit.arp_select_none()
     source_left = item_by_source(scene, "Arm.L")
     source_right = item_by_source(scene, "Arm.R")
     source_left.selected = True
@@ -131,6 +143,27 @@ def run():
     assert source_right.target_name == "T_PRE_Forearm.R_SUF_X"
 
     bpy.ops.script_toolkit.arp_build_bone_list()
+    preserved = item_by_source(scene, "Arm.L")
+    preserved.target_name = "CTRL.L"
+    preserved.location = True
+    preserved.rot_add = (1.0, 2.0, 3.0)
+    source_updated = make_armature("SourceUpdated", source_names + ("Extra.L",))
+    target_updated = make_armature("TargetUpdated", target_names + ("Extra.L", "Center"))
+    scene.arp_retarget_source_armature = source_updated
+    scene.arp_retarget_target_armature = target_updated
+    assert bpy.ops.script_toolkit.arp_update_bone_list() == {"FINISHED"}
+    assert len(scene.arp_retarget_mapping_items) == len(source_updated.data.bones)
+    assert len({item.source_name for item in scene.arp_retarget_mapping_items}) == len(source_updated.data.bones)
+    preserved = item_by_source(scene, "Arm.L")
+    assert preserved.target_name == "CTRL.L"
+    assert preserved.location
+    assert tuple(preserved.rot_add) == (1.0, 2.0, 3.0)
+    assert item_by_source(scene, "Extra.L").target_name == "Extra.L"
+    assert item_by_source(scene, "Center").target_name == "Center"
+
+    scene.arp_retarget_source_armature = source
+    scene.arp_retarget_target_armature = target
+    bpy.ops.script_toolkit.arp_build_bone_list()
 
     addon._select_mapping_row(scene, 0)
     addon._select_mapping_row(scene, 2)
@@ -145,6 +178,12 @@ def run():
     assert scene.arp_retarget_selection_anchor == -1
     addon._select_mapping_row(scene, 4, select_range=True)
     assert [index for index, item in enumerate(scene.arp_retarget_mapping_items) if item.selected] == [4]
+    addon._select_mapping_row(scene, 1)
+    addon._select_mapping_row(scene, 3, extend=True)
+    addon._select_mapping_row(scene, 5, extend=True)
+    assert [index for index, item in enumerate(scene.arp_retarget_mapping_items) if item.selected] == [1, 3, 5]
+    addon._select_mapping_row(scene, 3, deselect=True)
+    assert [index for index, item in enumerate(scene.arp_retarget_mapping_items) if item.selected] == [1, 5]
 
     bpy.ops.script_toolkit.arp_select_none()
     swap_item = scene.arp_retarget_mapping_items[0]
