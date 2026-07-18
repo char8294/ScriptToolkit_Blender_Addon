@@ -699,7 +699,7 @@ def draw_ui(layout, context):
     actions = mapping_box.row(align=True)
     actions.operator(STARP_OT_swap_source_target.bl_idname, icon="ARROW_LEFTRIGHT")
     actions.operator(STARP_OT_mirror_bone_list.bl_idname, icon="MOD_MIRROR")
-    mapping_box.label(text="Click rows to toggle selection; Shift-click selects a range.", icon="INFO")
+    mapping_box.label(text="Click selects one row; Shift-click selects a range.", icon="INFO")
     mapping_box.label(text="With no highlighted rows, actions use the active row.")
 
     rename_box = layout.box()
