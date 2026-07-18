@@ -2,6 +2,7 @@
 
 import os
 import sys
+import tempfile
 
 import bpy
 
@@ -46,7 +47,6 @@ def run():
     assert bpy.ops.script_toolkit.arp_build_bone_list() == {"FINISHED"}
     assert len(scene.arp_retarget_mapping_items) == len(source.data.bones)
     assert {item.source_name for item in scene.arp_retarget_mapping_items} == set(source_names)
-    assert len(addon._included_bones(target)) == len(target.data.bones)
 
     addon._toggle_mapping_selection(scene, 0)
     addon._toggle_mapping_selection(scene, 2)
@@ -62,9 +62,13 @@ def run():
     swap_item.target_name = "CTRL.L"
     swap_item.selected = True
     assert bpy.ops.script_toolkit.arp_swap_source_target() == {"FINISHED"}
-    assert swap_item.source_name == "CTRL.L"
-    assert swap_item.target_name == original_source
+    assert scene.arp_retarget_source_armature == target
+    assert scene.arp_retarget_target_armature == source
+    assert len(scene.arp_retarget_mapping_items) == len(target.data.bones)
+    assert item_by_source(scene, "CTRL.L").target_name == original_source
 
+    scene.arp_retarget_source_armature = source
+    scene.arp_retarget_target_armature = target
     bpy.ops.script_toolkit.arp_build_bone_list()
     left = item_by_source(scene, "Arm.L")
     right = item_by_source(scene, "Arm.R")
@@ -94,6 +98,15 @@ def run():
     assert addon._mirror_name("calf_left.001", "LEFT_TO_RIGHT") == "calf_right.001"
     assert addon._mirror_name("Hand-R", "RIGHT_TO_LEFT") == "Hand-L"
     assert not hasattr(addon, "STARP_OT_rename_target")
+
+    import_path = os.path.join(tempfile.gettempdir(), "script_toolkit_anchor_test.bmap")
+    with open(import_path, "w", encoding="utf-8", newline="\n") as preset:
+        preset.write("CTRL.L%False%ABSOLUTE%0,0,0%0,0,0%1%False%False%Y%\n")
+        preset.write("Arm.L\nFalse\nFalse\n\n")
+    scene.arp_retarget_selection_anchor = 3
+    assert bpy.ops.script_toolkit.arp_import_bmap(filepath=import_path) == {"FINISHED"}
+    assert scene.arp_retarget_selection_anchor == -1
+    os.remove(import_path)
 
     addon.unregister()
     print("ARP_RETARGET_TESTS_OK")

@@ -3,6 +3,7 @@
 import difflib
 import os
 import re
+from typing import NamedTuple
 
 import bpy
 from bpy.props import (
@@ -42,13 +43,6 @@ def _armature_poll(_self, obj):
     return obj.type == "ARMATURE"
 
 
-def _included_bones(obj, is_source=False):
-    # Keep every data bone visible. ARP's own filters are useful while binding,
-    # but this editor is also used to repair unusual or helper-bone mappings.
-    del is_source
-    return list(obj.data.bones)
-
-
 def _tokens(name):
     aliases = {"left": "l", "right": "r", "lft": "l", "rgt": "r"}
     values = []
@@ -59,59 +53,56 @@ def _tokens(name):
     return values
 
 
-def _canonical_name(name):
-    return " ".join(sorted(_tokens(name)))
+class _NameSignature(NamedTuple):
+    tokens: tuple
+    token_set: frozenset
+    canonical: str
+    side: str | None
 
 
-def _side(name):
-    values = set(_tokens(name))
+def _name_signature(name):
+    tokens = tuple(_tokens(name))
+    values = frozenset(tokens)
+    side = None
     if "l" in values and "r" not in values:
-        return "l"
-    if "r" in values and "l" not in values:
-        return "r"
-    return None
+        side = "l"
+    elif "r" in values and "l" not in values:
+        side = "r"
+    return _NameSignature(tokens, values, " ".join(sorted(tokens)), side)
 
 
-def _match_score(source_name, target_name):
-    source_tokens = _tokens(source_name)
-    target_tokens = _tokens(target_name)
-    if not source_tokens or not target_tokens:
+def _match_score(source, target):
+    if not source.tokens or not target.tokens:
         return 0.0
 
-    source_side = _side(source_name)
-    target_side = _side(target_name)
-    if source_side and target_side and source_side != target_side:
+    if source.side and target.side and source.side != target.side:
         return 0.0
 
-    source_set = set(source_tokens)
-    target_set = set(target_tokens)
-    common = len(source_set & target_set)
+    common = len(source.token_set & target.token_set)
     if common == 0:
         return 0.0
 
-    source_key = _canonical_name(source_name)
-    target_key = _canonical_name(target_name)
-    if source_key == target_key:
+    if source.canonical == target.canonical:
         return 1.0
 
     # A source bone may carry an import prefix while the target carries an
     # extra rig prefix. Treat either name as a useful subset of the other.
-    subset_ratio = common / max(1, min(len(source_set), len(target_set)))
-    jaccard = common / max(1, len(source_set | target_set))
-    sequence = difflib.SequenceMatcher(None, source_key, target_key).ratio()
-    if source_set <= target_set or target_set <= source_set:
+    subset_ratio = common / max(1, min(len(source.token_set), len(target.token_set)))
+    jaccard = common / max(1, len(source.token_set | target.token_set))
+    sequence = difflib.SequenceMatcher(None, source.canonical, target.canonical).ratio()
+    if source.token_set <= target.token_set or target.token_set <= source.token_set:
         return 0.72 + (subset_ratio * 0.18) + (sequence * 0.10)
     if common < 2:
         return 0.0
     return (jaccard * 0.55) + (sequence * 0.45)
 
 
-def _find_target(source_name, target_names, assigned):
+def _find_target(source_signature, target_signatures, assigned):
     candidates = []
-    for target_name in target_names:
+    for target_name, target_signature in target_signatures.items():
         if target_name in assigned:
             continue
-        score = _match_score(source_name, target_name)
+        score = _match_score(source_signature, target_signature)
         if score >= 0.52:
             candidates.append((score, target_name))
     if not candidates:
@@ -282,8 +273,11 @@ class STARP_OT_build_list(Operator):
             self.report({"ERROR"}, "Source and Target Armature must be different")
             return {"CANCELLED"}
 
-        source_names = sorted((bone.name for bone in _included_bones(source, is_source=True)), key=str.casefold)
-        target_names = sorted((bone.name for bone in _included_bones(target)), key=str.casefold)
+        # Include every data bone. This editor must expose helper/controller
+        # bones too, even when Auto-Rig Pro would filter them during binding.
+        source_names = sorted((bone.name for bone in source.data.bones), key=str.casefold)
+        target_names = sorted((bone.name for bone in target.data.bones), key=str.casefold)
+        target_signatures = {name: _name_signature(name) for name in target_names}
         scene.arp_retarget_mapping_items.clear()
 
         assigned = set()
@@ -291,7 +285,7 @@ class STARP_OT_build_list(Operator):
         for source_name in source_names:
             item = scene.arp_retarget_mapping_items.add()
             item.source_name = source_name
-            item.target_name = _find_target(source_name, target_names, assigned)
+            item.target_name = _find_target(_name_signature(source_name), target_signatures, assigned)
             if item.target_name:
                 assigned.add(item.target_name)
                 matched += 1
@@ -356,25 +350,60 @@ class STARP_OT_clear_target(Operator):
 class STARP_OT_swap_source_target(Operator):
     bl_idname = "script_toolkit.arp_swap_source_target"
     bl_label = "Swap Source / Target"
-    bl_description = "Swap Source Bone and Target Bone names for selected rows"
+    bl_description = "Swap armature roles and reverse every source-to-target mapping"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        items = _selected_or_active(context.scene)
-        if not items:
-            self.report({"WARNING"}, "Select at least one mapping row")
+        scene = context.scene
+        old_source = scene.arp_retarget_source_armature
+        old_target = scene.arp_retarget_target_armature
+        if not old_source or not old_target:
+            self.report({"ERROR"}, "Choose Source and Target Armatures first")
             return {"CANCELLED"}
 
-        swapped = 0
-        skipped = 0
-        for item in items:
+        mapping_properties = (
+            "set_as_root",
+            "location",
+            "ik",
+            "ik_pole",
+            "ik_world",
+            "ik_auto_pole",
+            "ik_create_constraints",
+            "ik_axis_correction",
+            "rot_add",
+            "loc_add",
+            "loc_mult",
+        )
+        reverse_mapping = {}
+        for item in scene.arp_retarget_mapping_items:
             if not item.target_name:
-                skipped += 1
                 continue
-            item.source_name, item.target_name = item.target_name, item.source_name
-            swapped += 1
+            values = {}
+            for name in mapping_properties:
+                value = getattr(item, name)
+                values[name] = tuple(value) if name in {"rot_add", "loc_add"} else value
+            values["target_name"] = item.source_name
+            reverse_mapping[item.target_name] = values
 
-        self.report({"INFO"}, f"Swapped {swapped} mappings; skipped {skipped} empty targets")
+        scene.arp_retarget_source_armature = old_target
+        scene.arp_retarget_target_armature = old_source
+        scene.arp_retarget_mapping_items.clear()
+        reversed_count = 0
+        for source_name in sorted((bone.name for bone in old_target.data.bones), key=str.casefold):
+            item = scene.arp_retarget_mapping_items.add()
+            item.source_name = source_name
+            values = reverse_mapping.get(source_name)
+            if values:
+                for name, value in values.items():
+                    setattr(item, name, value)
+                reversed_count += 1
+
+        scene.arp_retarget_mapping_index = 0
+        scene.arp_retarget_selection_anchor = -1
+        self.report(
+            {"INFO"},
+            f"Swapped armatures; reversed {reversed_count} mappings across {len(old_target.data.bones)} source bones",
+        )
         return {"FINISHED"}
 
 
@@ -597,6 +626,7 @@ class STARP_OT_import_bmap(Operator):
             imported += 1
 
         scene.arp_retarget_mapping_index = 0
+        scene.arp_retarget_selection_anchor = -1
         self.report({"INFO"}, f"Imported {imported} mappings")
         return {"FINISHED"}
 
