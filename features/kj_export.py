@@ -69,6 +69,11 @@ class BATCH_FBX_Properties(bpy.types.PropertyGroup):
         description="Export with original Biped bone names from biped_name_mapping",
         default=False,
     )
+    remove_unused_bones: bpy.props.BoolProperty(
+        name="Remove Unused Bones",
+        description="Remove bones without skin weights from each exported mesh while preserving weighted bones and their parent chains",
+        default=False,
+    )
 
 
 class BATCH_FBX_UL_mesh_list(bpy.types.UIList):
@@ -150,6 +155,67 @@ def _load_preset_parameters(preset_name):
     }
 
 
+def _weighted_bone_names_with_ancestors(mesh, armature):
+    """Return weighted bone names plus every parent needed by this mesh."""
+    group_names = {group.index: group.name for group in mesh.vertex_groups}
+    weighted_bones = set()
+    for vertex in mesh.data.vertices:
+        for assignment in vertex.groups:
+            if assignment.weight <= 0.0:
+                continue
+            bone_name = group_names.get(assignment.group)
+            bone = armature.data.bones.get(bone_name) if bone_name else None
+            if bone:
+                weighted_bones.add(bone.name)
+
+    names_to_keep = set(weighted_bones)
+    for bone_name in weighted_bones:
+        bone = armature.data.bones.get(bone_name)
+        while bone and bone.parent:
+            bone = bone.parent
+            names_to_keep.add(bone.name)
+    return names_to_keep
+
+
+def _duplicate_armature(context, armature):
+    """Create a scene-linked independent armature copy for one export."""
+    temp_armature_data = armature.data.copy()
+    temp_armature = armature.copy()
+    temp_armature.data = temp_armature_data
+    if temp_armature.animation_data:
+        temp_armature.animation_data_clear()
+    context.collection.objects.link(temp_armature)
+    return temp_armature
+
+
+def _remove_bones_except(context, armature, names_to_keep):
+    """Remove all other bones from a temporary armature and restore selection."""
+    original_active = context.view_layer.objects.active
+    original_selected = list(context.selected_objects)
+    removed_count = 0
+    try:
+        if original_active and original_active.mode != "OBJECT" and bpy.ops.object.mode_set.poll():
+            bpy.ops.object.mode_set(mode="OBJECT")
+        bpy.ops.object.select_all(action="DESELECT")
+        armature.select_set(True)
+        context.view_layer.objects.active = armature
+        bpy.ops.object.mode_set(mode="EDIT")
+        for bone in list(armature.data.edit_bones):
+            if bone.name not in names_to_keep:
+                armature.data.edit_bones.remove(bone)
+                removed_count += 1
+    finally:
+        if armature.mode != "OBJECT" and bpy.ops.object.mode_set.poll():
+            bpy.ops.object.mode_set(mode="OBJECT")
+        bpy.ops.object.select_all(action="DESELECT")
+        for obj in original_selected:
+            if obj and obj.name in bpy.data.objects:
+                obj.select_set(True)
+        if original_active and original_active.name in bpy.data.objects:
+            context.view_layer.objects.active = original_active
+    return removed_count
+
+
 class BATCH_FBX_OT_export(bpy.types.Operator):
     bl_idname = "export.batch_better_fbx"
     bl_label = "Batch Export FBX"
@@ -189,47 +255,55 @@ class BATCH_FBX_OT_export(bpy.types.Operator):
 
         original_active = context.view_layer.objects.active
         original_selected = list(context.selected_objects)
-        temp_armature = None
-        export_armature = armature
         bone_mapping = None
         restore_biped = props.restore_biped_names
-
         if restore_biped and "biped_name_mapping" in armature.data:
             try:
                 bone_mapping = json.loads(armature.data["biped_name_mapping"])
             except (TypeError, ValueError):
                 bone_mapping = None
-            if bone_mapping:
-                temp_arm_data = armature.data.copy()
-                temp_armature = armature.copy()
-                temp_armature.data = temp_arm_data
-                if temp_armature.animation_data:
-                    temp_armature.animation_data_clear()
-                context.collection.objects.link(temp_armature)
-                for new_name, old_name in bone_mapping.items():
-                    bone = temp_arm_data.bones.get(new_name)
-                    if bone:
-                        bone.name = old_name
-                export_armature = temp_armature
+        apply_biped_names = bool(restore_biped and bone_mapping)
+        remove_unused_bones = props.remove_unused_bones
 
         count = 0
         errors = []
         try:
             for mesh in meshes:
-                bpy.ops.object.select_all(action="DESELECT")
                 temp_mesh = None
+                temp_armature = None
                 export_mesh = mesh
+                export_armature = armature
                 original_name = mesh.name
-                need_duplicate = props.force_shade_smooth or restore_biped
+                source_mesh_renamed = False
+                try:
+                    if apply_biped_names or remove_unused_bones:
+                        temp_armature = _duplicate_armature(context, armature)
+                        export_armature = temp_armature
+                        if remove_unused_bones:
+                            names_to_keep = _weighted_bone_names_with_ancestors(mesh, armature)
+                            _remove_bones_except(context, temp_armature, names_to_keep)
+                        if apply_biped_names:
+                            for new_name, old_name in bone_mapping.items():
+                                bone = temp_armature.data.bones.get(new_name)
+                                if bone:
+                                    bone.name = old_name
 
-                if need_duplicate:
-                    mesh.select_set(True)
-                    context.view_layer.objects.active = mesh
-                    bpy.ops.object.duplicate(linked=False)
-                    export_mesh = context.active_object
-                    temp_mesh = export_mesh
+                    need_duplicate = (
+                        props.force_shade_smooth
+                        or apply_biped_names
+                        or remove_unused_bones
+                    )
+                    bpy.ops.object.select_all(action="DESELECT")
+                    if not need_duplicate:
+                        export_mesh = mesh
+                    else:
+                        mesh.select_set(True)
+                        context.view_layer.objects.active = mesh
+                        bpy.ops.object.duplicate(linked=False)
+                        export_mesh = context.active_object
+                        temp_mesh = export_mesh
 
-                    if props.force_shade_smooth:
+                    if temp_mesh and props.force_shade_smooth:
                         if temp_mesh.data.has_custom_normals:
                             try:
                                 bpy.ops.mesh.customdata_custom_splitnormals_clear()
@@ -250,7 +324,7 @@ class BATCH_FBX_OT_export(bpy.types.Operator):
                             edge.use_edge_sharp = False
                         temp_mesh.data.update()
 
-                    if restore_biped and bone_mapping:
+                    if temp_mesh and apply_biped_names:
                         vertex_group_mapping = bone_mapping
                         if "biped_vg_mapping" in mesh:
                             try:
@@ -261,43 +335,50 @@ class BATCH_FBX_OT_export(bpy.types.Operator):
                             vertex_group = temp_mesh.vertex_groups.get(new_name)
                             if vertex_group:
                                 vertex_group.name = old_name
-                        if temp_armature:
-                            for modifier in temp_mesh.modifiers:
-                                if modifier.type == "ARMATURE" and modifier.object == armature:
-                                    modifier.object = temp_armature
 
-                    mesh.name = original_name + "_temp_export"
-                    export_mesh.name = original_name
+                    if temp_mesh and temp_armature:
+                        for modifier in temp_mesh.modifiers:
+                            if modifier.type == "ARMATURE" and modifier.object == armature:
+                                modifier.object = temp_armature
+
+                    if temp_mesh and not remove_unused_bones:
+                        mesh.name = original_name + "_temp_export"
+                        export_mesh.name = original_name
+                        source_mesh_renamed = True
+
                     bpy.ops.object.select_all(action="DESELECT")
-
-                export_armature.select_set(True)
-                export_mesh.select_set(True)
-                context.view_layer.objects.active = export_mesh
-                export_kwargs = preset_params.copy()
-                export_kwargs.update(filepath=os.path.join(export_dir, original_name + ".fbx"), use_selection=True)
-                try:
+                    export_armature.select_set(True)
+                    export_mesh.select_set(True)
+                    context.view_layer.objects.active = export_mesh
+                    export_kwargs = preset_params.copy()
+                    export_kwargs.update(
+                        filepath=os.path.join(export_dir, original_name + ".fbx"),
+                        use_selection=True,
+                    )
                     bpy.ops.better_export.fbx(**export_kwargs)
                     count += 1
                 except Exception as error:
                     errors.append(f"{original_name}: {error}")
-
-                if temp_mesh:
-                    temp_data = temp_mesh.data
-                    bpy.data.objects.remove(temp_mesh, do_unlink=True)
-                    if temp_data.users == 0:
-                        bpy.data.meshes.remove(temp_data)
-                    mesh.name = original_name
+                finally:
+                    if temp_mesh and temp_mesh.name in bpy.data.objects:
+                        temp_data = temp_mesh.data
+                        bpy.data.objects.remove(temp_mesh, do_unlink=True)
+                        if temp_data.users == 0:
+                            bpy.data.meshes.remove(temp_data)
+                    if source_mesh_renamed:
+                        mesh.name = original_name
+                    if temp_armature and temp_armature.name in bpy.data.objects:
+                        temp_armature_data = temp_armature.data
+                        bpy.data.objects.remove(temp_armature, do_unlink=True)
+                        if temp_armature_data.users == 0:
+                            bpy.data.armatures.remove(temp_armature_data)
         finally:
-            if temp_armature:
-                temp_arm_data = temp_armature.data
-                bpy.data.objects.remove(temp_armature, do_unlink=True)
-                if temp_arm_data.users == 0:
-                    bpy.data.armatures.remove(temp_arm_data)
             bpy.ops.object.select_all(action="DESELECT")
             for obj in original_selected:
                 if obj and obj.name in bpy.data.objects:
                     obj.select_set(True)
-            context.view_layer.objects.active = original_active
+            if original_active and original_active.name in bpy.data.objects:
+                context.view_layer.objects.active = original_active
 
         if errors:
             self.report({"WARNING"}, f"Exported {count} files. Errors in: {', '.join(errors)}")
@@ -340,6 +421,7 @@ def draw_ui(layout, context):
     options.label(text="Options", icon="OPTIONS")
     options.prop(props, "force_shade_smooth")
     options.prop(props, "restore_biped_names")
+    options.prop(props, "remove_unused_bones")
 
     export_row = layout.row()
     export_row.scale_y = 1.5

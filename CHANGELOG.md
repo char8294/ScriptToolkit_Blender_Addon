@@ -1,5 +1,10 @@
 # Script Toolkit Changelog
 
+## v0.4.1
+
+- Added a KJ Export option to remove bones without skin weights separately for each exported mesh.
+- Preserved every weighted bone's complete parent chain and kept all pruning on temporary export copies.
+
 ## v0.4.0
 
 - Integrated KJ Export into the Script Toolkit tool selector.
