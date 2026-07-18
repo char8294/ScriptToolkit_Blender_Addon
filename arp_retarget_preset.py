@@ -3,6 +3,7 @@
 import difflib
 import os
 import re
+import time
 from typing import NamedTuple
 
 import blf
@@ -26,6 +27,7 @@ _SCENE_PROPERTIES = (
     "arp_retarget_mapping_items",
     "arp_retarget_mapping_index",
     "arp_retarget_selection_anchor",
+    "arp_retarget_inline_edit_index",
     "arp_retarget_find",
     "arp_retarget_replace",
     "arp_retarget_prefix",
@@ -46,6 +48,10 @@ _LIST_REGION_SIDE_PADDING = 32.0
 _LIST_LABEL_END_MARGIN = 40.0
 _LIST_FONT_SIZE = 11
 _LIST_LABEL_ELLIPSIS = "…"
+
+_TARGET_DOUBLE_CLICK_SECONDS = 0.4
+_last_target_click_index = -1
+_last_target_click_time = 0.0
 
 
 def _left_aligned_operator_text(context, text):
@@ -78,6 +84,34 @@ def _left_aligned_operator_text(context, text):
     space_width = max(1.0, blf.dimensions(0, _LIST_LABEL_SPACE)[0])
     padding_width = max(0.0, content_width - text_width)
     return text + (_LIST_LABEL_SPACE * int(padding_width / space_width))
+
+
+def _reset_target_click_state():
+    global _last_target_click_index, _last_target_click_time
+    _last_target_click_index = -1
+    _last_target_click_time = 0.0
+
+
+def _is_target_double_click(index, event, now=None):
+    global _last_target_click_index, _last_target_click_time
+    current_time = time.monotonic() if now is None else now
+    has_modifier = bool(event.shift or event.ctrl or event.alt)
+    is_double = (
+        not has_modifier
+        and (
+            event.value == "DOUBLE_CLICK"
+            or (
+                index == _last_target_click_index
+                and current_time - _last_target_click_time <= _TARGET_DOUBLE_CLICK_SECONDS
+            )
+        )
+    )
+    if is_double or has_modifier:
+        _reset_target_click_state()
+    else:
+        _last_target_click_index = index
+        _last_target_click_time = current_time
+    return is_double
 
 _MAPPING_STATE_PROPERTIES = (
     "target_name",
@@ -243,6 +277,8 @@ def _select_mapping_row(scene, index, select_range=False, extend=False, deselect
     if not (0 <= index < len(items)):
         return False
 
+    scene.arp_retarget_inline_edit_index = -1
+
     anchor = scene.arp_retarget_selection_anchor
     if deselect:
         previous_active = scene.arp_retarget_mapping_index
@@ -407,6 +443,7 @@ class STARP_OT_target_mapping_cell(Operator):
     index: IntProperty()
 
     def invoke(self, context, event):
+        is_double = _is_target_double_click(self.index, event)
         if not _select_mapping_row(
             context.scene,
             self.index,
@@ -415,6 +452,10 @@ class STARP_OT_target_mapping_cell(Operator):
             deselect=event.alt,
         ):
             return {"CANCELLED"}
+        if is_double:
+            context.scene.arp_retarget_inline_edit_index = self.index
+            if context.area:
+                context.area.tag_redraw()
         return {"FINISHED"}
 
     def execute(self, context):
@@ -433,13 +474,7 @@ class STARP_UL_mapping(UIList):
             depress=item.selected,
         )
         source.index = _index
-        scene = _context.scene
-        is_single_active = (
-            scene.arp_retarget_mapping_index == _index
-            and item.selected
-            and sum(mapping.selected for mapping in scene.arp_retarget_mapping_items) == 1
-        )
-        if is_single_active:
+        if _context.scene.arp_retarget_inline_edit_index == _index:
             split.prop(item, "target_name_inline", text="", emboss=False)
         else:
             target = split.operator(
@@ -1063,6 +1098,7 @@ def register():
     bpy.types.Scene.arp_retarget_mapping_items = CollectionProperty(type=STARP_MappingItem)
     bpy.types.Scene.arp_retarget_mapping_index = IntProperty(default=0)
     bpy.types.Scene.arp_retarget_selection_anchor = IntProperty(default=-1)
+    bpy.types.Scene.arp_retarget_inline_edit_index = IntProperty(default=-1, options={"HIDDEN"})
     bpy.types.Scene.arp_retarget_find = StringProperty(name="Find", default="")
     bpy.types.Scene.arp_retarget_replace = StringProperty(name="Replace", default="")
     bpy.types.Scene.arp_retarget_prefix = StringProperty(name="Prefix", default="")
