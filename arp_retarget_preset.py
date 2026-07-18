@@ -121,10 +121,13 @@ def _selected_or_active(scene):
     return []
 
 
-def _toggle_mapping_selection(scene, index, select_range=False):
+def _select_mapping_row(scene, index, select_range=False):
     items = scene.arp_retarget_mapping_items
     if not (0 <= index < len(items)):
         return False
+
+    for item in items:
+        item.selected = False
 
     anchor = scene.arp_retarget_selection_anchor
     if select_range and 0 <= anchor < len(items):
@@ -132,7 +135,7 @@ def _toggle_mapping_selection(scene, index, select_range=False):
         for item_index in range(start, end + 1):
             items[item_index].selected = True
     else:
-        items[index].selected = not items[index].selected
+        items[index].selected = True
         scene.arp_retarget_selection_anchor = index
 
     scene.arp_retarget_mapping_index = index
@@ -217,21 +220,21 @@ class STARP_MappingItem(PropertyGroup):
     loc_mult: FloatProperty(name="Location Multiplier", default=1.0)
 
 
-class STARP_OT_toggle_mapping_selection(Operator):
-    bl_idname = "script_toolkit.arp_toggle_mapping_selection"
+class STARP_OT_select_mapping_row(Operator):
+    bl_idname = "script_toolkit.arp_select_mapping_row"
     bl_label = "Select Mapping Row"
-    bl_description = "Click to toggle this row; Shift-click selects a continuous range"
+    bl_description = "Click to select one row; Shift-click selects the range from the previous row"
     bl_options = {"INTERNAL"}
 
     index: IntProperty()
 
     def invoke(self, context, event):
-        if not _toggle_mapping_selection(context.scene, self.index, select_range=event.shift):
+        if not _select_mapping_row(context.scene, self.index, select_range=event.shift):
             return {"CANCELLED"}
         return {"FINISHED"}
 
     def execute(self, context):
-        if not _toggle_mapping_selection(context.scene, self.index):
+        if not _select_mapping_row(context.scene, self.index):
             return {"CANCELLED"}
         return {"FINISHED"}
 
@@ -240,14 +243,16 @@ class STARP_UL_mapping(UIList):
     def draw_item(self, _context, layout, _data, item, _icon, _active_data, _active_property, _index):
         split = layout.split(factor=0.5, align=True)
         source = split.operator(
-            STARP_OT_toggle_mapping_selection.bl_idname,
+            STARP_OT_select_mapping_row.bl_idname,
             text=item.source_name,
+            emboss=item.selected,
             depress=item.selected,
         )
         source.index = _index
         target = split.operator(
-            STARP_OT_toggle_mapping_selection.bl_idname,
+            STARP_OT_select_mapping_row.bl_idname,
             text=item.target_name or "None",
+            emboss=item.selected,
             depress=item.selected,
         )
         target.index = _index
@@ -304,6 +309,7 @@ class STARP_OT_select_all(Operator):
     def execute(self, context):
         for item in context.scene.arp_retarget_mapping_items:
             item.selected = True
+        context.scene.arp_retarget_selection_anchor = -1
         return {"FINISHED"}
 
 
@@ -327,6 +333,7 @@ class STARP_OT_select_invert(Operator):
     def execute(self, context):
         for item in context.scene.arp_retarget_mapping_items:
             item.selected = not item.selected
+        context.scene.arp_retarget_selection_anchor = -1
         return {"FINISHED"}
 
 
@@ -512,7 +519,8 @@ class STARP_OT_export_bmap(Operator):
 
     def invoke(self, context, _event):
         self.filepath = "retarget_mapping.bmap"
-        return context.window_manager.fileselect_add(self)
+        context.window_manager.fileselect_add(self)
+        return {"RUNNING_MODAL"}
 
     def execute(self, context):
         filepath = bpy.path.abspath(self.filepath)
@@ -571,7 +579,8 @@ class STARP_OT_import_bmap(Operator):
 
     def invoke(self, context, _event):
         self.filepath = ""
-        return context.window_manager.fileselect_add(self)
+        context.window_manager.fileselect_add(self)
+        return {"RUNNING_MODAL"}
 
     def execute(self, context):
         filepath = bpy.path.abspath(self.filepath)
@@ -716,7 +725,7 @@ def draw_ui(layout, context):
 
 CLASSES = (
     STARP_MappingItem,
-    STARP_OT_toggle_mapping_selection,
+    STARP_OT_select_mapping_row,
     STARP_UL_mapping,
     STARP_OT_build_list,
     STARP_OT_select_all,

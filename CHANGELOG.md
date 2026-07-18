@@ -1,5 +1,10 @@
 # Script Toolkit Changelog
 
+## v0.3.9
+
+- Changed ARP mapping rows to native-style flat list entries: a normal click selects one row, while Shift-click selects an inclusive range from the previous row.
+- Fixed Import/Export file selectors returning `None` from `invoke()` under Blender 5.1.
+
 ## v0.3.8
 
 - Changed ARP Retarget Preset multi-selection from checkboxes to clickable highlighted rows with Shift-click range selection.

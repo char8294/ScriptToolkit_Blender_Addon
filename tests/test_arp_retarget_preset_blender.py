@@ -3,6 +3,7 @@
 import os
 import sys
 import tempfile
+from types import SimpleNamespace
 
 import bpy
 
@@ -48,13 +49,37 @@ def run():
     assert len(scene.arp_retarget_mapping_items) == len(source.data.bones)
     assert {item.source_name for item in scene.arp_retarget_mapping_items} == set(source_names)
 
-    addon._toggle_mapping_selection(scene, 0)
-    addon._toggle_mapping_selection(scene, 2)
-    assert [item.selected for item in scene.arp_retarget_mapping_items].count(True) == 2
+    class FakeWindowManager:
+        def __init__(self):
+            self.operators = []
+
+        def fileselect_add(self, operator):
+            self.operators.append(operator)
+
+    file_selector = FakeWindowManager()
+    fake_context = SimpleNamespace(window_manager=file_selector)
+    for operator_type in (addon.STARP_OT_import_bmap, addon.STARP_OT_export_bmap):
+        operator = SimpleNamespace(filepath="")
+        result = operator_type.invoke(operator, fake_context, None)
+        assert result == {"RUNNING_MODAL"}, (
+            f"{operator_type.__name__}.invoke incompatible return value: "
+            f"expected a set, got {type(result).__name__} ({result!r})"
+        )
+    assert len(file_selector.operators) == 2
+
+    addon._select_mapping_row(scene, 0)
+    addon._select_mapping_row(scene, 2)
+    assert [index for index, item in enumerate(scene.arp_retarget_mapping_items) if item.selected] == [2]
     bpy.ops.script_toolkit.arp_select_none()
-    addon._toggle_mapping_selection(scene, 1)
-    addon._toggle_mapping_selection(scene, 3, select_range=True)
-    assert all(scene.arp_retarget_mapping_items[index].selected for index in range(1, 4))
+    addon._select_mapping_row(scene, 1)
+    addon._select_mapping_row(scene, 3, select_range=True)
+    assert [index for index, item in enumerate(scene.arp_retarget_mapping_items) if item.selected] == [1, 2, 3]
+    addon._select_mapping_row(scene, 5)
+    assert [index for index, item in enumerate(scene.arp_retarget_mapping_items) if item.selected] == [5]
+    bpy.ops.script_toolkit.arp_select_all()
+    assert scene.arp_retarget_selection_anchor == -1
+    addon._select_mapping_row(scene, 4, select_range=True)
+    assert [index for index, item in enumerate(scene.arp_retarget_mapping_items) if item.selected] == [4]
 
     bpy.ops.script_toolkit.arp_select_none()
     swap_item = scene.arp_retarget_mapping_items[0]
