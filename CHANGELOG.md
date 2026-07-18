@@ -1,5 +1,9 @@
 # Script Toolkit Changelog
 
+## v0.3.14
+
+- Made mapping-list labels visibly left-aligned inside their full-width clickable cells.
+
 ## v0.3.13
 
 - Left-aligned Source Bone and Target Bone text in mapping-list rows.

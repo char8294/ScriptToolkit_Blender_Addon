@@ -71,14 +71,19 @@ def run():
 
     fake_layout = FakeListLayout()
     fake_item = SimpleNamespace(source_name="Source", target_name="Target", selected=False)
-    addon.STARP_UL_mapping.draw_item(None, None, fake_layout, None, fake_item, None, None, None, 0)
+    fake_draw_context = SimpleNamespace(
+        preferences=bpy.context.preferences,
+        region=SimpleNamespace(width=600),
+    )
+    addon.STARP_UL_mapping.draw_item(None, fake_draw_context, fake_layout, None, fake_item, None, None, None, 0)
     operator_calls = [call for call in fake_layout.calls if call[0] == "operator"]
     assert [call[1] for call in operator_calls] == [
         addon.STARP_OT_select_mapping_row.bl_idname,
         addon.STARP_OT_target_mapping_cell.bl_idname,
     ]
-    assert [call[2]["text"] for call in operator_calls] == ["Source", "Target"]
-    assert fake_layout.alignment == "LEFT"
+    operator_texts = [call[2]["text"] for call in operator_calls]
+    assert [text.rstrip("\u00a0") for text in operator_texts] == ["Source", "Target"]
+    assert all(text.endswith("\u00a0") for text in operator_texts)
     assert not any(call[0] == "row" for call in fake_layout.calls)
 
     class FakeWindowManager:

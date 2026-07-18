@@ -6,6 +6,7 @@ import re
 import time
 from typing import NamedTuple
 
+import blf
 import bpy
 from bpy.props import (
     BoolProperty,
@@ -40,6 +41,32 @@ _IK_AXES = (
     ("-Y", "-Y", "-Y"),
     ("-Z", "-Z", "-Z"),
 )
+
+_LIST_LABEL_SPACE = "\u00a0"
+_LIST_REGION_SIDE_PADDING = 32.0
+_LIST_LABEL_END_MARGIN = 40.0
+_LIST_FONT_SIZE = 11
+
+
+def _left_aligned_operator_text(context, text):
+    """Pad an operator label so Blender's centered text appears left-aligned."""
+    text = text or "None"
+    if context is None or context.region is None:
+        return text
+
+    ui_scale = context.preferences.system.ui_scale
+    blf.size(0, max(1, round(_LIST_FONT_SIZE * ui_scale)))
+    cell_width = max(
+        80.0,
+        (context.region.width - (_LIST_REGION_SIDE_PADDING * ui_scale)) * 0.5,
+    )
+    text_width = blf.dimensions(0, text)[0]
+    space_width = max(1.0, blf.dimensions(0, _LIST_LABEL_SPACE)[0])
+    padding_width = max(
+        0.0,
+        cell_width - text_width - (_LIST_LABEL_END_MARGIN * ui_scale),
+    )
+    return text + (_LIST_LABEL_SPACE * int(padding_width / space_width))
 
 _TARGET_DOUBLE_CLICK_SECONDS = 0.4
 _last_target_click_index = -1
@@ -431,17 +458,16 @@ class STARP_OT_target_mapping_cell(Operator):
 class STARP_UL_mapping(UIList):
     def draw_item(self, _context, layout, _data, item, _icon, _active_data, _active_property, _index):
         split = layout.split(factor=0.5, align=True)
-        split.alignment = "LEFT"
         source = split.operator(
             STARP_OT_select_mapping_row.bl_idname,
-            text=item.source_name,
+            text=_left_aligned_operator_text(_context, item.source_name),
             emboss=item.selected,
             depress=item.selected,
         )
         source.index = _index
         target = split.operator(
             STARP_OT_target_mapping_cell.bl_idname,
-            text=item.target_name or "None",
+            text=_left_aligned_operator_text(_context, item.target_name or "None"),
             emboss=item.selected,
             depress=item.selected,
         )
