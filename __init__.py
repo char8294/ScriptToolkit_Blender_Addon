@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 4, 2),
+    "version": (0, 4, 3),
     "blender": (5, 1, 0),
     "location": "3D View > Sidebar > Script Toolkit",
     "description": "FBX batch tools in an isolated Blender worker plus selected-object cleanup tools.",
@@ -238,6 +238,11 @@ class ST_Properties(PropertyGroup):
         description="Search radius for snapping Tail to nearest Head",
         default=0.1, 
         min=0.001
+    )
+    delete_bone_keyword: StringProperty(
+        name="Delete Keyword",
+        description="Search keyword to match bone names for deletion",
+        default=""
     )
     bone_hierarchy: bpy.props.CollectionProperty(type=empty_to_bone.ST_BoneHierarchyItem)
     bone_hierarchy_index: IntProperty()

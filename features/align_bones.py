@@ -147,6 +147,60 @@ class ST_OT_ConnectBones(Operator):
         self.report({'INFO'}, f"Connected {connected_count} bones.")
         return {'FINISHED'}
 
+class ST_OT_DeleteBonesByName(Operator):
+    bl_idname = "script_toolkit.delete_bones_by_name"
+    bl_label = "Delete Bones by Name"
+    bl_description = "Delete bones in the active armature matching the specified search keyword"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object and context.active_object.type == 'ARMATURE'
+
+    def execute(self, context):
+        props = context.scene.script_toolkit
+        keyword = props.delete_bone_keyword.strip()
+
+        if not keyword:
+            self.report({'WARNING'}, "Please enter a bone name or keyword to delete.")
+            def draw_empty(menu, context):
+                menu.layout.label(text="Please enter a bone name or keyword to delete.", icon='ERROR')
+            context.window_manager.popup_menu(draw_empty, title="Delete Bones Report", icon='CANCEL')
+            return {'CANCELLED'}
+
+        if context.mode != 'EDIT_ARMATURE':
+            bpy.ops.object.mode_set(mode='EDIT')
+
+        edit_bones = context.active_object.data.edit_bones
+        kw_lower = keyword.lower()
+        matching_bones = [b for b in edit_bones if kw_lower in b.name.lower()]
+
+        if not matching_bones:
+            self.report({'WARNING'}, f"No bones matching '{keyword}' were found.")
+            def draw_not_found(menu, context):
+                menu.layout.label(text=f"No bones matching '{keyword}' were found.", icon='INFO')
+            context.window_manager.popup_menu(draw_not_found, title="Delete Bones Report", icon='INFO')
+            return {'CANCELLED'}
+
+        deleted_names = [b.name for b in matching_bones]
+        for bone in matching_bones:
+            edit_bones.remove(bone)
+
+        self.report({'INFO'}, f"Deleted {len(deleted_names)} bone(s) matching '{keyword}'.")
+
+        def draw_report(menu, context):
+            layout = menu.layout
+            layout.label(text=f"Deleted {len(deleted_names)} bone(s) matching '{keyword}':", icon='TRASH')
+            box = layout.box()
+            max_display = 20
+            for name in deleted_names[:max_display]:
+                box.label(text=name, icon='BONE_DATA')
+            if len(deleted_names) > max_display:
+                box.label(text=f"...and {len(deleted_names) - max_display} more")
+
+        context.window_manager.popup_menu(draw_report, title="Deleted Bones Report", icon='CHECKMARK')
+        return {'FINISHED'}
+
 def draw_ui(layout, context):
     props = context.scene.script_toolkit
     
@@ -201,10 +255,17 @@ def draw_ui(layout, context):
     align_box.operator("script_toolkit.snap_tail_to_nearest", icon='SNAP_VERTEX')
     align_box.operator("script_toolkit.connect_touching_bones", icon='CONSTRAINT')
 
+    align_box.separator()
+    align_box.label(text="Delete Bones by Name:", icon='TRASH')
+    row_del = align_box.row(align=True)
+    row_del.prop(props, "delete_bone_keyword", text="", icon='VIEWZOOM')
+    row_del.operator("script_toolkit.delete_bones_by_name", text="Delete", icon='X')
+
 classes = (
     ST_OT_AlignBones,
     ST_OT_SnapTailToNearest,
     ST_OT_ConnectBones,
+    ST_OT_DeleteBonesByName,
 )
 
 def register():

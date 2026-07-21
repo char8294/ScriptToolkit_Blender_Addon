@@ -1,5 +1,9 @@
 # Script Toolkit Changelog
 
+## v0.4.3
+
+- Added Delete Bones by Name feature to Align Bones tool with a popup report dialog.
+
 ## v0.4.2
 
 - Updated Align Bones tool to operate directly on the active armature and always display armature controls.
