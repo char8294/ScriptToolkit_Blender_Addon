@@ -285,6 +285,26 @@ class STBN_OT_generate_preview(Operator):
 def draw_ui(layout, context):
     props = context.scene.script_toolkit
     
+    active_obj = context.active_object
+    arm = active_obj.data if (active_obj and active_obj.type == 'ARMATURE') else None
+
+    arm_box = layout.box()
+    sub = arm_box.column()
+    if arm:
+        row = sub.row()
+        row.prop(arm, "show_names", text="Show Names", toggle=True, icon='VIS_SEL_11')
+        row.prop(arm, "show_axes", text="Show Axes", toggle=True, icon='AXIS_SIDE')
+        if hasattr(arm, "axes_position"):
+            sub.prop(arm, "axes_position", text="Axes Position")
+    else:
+        sub.active = False
+        row = sub.row()
+        row.label(text="Show Names", icon='VIS_SEL_11')
+        row.label(text="Show Axes", icon='AXIS_SIDE')
+        sub.label(text="Axes Position")
+
+    layout.separator()
+    
     col = layout.column(align=True)
     col.operator("script_toolkit.biped_setup_mirror", icon="MOD_MIRROR")
     col.operator("script_toolkit.biped_restore_names", icon="LOOP_BACK")

@@ -154,17 +154,22 @@ def draw_ui(layout, context):
     align_box = layout.box()
     align_box.label(text="Align Bones (Edit Mode)", icon='CON_LOCLIKE')
     
-    row = align_box.row(align=True)
-    row.prop(props, "target_armature", text="Target")
-    row.operator("script_toolkit.pick_target_armature", text="", icon='RESTRICT_SELECT_OFF')
-    
-    if props.target_armature:
-        arm = props.target_armature.data
-        row = align_box.row()
+    active_obj = context.active_object
+    arm = active_obj.data if (active_obj and active_obj.type == 'ARMATURE') else None
+
+    sub = align_box.column()
+    if arm:
+        row = sub.row()
         row.prop(arm, "show_names", text="Show Names", toggle=True, icon='VIS_SEL_11')
         row.prop(arm, "show_axes", text="Show Axes", toggle=True, icon='AXIS_SIDE')
         if hasattr(arm, "axes_position"):
-            align_box.prop(arm, "axes_position", text="Axes Position")
+            sub.prop(arm, "axes_position", text="Axes Position")
+    else:
+        sub.active = False
+        row = sub.row()
+        row.label(text="Show Names", icon='VIS_SEL_11')
+        row.label(text="Show Axes", icon='AXIS_SIDE')
+        sub.label(text="Axes Position")
             
     align_box.separator()
     align_box.label(text="Align to Local Axis (Snap to Nearest):")

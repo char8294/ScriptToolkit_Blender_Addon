@@ -1,5 +1,10 @@
 # Script Toolkit Changelog
 
+## v0.4.2
+
+- Updated Align Bones tool to operate directly on the active armature and always display armature controls.
+- Added Armature display options (Show Names, Show Axes, Axes Position) to Biped Names Helper.
+
 ## v0.4.1
 
 - Added a KJ Export option to remove bones without skin weights separately for each exported mesh.
