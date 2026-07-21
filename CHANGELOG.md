@@ -1,5 +1,9 @@
 # Script Toolkit Changelog
 
+## v0.4.2
+
+- Fixed KJ Export temporary duplicate meshes being exported with a `.001` suffix.
+
 ## v0.4.1
 
 - Added a KJ Export option to remove bones without skin weights separately for each exported mesh.

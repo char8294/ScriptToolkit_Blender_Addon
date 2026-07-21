@@ -28,6 +28,8 @@ class TEST_OT_better_export_fbx(bpy.types.Operator):
         }
         EXPORT_CAPTURES.append(
             {
+                "mesh_name": mesh.name,
+                "mesh_data_name": mesh.data.name,
                 "bones": set(armature.data.bones.keys()),
                 "modifier_uses_export_armature": armature in modifier_targets,
                 "sources_unchanged": all(
@@ -140,6 +142,14 @@ def run():
             {"Root", "Unused"},
         ]
         assert all(capture["modifier_uses_export_armature"] for capture in EXPORT_CAPTURES)
+        assert [capture["mesh_name"] for capture in EXPORT_CAPTURES] == [
+            "KJ_Test_Mesh",
+            "KJ_Test_Accessory",
+        ]
+        assert [capture["mesh_data_name"] for capture in EXPORT_CAPTURES] == [
+            "KJ_Test_Mesh_Data",
+            "KJ_Test_Accessory_Data",
+        ]
         assert all(capture["sources_unchanged"] for capture in EXPORT_CAPTURES)
         assert set(armature.data.bones.keys()) == {"Root", "Spine", "Hand", "Unused"}
         assert all(
