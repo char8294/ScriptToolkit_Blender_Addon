@@ -274,7 +274,9 @@ class BATCH_FBX_OT_export(bpy.types.Operator):
                 export_mesh = mesh
                 export_armature = armature
                 original_name = mesh.name
+                original_data_name = mesh.data.name
                 source_mesh_renamed = False
+                source_mesh_data_renamed = False
                 try:
                     if apply_biped_names or remove_unused_bones:
                         temp_armature = _duplicate_armature(context, armature)
@@ -341,10 +343,18 @@ class BATCH_FBX_OT_export(bpy.types.Operator):
                             if modifier.type == "ARMATURE" and modifier.object == armature:
                                 modifier.object = temp_armature
 
-                    if temp_mesh and not remove_unused_bones:
+                    # Blender appends ".001" to both the duplicated object and its
+                    # mesh data while the source owns the original names.  Give the
+                    # source temporary names so the exporter always sees the
+                    # selected copy with the original names, including when
+                    # remove_unused_bones requires a temporary armature.
+                    if temp_mesh:
                         mesh.name = original_name + "_temp_export"
                         export_mesh.name = original_name
                         source_mesh_renamed = True
+                        mesh.data.name = original_data_name + "_temp_export"
+                        export_mesh.data.name = original_data_name
+                        source_mesh_data_renamed = True
 
                     bpy.ops.object.select_all(action="DESELECT")
                     export_armature.select_set(True)
@@ -367,6 +377,8 @@ class BATCH_FBX_OT_export(bpy.types.Operator):
                             bpy.data.meshes.remove(temp_data)
                     if source_mesh_renamed:
                         mesh.name = original_name
+                    if source_mesh_data_renamed:
+                        mesh.data.name = original_data_name
                     if temp_armature and temp_armature.name in bpy.data.objects:
                         temp_armature_data = temp_armature.data
                         bpy.data.objects.remove(temp_armature, do_unlink=True)

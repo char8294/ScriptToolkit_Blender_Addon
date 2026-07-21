@@ -4,6 +4,7 @@
 
 - Updated Align Bones tool to operate directly on the active armature and always display armature controls.
 - Added Armature display options (Show Names, Show Axes, Axes Position) to Biped Names Helper.
+- Fixed KJ Export temporary duplicate meshes being exported with a `.001` suffix.
 
 ## v0.4.1
 
