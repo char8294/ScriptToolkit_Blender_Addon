@@ -282,6 +282,70 @@ class STBN_OT_generate_preview(Operator):
         return {"FINISHED"}
 
 
+class STBN_OT_set_bone_name(Operator):
+    bl_idname = "script_toolkit.biped_set_bone_name"
+    bl_label = "Set Bone Name"
+    bl_description = "Set name of selected/active bone to specified target name"
+    bl_options = {"REGISTER", "UNDO"}
+
+    target_name: bpy.props.StringProperty(name="Target Name", default="")
+
+    def execute(self, context):
+        if not self.target_name:
+            self.report({'WARNING'}, "No bone name specified.")
+            return {'CANCELLED'}
+
+        obj = context.active_object
+        if not obj or obj.type != 'ARMATURE':
+            self.report({'WARNING'}, "Please select an Armature object.")
+            return {'CANCELLED'}
+
+        renamed = False
+
+        if obj.mode == 'POSE':
+            active_pb = context.active_pose_bone
+            if active_pb:
+                active_pb.name = self.target_name
+                renamed = True
+            elif context.selected_pose_bones:
+                context.selected_pose_bones[0].name = self.target_name
+                renamed = True
+        elif obj.mode == 'EDIT':
+            if obj.data.edit_bones and obj.data.edit_bones.active:
+                obj.data.edit_bones.active.name = self.target_name
+                renamed = True
+            elif context.selected_editable_bones:
+                context.selected_editable_bones[0].name = self.target_name
+                renamed = True
+        else:
+            if obj.data.bones and obj.data.bones.active:
+                obj.data.bones.active.name = self.target_name
+                renamed = True
+            elif context.selected_bones:
+                context.selected_bones[0].name = self.target_name
+                renamed = True
+
+        if renamed:
+            self.report({'INFO'}, f"Renamed bone to '{self.target_name}'")
+            return {'FINISHED'}
+        else:
+            self.report({'WARNING'}, "No active bone selected to rename.")
+            return {'CANCELLED'}
+
+
+class STBN_OT_clear_preview(Operator):
+    bl_idname = "script_toolkit.biped_clear_preview"
+    bl_label = "Clear Preview"
+    bl_description = "Clear the preview list"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        props = context.scene.script_toolkit
+        props.preview_items.clear()
+        props.preview_summary = ""
+        return {"FINISHED"}
+
+
 def draw_ui(layout, context):
     props = context.scene.script_toolkit
     
@@ -305,10 +369,36 @@ def draw_ui(layout, context):
 
     layout.separator()
     
-    col = layout.column(align=True)
+    biped_box = layout.box()
+    biped_box.label(text="Biped Symmetry Names", icon="ARMATURE_DATA")
+    col = biped_box.column(align=True)
     col.operator("script_toolkit.biped_setup_mirror", icon="MOD_MIRROR")
     col.operator("script_toolkit.biped_restore_names", icon="LOOP_BACK")
     
+    layout.separator()
+
+    quick_box = layout.box()
+    quick_box.label(text="Set Bone Name", icon="BONE_DATA")
+    
+    pairs = [
+        ("quick_rename_1", "quick_rename_2"),
+        ("quick_rename_3", "quick_rename_4"),
+        ("quick_rename_5", "quick_rename_6"),
+    ]
+    
+    for p1, p2 in pairs:
+        split = quick_box.split(factor=0.5)
+        
+        row1 = split.row(align=True)
+        row1.prop(props, p1, text="Front")
+        op1 = row1.operator("script_toolkit.biped_set_bone_name", text="Rename")
+        op1.target_name = getattr(props, p1)
+        
+        row2 = split.row(align=True)
+        row2.prop(props, p2, text="Back")
+        op2 = row2.operator("script_toolkit.biped_set_bone_name", text="Rename")
+        op2.target_name = getattr(props, p2)
+
     layout.separator()
     
     box = layout.box()
@@ -336,14 +426,25 @@ def draw_ui(layout, context):
     layout.separator()
     
     box_prev = layout.box()
-    box_prev.operator("script_toolkit.biped_generate_preview", icon="FILE_TICK")
+    row_prev = box_prev.row(align=True)
+    row_prev.operator("script_toolkit.biped_generate_preview", icon="FILE_TICK")
+    row_prev.operator("script_toolkit.biped_clear_preview", icon="TRASH", text="Clear")
     if props.preview_summary:
         box_prev.label(text=props.preview_summary, icon="INFO")
     if len(props.preview_items) > 0:
         box_prev.template_list("STBN_UL_preview_list", "", props, "preview_items", props, "preview_index", rows=15)
 
 
-CLASSES = (STBN_OT_setup_mirror, STBN_OT_restore_names, STBN_OT_batch_rename, STBN_OT_add_vg_prefix, STBN_UL_preview_list, STBN_OT_generate_preview)
+CLASSES = (
+    STBN_OT_setup_mirror,
+    STBN_OT_restore_names,
+    STBN_OT_set_bone_name,
+    STBN_OT_batch_rename,
+    STBN_OT_add_vg_prefix,
+    STBN_UL_preview_list,
+    STBN_OT_generate_preview,
+    STBN_OT_clear_preview,
+)
 
 
 def register():
@@ -354,3 +455,4 @@ def register():
 def unregister():
     for cls in reversed(CLASSES):
         bpy.utils.unregister_class(cls)
+

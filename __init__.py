@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 4, 3),
+    "version": (0, 4, 4),
     "blender": (5, 1, 0),
     "location": "3D View > Sidebar > Script Toolkit",
     "description": "FBX batch tools in an isolated Blender worker plus selected-object cleanup tools.",
@@ -200,6 +200,14 @@ class ST_Properties(PropertyGroup):
     rename_replace_2: StringProperty(name="Replace", default="")
     rename_suffix_2: StringProperty(name="Suffix", default=".R")
     vg_prefix: StringProperty(name="Prefix", default="DEF-")
+
+    # Quick Set Bone Name
+    quick_rename_1: StringProperty(name="Front", default="POLE-IK_LEG_FRONT.L")
+    quick_rename_2: StringProperty(name="Back", default="POLE-IK_LEG_BACK.L")
+    quick_rename_3: StringProperty(name="Front", default="MCH-IK_LEG_FRONT.L")
+    quick_rename_4: StringProperty(name="Back", default="MCH-IK_LEG_BACK.L")
+    quick_rename_5: StringProperty(name="Front", default="FOOT_LEG_FRONT.L")
+    quick_rename_6: StringProperty(name="Back", default="FOOT_LEG_BACK.L")
     
     preview_items: bpy.props.CollectionProperty(type=STBN_PreviewItem)
     preview_index: IntProperty()

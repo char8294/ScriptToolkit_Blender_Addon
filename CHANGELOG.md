@@ -1,5 +1,11 @@
 # Script Toolkit Changelog
 
+## v0.4.4
+
+- Grouped Setup Symmetry Names and Restore Original Names under Biped Symmetry Names box in Biped Names Helper.
+- Added a Quick Set Bone Name section with Front / Back labels, textboxes, and direct rename buttons ("Rename") for `POLE-IK_LEG`, `MCH-IK_LEG`, and `FOOT_LEG` bones (.L / .R).
+- Added a Clear button to the Generate Preview section in Biped Names Helper.
+
 ## v0.4.3
 
 - Added Delete Bones by Name feature to Align Bones tool with a popup report dialog.
