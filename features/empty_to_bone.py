@@ -72,7 +72,9 @@ class ST_OT_PickTargetArmature(Operator):
 class ST_OT_EmptyToBone(Operator):
     bl_idname = "script_toolkit.empty_to_bone"
     bl_label = "Convert to Bone"
-    bl_description = "Convert selected Empties to Bones in the target Armature"
+    bl_description = (
+        "Convert selected Empties and Armature origins to Bones in the target Armature"
+    )
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -83,10 +85,13 @@ class ST_OT_EmptyToBone(Operator):
     def execute(self, context):
         props = context.scene.script_toolkit
         armature = props.target_armature
-        empties = [obj for obj in context.selected_objects if obj.type == 'EMPTY']
+        source_objects = [
+            obj for obj in context.selected_objects
+            if obj.type in {'EMPTY', 'ARMATURE'}
+        ]
         
-        if not empties:
-            self.report({'WARNING'}, "No Empty objects selected.")
+        if not source_objects:
+            self.report({'WARNING'}, "No Empty or Armature objects selected.")
             return {'CANCELLED'}
             
         if armature.type != 'ARMATURE':
@@ -117,17 +122,17 @@ class ST_OT_EmptyToBone(Operator):
 
         armature_matrix_inv = armature.matrix_world.inverted()
 
-        for empty in empties:
+        for source_object in source_objects:
             # Calculate position in armature space
-            armature_space_matrix = armature_matrix_inv @ empty.matrix_world
+            armature_space_matrix = armature_matrix_inv @ source_object.matrix_world
             head_pos = armature_space_matrix.translation
             
-            # The Empty's Y axis in armature space
+            # The source object's Y axis in armature space
             y_axis = (armature_space_matrix.to_3x3() @ Vector((0, 1, 0))).normalized()
             tail_pos = head_pos + (y_axis * props.bone_length)
 
             # Create new bone
-            new_bone = edit_bones.new(empty.name)
+            new_bone = edit_bones.new(source_object.name)
             new_bone.head = head_pos
             new_bone.tail = tail_pos
             
@@ -141,13 +146,16 @@ class ST_OT_EmptyToBone(Operator):
         # Return to Object Mode
         bpy.ops.object.mode_set(mode='OBJECT')
         
-        # Reselect empties so user doesn't lose selection
+        # Reselect source objects so the user doesn't lose the selection.
         bpy.ops.object.select_all(action='DESELECT')
-        for empty in empties:
-            empty.select_set(True)
-        context.view_layer.objects.active = empties[0] if empties else None
+        for source_object in source_objects:
+            source_object.select_set(True)
+        context.view_layer.objects.active = source_objects[0]
 
-        self.report({'INFO'}, f"Created {len(empties)} bones in '{armature.name}'.")
+        self.report(
+            {'INFO'},
+            f"Created {len(source_objects)} bones in '{armature.name}'.",
+        )
         return {'FINISHED'}
 
 
@@ -183,7 +191,11 @@ def draw_ui(layout, context):
             rows=10
         )
         
-        conv_box.operator("script_toolkit.empty_to_bone", icon='GROUP_BONE', text="Convert Selected Empties to Bones")
+        conv_box.operator(
+            "script_toolkit.empty_to_bone",
+            icon='GROUP_BONE',
+            text="Convert Selected Empties / Armatures to Bones",
+        )
 
 @bpy.app.handlers.persistent
 def auto_refresh_bone_hierarchy(scene, depsgraph):

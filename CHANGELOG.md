@@ -1,5 +1,9 @@
 # Script Toolkit Changelog
 
+## Unreleased
+
+- Empty to Bone can now create one bone from each selected Armature origin/pivot, in addition to selected Empties.
+
 ## v0.4.4
 
 - Grouped Setup Symmetry Names and Restore Original Names under Biped Symmetry Names box in Biped Names Helper.

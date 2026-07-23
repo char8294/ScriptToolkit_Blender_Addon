@@ -121,7 +121,11 @@ class ST_Properties(PropertyGroup):
             ("HAIR_CHECK", "Check Hair And Cap", "Cycle hair objects while keeping the hat visible"),
             ("BIPED_NAMES", "Biped Names Helper", "Convert Biped names for symmetry and restore them"),
             ("ALIGN_BONES", "Align Bones", "Align and snap bones"),
-            ("EMPTY_TO_BONE", "Empty to Bone", "Convert empties to bones"),
+            (
+                "EMPTY_TO_BONE",
+                "Empty to Bone",
+                "Convert empties and armature origins to bones",
+            ),
             ("ARP_REMAP_PRESET", "ARP Retarget Preset", "Build and export an Auto-Rig Pro mapping preset"),
             ("KJ_EXPORT", "KJ Export", "Batch export meshes with a pinned armature using Better FBX"),
         ],
