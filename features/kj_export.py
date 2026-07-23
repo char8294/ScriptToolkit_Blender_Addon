@@ -188,6 +188,17 @@ def _duplicate_armature(context, armature):
     return temp_armature
 
 
+def _duplicate_mesh(context, mesh):
+    """Create a scene-linked independent mesh copy without relying on UI context."""
+    temp_mesh_data = mesh.data.copy()
+    temp_mesh = mesh.copy()
+    temp_mesh.data = temp_mesh_data
+    if temp_mesh.animation_data:
+        temp_mesh.animation_data_clear()
+    context.collection.objects.link(temp_mesh)
+    return temp_mesh
+
+
 def _remove_bones_except(context, armature, names_to_keep):
     """Remove all other bones from a temporary armature and restore selection."""
     original_active = context.view_layer.objects.active
@@ -255,6 +266,7 @@ class BATCH_FBX_OT_export(bpy.types.Operator):
 
         original_active = context.view_layer.objects.active
         original_selected = list(context.selected_objects)
+        original_mode = original_active.mode if original_active else "OBJECT"
         bone_mapping = None
         restore_biped = props.restore_biped_names
         if restore_biped and "biped_name_mapping" in armature.data:
@@ -268,6 +280,21 @@ class BATCH_FBX_OT_export(bpy.types.Operator):
         count = 0
         errors = []
         try:
+            # Edit-mode changes (including Mesh > Sort Elements) live in the
+            # edit BMesh until Blender syncs them back to the mesh datablock.
+            # The temporary export copies below must be made after that sync.
+            if original_mode != "OBJECT":
+                for obj in original_selected:
+                    if obj.type == "MESH" and obj.mode == "EDIT":
+                        obj.update_from_editmode()
+                if not bpy.ops.object.mode_set.poll():
+                    self.report(
+                        {"ERROR"},
+                        "Could not switch to Object Mode to synchronize mesh edits.",
+                    )
+                    return {"CANCELLED"}
+                bpy.ops.object.mode_set(mode="OBJECT")
+
             for mesh in meshes:
                 temp_mesh = None
                 temp_armature = None
@@ -299,10 +326,7 @@ class BATCH_FBX_OT_export(bpy.types.Operator):
                     if not need_duplicate:
                         export_mesh = mesh
                     else:
-                        mesh.select_set(True)
-                        context.view_layer.objects.active = mesh
-                        bpy.ops.object.duplicate(linked=False)
-                        export_mesh = context.active_object
+                        export_mesh = _duplicate_mesh(context, mesh)
                         temp_mesh = export_mesh
 
                     if temp_mesh and props.force_shade_smooth:
@@ -356,6 +380,16 @@ class BATCH_FBX_OT_export(bpy.types.Operator):
                         export_mesh.data.name = original_data_name
                         source_mesh_data_renamed = True
 
+                    # Better FBX evaluates selected objects through the
+                    # dependency graph when Apply Modifiers is enabled.  Data
+                    # API copies and modifier retargeting must be explicitly
+                    # tagged before that evaluation or Blender can hand the
+                    # exporter the copy's previous evaluated mesh.
+                    export_mesh.data.update()
+                    export_mesh.update_tag(refresh={"OBJECT", "DATA"})
+                    export_armature.update_tag(refresh={"OBJECT", "DATA"})
+                    context.view_layer.update()
+
                     bpy.ops.object.select_all(action="DESELECT")
                     export_armature.select_set(True)
                     export_mesh.select_set(True)
@@ -391,6 +425,15 @@ class BATCH_FBX_OT_export(bpy.types.Operator):
                     obj.select_set(True)
             if original_active and original_active.name in bpy.data.objects:
                 context.view_layer.objects.active = original_active
+                if (
+                    original_mode != "OBJECT"
+                    and original_active.mode == "OBJECT"
+                    and bpy.ops.object.mode_set.poll()
+                ):
+                    try:
+                        bpy.ops.object.mode_set(mode=original_mode)
+                    except RuntimeError:
+                        pass
 
         if errors:
             self.report({"WARNING"}, f"Exported {count} files. Errors in: {', '.join(errors)}")

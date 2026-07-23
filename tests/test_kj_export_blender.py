@@ -3,6 +3,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+import bmesh
 import bpy
 
 
@@ -21,6 +22,12 @@ class TEST_OT_better_export_fbx(bpy.types.Operator):
         selected = list(context.selected_objects)
         armature = next(obj for obj in selected if obj.type == "ARMATURE")
         mesh = next(obj for obj in selected if obj.type == "MESH")
+        depsgraph = context.evaluated_depsgraph_get()
+        evaluated_mesh = bpy.data.meshes.new_from_object(
+            mesh.evaluated_get(depsgraph),
+            preserve_all_data_layers=True,
+            depsgraph=depsgraph,
+        )
         modifier_targets = {
             modifier.object
             for modifier in mesh.modifiers
@@ -30,14 +37,23 @@ class TEST_OT_better_export_fbx(bpy.types.Operator):
             {
                 "mesh_name": mesh.name,
                 "mesh_data_name": mesh.data.name,
+                "mesh_mode": mesh.mode,
+                "first_vertex_x": mesh.data.vertices[0].co.x,
+                "polygon_material_order": tuple(
+                    polygon.material_index for polygon in mesh.data.polygons
+                ),
+                "evaluated_polygon_material_order": tuple(
+                    polygon.material_index for polygon in evaluated_mesh.polygons
+                ),
                 "bones": set(armature.data.bones.keys()),
                 "modifier_uses_export_armature": armature in modifier_targets,
-                "sources_unchanged": all(
-                    source.name == expected_name and source.data == expected_data
-                    for source, expected_name, expected_data in SOURCE_OBJECT_STATES
+                "source_data_unchanged": all(
+                    source.data == expected_data
+                    for source, _expected_name, expected_data in SOURCE_OBJECT_STATES
                 ),
             }
         )
+        bpy.data.meshes.remove(evaluated_mesh)
         return {"FINISHED"}
 
 
@@ -98,6 +114,33 @@ def make_weighted_mesh(name, armature, weighted_bone_name):
     return mesh
 
 
+def make_material_sort_mesh(name, armature):
+    mesh_data = bpy.data.meshes.new(f"{name}_Data")
+    vertices = [
+        (0.0, 0.0, 0.0),
+        (1.0, 0.0, 0.0),
+        (0.0, 1.0, 0.0),
+        (2.0, 0.0, 0.0),
+        (3.0, 0.0, 0.0),
+        (2.0, 1.0, 0.0),
+        (4.0, 0.0, 0.0),
+        (5.0, 0.0, 0.0),
+        (4.0, 1.0, 0.0),
+    ]
+    mesh_data.from_pydata(vertices, [], [(0, 1, 2), (3, 4, 5), (6, 7, 8)])
+    mesh = bpy.data.objects.new(name, mesh_data)
+    bpy.context.scene.collection.objects.link(mesh)
+    mesh.data.materials.append(bpy.data.materials.new(f"{name}_Material_0"))
+    mesh.data.materials.append(bpy.data.materials.new(f"{name}_Material_1"))
+    for polygon, material_index in zip(mesh.data.polygons, (1, 0, 1)):
+        polygon.material_index = material_index
+    weighted_group = mesh.vertex_groups.new(name="Hand")
+    weighted_group.add(range(len(vertices)), 1.0, "REPLACE")
+    modifier = mesh.modifiers.new(name="Armature", type="ARMATURE")
+    modifier.object = armature
+    return mesh
+
+
 def run():
     addon = load_addon()
     bpy.utils.register_class(TEST_OT_better_export_fbx)
@@ -121,6 +164,14 @@ def run():
         temp_armature_data = temp_armature.data
         bpy.data.objects.remove(temp_armature, do_unlink=True)
         bpy.data.armatures.remove(temp_armature_data)
+
+        temp_mesh = addon.kj_export._duplicate_mesh(bpy.context, mesh)
+        assert temp_mesh is not mesh
+        assert temp_mesh.data is not mesh.data
+        assert temp_mesh in bpy.context.scene.objects.values()
+        temp_mesh_data = temp_mesh.data
+        bpy.data.objects.remove(temp_mesh, do_unlink=True)
+        bpy.data.meshes.remove(temp_mesh_data)
 
         second_mesh = make_weighted_mesh("KJ_Test_Accessory", armature, "Unused")
         props = scene.batch_better_fbx_props
@@ -150,7 +201,11 @@ def run():
             "KJ_Test_Mesh_Data",
             "KJ_Test_Accessory_Data",
         ]
-        assert all(capture["sources_unchanged"] for capture in EXPORT_CAPTURES)
+        assert all(capture["source_data_unchanged"] for capture in EXPORT_CAPTURES)
+        assert all(
+            source.name == expected_name and source.data == expected_data
+            for source, expected_name, expected_data in SOURCE_OBJECT_STATES
+        )
         assert set(armature.data.bones.keys()) == {"Root", "Spine", "Hand", "Unused"}
         assert all(
             modifier.object == armature
@@ -158,6 +213,48 @@ def run():
             for modifier in source_mesh.modifiers
             if modifier.type == "ARMATURE"
         )
+
+        # Edit-mode changes must be synchronized before the temporary mesh is
+        # copied, and the user's original mode must be restored afterward.
+        bpy.ops.object.select_all(action="DESELECT")
+        mesh.select_set(True)
+        bpy.context.view_layer.objects.active = mesh
+        bpy.ops.object.mode_set(mode="EDIT")
+        edit_mesh = bmesh.from_edit_mesh(mesh.data)
+        edit_mesh.verts.ensure_lookup_table()
+        edit_mesh.verts[0].co.x = 7.0
+        props.remove_unused_bones = False
+        props.force_shade_smooth = True
+        while len(props.mesh_list) > 1:
+            props.mesh_list.remove(len(props.mesh_list) - 1)
+        EXPORT_CAPTURES.clear()
+
+        assert bpy.ops.export.batch_better_fbx() == {"FINISHED"}
+        assert len(EXPORT_CAPTURES) == 1
+        assert EXPORT_CAPTURES[0]["mesh_mode"] == "OBJECT"
+        assert EXPORT_CAPTURES[0]["first_vertex_x"] == 7.0
+        assert mesh.mode == "EDIT"
+        bpy.ops.object.mode_set(mode="OBJECT")
+
+        # Reproduce Mesh > Sort Elements > Material and confirm the temporary
+        # export mesh receives the newly sorted polygon order.
+        sort_mesh = make_material_sort_mesh("KJ_Test_Material_Sort", armature)
+        props.mesh_list.clear()
+        props.mesh_list.add().obj = sort_mesh
+        bpy.ops.object.select_all(action="DESELECT")
+        sort_mesh.select_set(True)
+        bpy.context.view_layer.objects.active = sort_mesh
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.select_all(action="SELECT")
+        bpy.ops.mesh.sort_elements(type="MATERIAL", elements={"FACE"})
+        EXPORT_CAPTURES.clear()
+
+        assert bpy.ops.export.batch_better_fbx() == {"FINISHED"}
+        assert len(EXPORT_CAPTURES) == 1
+        assert EXPORT_CAPTURES[0]["polygon_material_order"] == (0, 1, 1)
+        assert EXPORT_CAPTURES[0]["evaluated_polygon_material_order"] == (0, 1, 1)
+        assert sort_mesh.mode == "EDIT"
+        bpy.ops.object.mode_set(mode="OBJECT")
         print("KJ_EXPORT_REGISTRATION_OK")
     finally:
         addon.unregister()
