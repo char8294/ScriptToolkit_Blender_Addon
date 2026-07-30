@@ -83,13 +83,13 @@ def run():
     assert scene.arp_retarget_mapping_items[0].target_name == "Bip001 L Finger01"
     assert scene.arp_retarget_mapping_items[1].target_name == "Bip001 L Finger02"
     assert scene.arp_retarget_mapping_items[2].target_name == ""
-    assert scene.arp_retarget_mapping_items[3].target_name == "No Match At All"
+    assert scene.arp_retarget_mapping_items[3].target_name == "Unrelated"
     matched_names = {
         scene.arp_retarget_mapping_items[index].target_name
-        for index in (0, 1)
+        for index in (0, 1, 3)
     }
-    assert len(matched_names) == 2
-    assert all(scene.arp_retarget_mapping_items[index].target_manual for index in (0, 1))
+    assert len(matched_names) == 3
+    assert all(scene.arp_retarget_mapping_items[index].target_manual for index in (0, 1, 3))
 
     scene.arp_retarget_target_armature = target
 

@@ -50,6 +50,7 @@ _LIST_FONT_SIZE = 11
 _LIST_LABEL_ELLIPSIS = "…"
 
 _TARGET_DOUBLE_CLICK_SECONDS = 0.4
+_AUTOMATIC_MATCH_MIN_SCORE = 0.52
 _last_target_click_index = -1
 _last_target_click_time = 0.0
 
@@ -189,18 +190,37 @@ def _match_score(source, target):
     return (jaccard * 0.55) + (sequence * 0.45)
 
 
-def _find_target(source_signature, target_signatures, assigned):
+def _ranked_target_candidates(source_signature, target_signatures, minimum_score):
     candidates = []
     for target_name, target_signature in target_signatures.items():
-        if target_name in assigned:
-            continue
         score = _match_score(source_signature, target_signature)
-        if score >= 0.52:
-            candidates.append((score, target_name))
-    if not candidates:
-        return ""
-    candidates.sort(key=lambda value: (-value[0], value[1].casefold()))
-    return candidates[0][1]
+        if score < minimum_score:
+            continue
+        sequence = difflib.SequenceMatcher(
+            None,
+            " ".join(source_signature.tokens),
+            " ".join(target_signature.tokens),
+        ).ratio()
+        candidates.append((score, sequence, target_name))
+    candidates.sort(
+        key=lambda candidate: (
+            -candidate[0],
+            -candidate[1],
+            candidate[2].casefold(),
+        )
+    )
+    return candidates
+
+
+def _find_target(source_signature, target_signatures, assigned):
+    for _score, _sequence, target_name in _ranked_target_candidates(
+        source_signature,
+        target_signatures,
+        _AUTOMATIC_MATCH_MIN_SCORE,
+    ):
+        if target_name not in assigned:
+            return target_name
+    return ""
 
 
 def _find_unique_target_matches(requested_names, target_names):
@@ -214,21 +234,24 @@ def _find_unique_target_matches(requested_names, target_names):
         if not requested_name:
             continue
         requested_signature = _name_signature(requested_name)
-        for target_name, target_signature in target_signatures.items():
-            score = _match_score(requested_signature, target_signature)
-            if score >= 0.52:
-                candidates.append((score, item_index, target_name))
+        for score, sequence, target_name in _ranked_target_candidates(
+            requested_signature,
+            target_signatures,
+            0.0,
+        ):
+            candidates.append((score, sequence, item_index, target_name))
 
     candidates.sort(
         key=lambda candidate: (
             -candidate[0],
-            candidate[1],
-            candidate[2].casefold(),
+            -candidate[1],
+            candidate[2],
+            candidate[3].casefold(),
         )
     )
     matches = {}
     assigned_targets = set()
-    for _score, item_index, target_name in candidates:
+    for _score, _sequence, item_index, target_name in candidates:
         if item_index in matches or target_name in assigned_targets:
             continue
         matches[item_index] = target_name
