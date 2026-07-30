@@ -18,7 +18,7 @@ from bpy.props import (
     PointerProperty,
     StringProperty,
 )
-from bpy.types import Operator, PropertyGroup, UIList
+from bpy.types import Operator, PropertyGroup, UIList, UI_UL_list
 
 
 _SCENE_PROPERTIES = (
@@ -201,6 +201,39 @@ def _find_target(source_signature, target_signatures, assigned):
         return ""
     candidates.sort(key=lambda value: (-value[0], value[1].casefold()))
     return candidates[0][1]
+
+
+def _find_unique_target_matches(requested_names, target_names):
+    """Assign the strongest available target to each non-empty requested name."""
+    target_signatures = {
+        target_name: _name_signature(target_name)
+        for target_name in target_names
+    }
+    candidates = []
+    for item_index, requested_name in enumerate(requested_names):
+        if not requested_name:
+            continue
+        requested_signature = _name_signature(requested_name)
+        for target_name, target_signature in target_signatures.items():
+            score = _match_score(requested_signature, target_signature)
+            if score >= 0.52:
+                candidates.append((score, item_index, target_name))
+
+    candidates.sort(
+        key=lambda candidate: (
+            -candidate[0],
+            candidate[1],
+            candidate[2].casefold(),
+        )
+    )
+    matches = {}
+    assigned_targets = set()
+    for _score, item_index, target_name in candidates:
+        if item_index in matches or target_name in assigned_targets:
+            continue
+        matches[item_index] = target_name
+        assigned_targets.add(target_name)
+    return matches
 
 
 def _selected_or_active(scene):
@@ -465,6 +498,19 @@ class STARP_OT_target_mapping_cell(Operator):
 
 
 class STARP_UL_mapping(UIList):
+    def filter_items(self, _context, data, property_name):
+        items = getattr(data, property_name)
+        if not self.filter_name:
+            return [], []
+        flags = UI_UL_list.filter_items_by_name(
+            self.filter_name,
+            self.bitflag_filter_item,
+            items,
+            "source_name",
+            reverse=self.use_filter_invert,
+        )
+        return flags, []
+
     def draw_item(self, _context, layout, _data, item, _icon, _active_data, _active_property, _index):
         split = layout.split(factor=0.5, align=True)
         source = split.operator(
@@ -625,6 +671,50 @@ class STARP_OT_update_list(Operator):
         self.report(
             {"INFO"},
             f"Updated {len(source_names)} bones; preserved {preserved}, matched {matched}, added {added}, removed {removed}",
+        )
+        return {"FINISHED"}
+
+
+class STARP_OT_match_target_names(Operator):
+    bl_idname = "script_toolkit.arp_match_target_names"
+    bl_label = "Match Target Names"
+    bl_description = (
+        "Match non-empty Target Bone names to the closest real bones in the "
+        "Target Armature without reusing a bone"
+    )
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        scene = context.scene
+        target = scene.arp_retarget_target_armature
+        if not target or target.type != "ARMATURE":
+            self.report({"ERROR"}, "Choose a Target Armature first")
+            return {"CANCELLED"}
+
+        items = scene.arp_retarget_mapping_items
+        requested_names = [item.target_name for item in items]
+        attempted = sum(bool(name) for name in requested_names)
+        if not attempted:
+            self.report({"WARNING"}, "No Target Bone names to match")
+            return {"CANCELLED"}
+
+        target_names = sorted(
+            (bone.name for bone in target.data.bones),
+            key=str.casefold,
+        )
+        matches = _find_unique_target_matches(requested_names, target_names)
+        changed = 0
+        for item_index, target_name in matches.items():
+            item = items[item_index]
+            if item.target_name != target_name:
+                item.target_name = target_name
+                changed += 1
+            item.target_manual = True
+
+        unmatched = attempted - len(matches)
+        self.report(
+            {"INFO"},
+            f"Matched {len(matches)} target names; changed {changed}, unmatched {unmatched}",
         )
         return {"FINISHED"}
 
@@ -1037,6 +1127,7 @@ def draw_ui(layout, context):
     actions = mapping_box.row(align=True)
     actions.operator(STARP_OT_swap_source_target.bl_idname, icon="ARROW_LEFTRIGHT")
     actions.operator(STARP_OT_mirror_bone_list.bl_idname, icon="MOD_MIRROR")
+    actions.operator(STARP_OT_match_target_names.bl_idname, icon="BONE_DATA")
 
     rename_box = layout.box()
     rename_box.label(text="Rename", icon="SORTALPHA")
@@ -1072,6 +1163,7 @@ CLASSES = (
     STARP_UL_mapping,
     STARP_OT_build_list,
     STARP_OT_update_list,
+    STARP_OT_match_target_names,
     STARP_OT_select_all,
     STARP_OT_select_none,
     STARP_OT_select_invert,
