@@ -49,6 +49,50 @@ def run():
     assert len(scene.arp_retarget_mapping_items) == len(source.data.bones)
     assert {item.source_name for item in scene.arp_retarget_mapping_items} == set(source_names)
 
+    filter_state = SimpleNamespace(
+        filter_name="arm",
+        bitflag_filter_item=1,
+        use_filter_invert=False,
+        use_filter_sort_alpha=False,
+        use_filter_sort_reverse=False,
+    )
+    filter_flags, filter_order = addon.STARP_UL_mapping.filter_items(
+        filter_state,
+        bpy.context,
+        scene,
+        "arp_retarget_mapping_items",
+    )
+    visible_sources = {
+        item.source_name
+        for item, flag in zip(scene.arp_retarget_mapping_items, filter_flags)
+        if flag
+    }
+    assert visible_sources == {"Arm.L", "Arm.R"}
+    assert filter_order == []
+
+    match_target = make_armature(
+        "MatchTarget",
+        ("Bip001 L Finger01", "Bip001 L Finger02", "Unrelated"),
+    )
+    scene.arp_retarget_target_armature = match_target
+    scene.arp_retarget_mapping_items[0].target_name = "Bip001 Finger01.L"
+    scene.arp_retarget_mapping_items[1].target_name = "Bip001 Finger01.L"
+    scene.arp_retarget_mapping_items[2].target_name = ""
+    scene.arp_retarget_mapping_items[3].target_name = "No Match At All"
+    assert bpy.ops.script_toolkit.arp_match_target_names() == {"FINISHED"}
+    assert scene.arp_retarget_mapping_items[0].target_name == "Bip001 L Finger01"
+    assert scene.arp_retarget_mapping_items[1].target_name == "Bip001 L Finger02"
+    assert scene.arp_retarget_mapping_items[2].target_name == ""
+    assert scene.arp_retarget_mapping_items[3].target_name == "Unrelated"
+    matched_names = {
+        scene.arp_retarget_mapping_items[index].target_name
+        for index in (0, 1, 3)
+    }
+    assert len(matched_names) == 3
+    assert all(scene.arp_retarget_mapping_items[index].target_manual for index in (0, 1, 3))
+
+    scene.arp_retarget_target_armature = target
+
     bpy.context.view_layer.objects.active = target
     target.select_set(True)
     scene.arp_retarget_source_armature = None
