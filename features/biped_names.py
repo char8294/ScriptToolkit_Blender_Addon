@@ -153,43 +153,46 @@ class STBN_OT_restore_names(Operator):
         return {"FINISHED"}
 
 
+def _get_batch_rename_rules(props):
+    rules = []
+    if props.batch_rename_preset == "LEG_2":
+        pairs = [
+            (props.rename_2leg_find_1, props.rename_2leg_replace_1, props.rename_2leg_suffix_1),
+            (props.rename_2leg_find_2, props.rename_2leg_replace_2, props.rename_2leg_suffix_2),
+        ]
+    else:
+        pairs = [
+            (props.rename_4leg_find_1, props.rename_4leg_replace_1, props.rename_4leg_suffix_1),
+            (props.rename_4leg_find_2, props.rename_4leg_replace_2, props.rename_4leg_suffix_2),
+            (props.rename_4leg_find_3, props.rename_4leg_replace_3, props.rename_4leg_suffix_3),
+            (props.rename_4leg_find_4, props.rename_4leg_replace_4, props.rename_4leg_suffix_4),
+        ]
+    for fnd, rep, suf in pairs:
+        if fnd:
+            rules.append((fnd, rep, suf))
+    return rules
+
+
 class STBN_OT_batch_rename(Operator):
     bl_idname = "script_toolkit.biped_batch_rename"
-    bl_label = "Batch Rename"
-    bl_description = "Rename Bones or Vertex Groups based on Find/Replace/Suffix"
+    bl_label = "Batch Rename Bones"
+    bl_description = "Rename Bones based on Find/Replace/Suffix rules"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         props = context.scene.script_toolkit
-        armatures, meshes = _related_objects(context)
+        armatures, _ = _related_objects(context)
         
-        rules = []
-        if props.rename_find_1:
-            rules.append((props.rename_find_1, props.rename_replace_1, props.rename_suffix_1))
-        if props.rename_find_2:
-            rules.append((props.rename_find_2, props.rename_replace_2, props.rename_suffix_2))
-            
+        rules = _get_batch_rename_rules(props)
         if not rules:
             return {"FINISHED"}
             
-        if props.rename_target == "BONE":
-            for arm in armatures:
-                for bone in arm.data.bones:
-                    for fnd, rep, suf in rules:
-                        if fnd in bone.name:
-                            bone.name = bone.name.replace(fnd, rep) + suf
-                            break
-                            
-        elif props.rename_target == "VERTEX_GROUP":
-            for mesh in meshes:
-                for vg in mesh.vertex_groups:
-                    for fnd, rep, suf in rules:
-                        if fnd in vg.name:
-                            try:
-                                vg.name = vg.name.replace(fnd, rep) + suf
-                            except Exception:
-                                pass
-                            break
+        for arm in armatures:
+            for bone in arm.data.bones:
+                for fnd, rep, suf in rules:
+                    if fnd in bone.name:
+                        bone.name = bone.name.replace(fnd, rep) + suf
+                        break
                             
         return {"FINISHED"}
 
@@ -236,46 +239,31 @@ class STBN_OT_generate_preview(Operator):
         props = context.scene.script_toolkit
         armatures, meshes = _related_objects(context)
         
-        rules = []
-        if props.rename_find_1:
-            rules.append((props.rename_find_1, props.rename_replace_1, props.rename_suffix_1))
-        if props.rename_find_2:
-            rules.append((props.rename_find_2, props.rename_replace_2, props.rename_suffix_2))
+        rules = _get_batch_rename_rules(props)
             
         props.preview_items.clear()
         count = 0
         
-        if props.rename_target == "BONE":
-            for arm in armatures:
-                for bone in arm.data.bones:
-                    for fnd, rep, suf in rules:
-                        if fnd in bone.name:
-                            new_name = bone.name.replace(fnd, rep) + suf
-                            if new_name != bone.name:
-                                item = props.preview_items.add()
-                                item.old_name = bone.name
-                                item.new_name = new_name
-                                count += 1
-                            break
-                            
-        elif props.rename_target == "VERTEX_GROUP":
-            prefix = props.vg_prefix
+        for arm in armatures:
+            for bone in arm.data.bones:
+                for fnd, rep, suf in rules:
+                    if fnd in bone.name:
+                        new_name = bone.name.replace(fnd, rep) + suf
+                        if new_name != bone.name:
+                            item = props.preview_items.add()
+                            item.old_name = bone.name
+                            item.new_name = new_name
+                            count += 1
+                        break
+                        
+        prefix = props.vg_prefix
+        if prefix:
             for mesh in meshes:
                 for vg in mesh.vertex_groups:
-                    new_name = vg.name
-                    # Apply batch rename rules
-                    for fnd, rep, suf in rules:
-                        if fnd in new_name:
-                            new_name = new_name.replace(fnd, rep) + suf
-                            break
-                    # Apply prefix
-                    if prefix and not new_name.startswith(prefix):
-                        new_name = prefix + new_name
-                        
-                    if new_name != vg.name:
+                    if not vg.name.startswith(prefix):
                         item = props.preview_items.add()
                         item.old_name = vg.name
-                        item.new_name = new_name
+                        item.new_name = prefix + vg.name
                         count += 1
                         
         props.preview_summary = f"{count} items will be changed"
@@ -379,49 +367,88 @@ def draw_ui(layout, context):
 
     quick_box = layout.box()
     quick_box.label(text="Set Bone Name", icon="BONE_DATA")
+    quick_box.prop(props, "quick_rename_preset", text="Preset")
     
-    pairs = [
-        ("quick_rename_1", "quick_rename_2"),
-        ("quick_rename_3", "quick_rename_4"),
-        ("quick_rename_5", "quick_rename_6"),
-    ]
-    
-    for p1, p2 in pairs:
-        split = quick_box.split(factor=0.5)
+    if props.quick_rename_preset == "LEG_2":
+        items_2leg = [
+            ("quick_rename_2leg_pole", "Pole:"),
+            ("quick_rename_2leg_mch", "MCH-IK:"),
+            ("quick_rename_2leg_foot", "Foot:"),
+        ]
+        for prop_name, label_text in items_2leg:
+            row = quick_box.row(align=True)
+            row.prop(props, prop_name, text=label_text)
+            op = row.operator("script_toolkit.biped_set_bone_name", text="Rename")
+            op.target_name = getattr(props, prop_name)
+    else:
+        pairs = [
+            ("quick_rename_1", "quick_rename_2"),
+            ("quick_rename_3", "quick_rename_4"),
+            ("quick_rename_5", "quick_rename_6"),
+        ]
         
-        row1 = split.row(align=True)
-        row1.prop(props, p1, text="Front")
-        op1 = row1.operator("script_toolkit.biped_set_bone_name", text="Rename")
-        op1.target_name = getattr(props, p1)
-        
-        row2 = split.row(align=True)
-        row2.prop(props, p2, text="Back")
-        op2 = row2.operator("script_toolkit.biped_set_bone_name", text="Rename")
-        op2.target_name = getattr(props, p2)
+        for p1, p2 in pairs:
+            split = quick_box.split(factor=0.5)
+            
+            row1 = split.row(align=True)
+            row1.prop(props, p1, text="Front")
+            op1 = row1.operator("script_toolkit.biped_set_bone_name", text="Rename")
+            op1.target_name = getattr(props, p1)
+            
+            row2 = split.row(align=True)
+            row2.prop(props, p2, text="Back")
+            op2 = row2.operator("script_toolkit.biped_set_bone_name", text="Rename")
+            op2.target_name = getattr(props, p2)
 
     layout.separator()
     
     box = layout.box()
-    box.prop(props, "rename_target")
-    row = box.row()
-    col1 = row.column(align=True)
-    col1.prop(props, "rename_find_2")
-    col1.prop(props, "rename_replace_2")
-    col1.prop(props, "rename_suffix_2")
+    box.label(text="Batch Rename (Bones)", icon="BONE_DATA")
+    box.prop(props, "batch_rename_preset", text="Preset")
     
-    col2 = row.column(align=True)
-    col2.prop(props, "rename_find_1")
-    col2.prop(props, "rename_replace_1")
-    col2.prop(props, "rename_suffix_1")
-    
-    box.operator("script_toolkit.biped_batch_rename", icon="FONT_DATA")
+    if props.batch_rename_preset == "LEG_2":
+        row = box.row()
+        col1 = row.column(align=True)
+        col1.prop(props, "rename_2leg_find_1")
+        col1.prop(props, "rename_2leg_replace_1")
+        col1.prop(props, "rename_2leg_suffix_1")
+        
+        col2 = row.column(align=True)
+        col2.prop(props, "rename_2leg_find_2")
+        col2.prop(props, "rename_2leg_replace_2")
+        col2.prop(props, "rename_2leg_suffix_2")
+    else:
+        row1 = box.row()
+        col1 = row1.column(align=True)
+        col1.prop(props, "rename_4leg_find_1")
+        col1.prop(props, "rename_4leg_replace_1")
+        col1.prop(props, "rename_4leg_suffix_1")
+        
+        col2 = row1.column(align=True)
+        col2.prop(props, "rename_4leg_find_2")
+        col2.prop(props, "rename_4leg_replace_2")
+        col2.prop(props, "rename_4leg_suffix_2")
+        
+        row2 = box.row()
+        col3 = row2.column(align=True)
+        col3.prop(props, "rename_4leg_find_3")
+        col3.prop(props, "rename_4leg_replace_3")
+        col3.prop(props, "rename_4leg_suffix_3")
+        
+        col4 = row2.column(align=True)
+        col4.prop(props, "rename_4leg_find_4")
+        col4.prop(props, "rename_4leg_replace_4")
+        col4.prop(props, "rename_4leg_suffix_4")
+        
+    box.operator("script_toolkit.biped_batch_rename", icon="FONT_DATA", text="Batch Rename Bones")
     
     layout.separator()
     
     box_vg = layout.box()
+    box_vg.label(text="Vertex Group Prefix", icon="GROUP_VERTEX")
     row_vg = box_vg.row(align=True)
-    row_vg.prop(props, "vg_prefix")
-    row_vg.operator("script_toolkit.biped_add_vg_prefix", icon="GROUP_VERTEX", text="Add Prefix")
+    row_vg.prop(props, "vg_prefix", text="Prefix")
+    row_vg.operator("script_toolkit.biped_add_vg_prefix", icon="GROUP_VERTEX", text="Add Prefix (Vertex Group)")
 
     layout.separator()
     

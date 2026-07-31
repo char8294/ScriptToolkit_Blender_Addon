@@ -1,7 +1,20 @@
 # Script Toolkit Changelog
 
-## Unreleased
+## v0.4.7
 
+- Removed Target selector from Batch Rename; Batch Rename now strictly operates on Armature Bones.
+- Clarified the Prefix section to explicitly indicate it applies to Vertex Groups ("Vertex Group Prefix").
+
+## v0.4.6
+
+- Added Preset dropdown (2-Legged vs 4-Legged) to Batch Rename section in Biped Names Helper.
+- Added preset rules for 2-Legged (`" R jts"` -> `""`, `".R"` and `" L jts"` -> `""`, `".L"`).
+- Added preset rules for 4-Legged (`" RF jts"` / `" LF jts"` -> `" Front"`, `".R"` / `".L"` and `" RB jts"` / `" LB jts"` -> `" Back"`, `".R"` / `".L"`).
+
+## v0.4.5
+
+- Added preset dropdown (2-Legged vs 4-Legged) to Biped Names Helper's Set Bone Name section.
+- Added 2-Legged preset support with Pole (`POLE-IK_LEG.L`), MCH-IK (`MCH-IK_LEG.L`), and Foot (`FOOT_LEG.L`) bone renaming.
 - Empty to Bone can now create one bone from each selected Armature origin/pivot, in addition to selected Empties.
 
 ## v0.4.4

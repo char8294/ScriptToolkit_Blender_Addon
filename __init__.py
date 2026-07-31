@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 4, 5),
+    "version": (0, 4, 7),
     "blender": (5, 1, 0),
     "location": "3D View > Sidebar > Script Toolkit",
     "description": "FBX batch tools in an isolated Blender worker plus selected-object cleanup tools.",
@@ -197,13 +197,59 @@ class ST_Properties(PropertyGroup):
         ],
         default="BONE",
     )
-    rename_find_1: StringProperty(name="Find", default="L")
+    batch_rename_preset: EnumProperty(
+        name="Preset",
+        description="Select batch rename preset",
+        items=[
+            ("LEG_2", "2-Legged (2 ขา)", "Preset for 2-legged biped"),
+            ("LEG_4", "4-Legged (4 ขา)", "Preset for 4-legged biped"),
+        ],
+        default="LEG_2",
+    )
+    # 2-Legged Batch Rename Rules
+    rename_2leg_find_1: StringProperty(name="Find", default=" R jts")
+    rename_2leg_replace_1: StringProperty(name="Replace", default="")
+    rename_2leg_suffix_1: StringProperty(name="Suffix", default=".R")
+    rename_2leg_find_2: StringProperty(name="Find", default=" L jts")
+    rename_2leg_replace_2: StringProperty(name="Replace", default="")
+    rename_2leg_suffix_2: StringProperty(name="Suffix", default=".L")
+
+    # 4-Legged Batch Rename Rules
+    rename_4leg_find_1: StringProperty(name="Find", default=" RF jts")
+    rename_4leg_replace_1: StringProperty(name="Replace", default=" Front")
+    rename_4leg_suffix_1: StringProperty(name="Suffix", default=".R")
+    rename_4leg_find_2: StringProperty(name="Find", default=" LF jts")
+    rename_4leg_replace_2: StringProperty(name="Replace", default=" Front")
+    rename_4leg_suffix_2: StringProperty(name="Suffix", default=".L")
+
+    rename_4leg_find_3: StringProperty(name="Find", default=" RB jts")
+    rename_4leg_replace_3: StringProperty(name="Replace", default=" Back")
+    rename_4leg_suffix_3: StringProperty(name="Suffix", default=".R")
+    rename_4leg_find_4: StringProperty(name="Find", default=" LB jts")
+    rename_4leg_replace_4: StringProperty(name="Replace", default=" Back")
+    rename_4leg_suffix_4: StringProperty(name="Suffix", default=".L")
+
+    rename_find_1: StringProperty(name="Find", default=" L jts")
     rename_replace_1: StringProperty(name="Replace", default="")
     rename_suffix_1: StringProperty(name="Suffix", default=".L")
-    rename_find_2: StringProperty(name="Find", default="R")
+    rename_find_2: StringProperty(name="Find", default=" R jts")
     rename_replace_2: StringProperty(name="Replace", default="")
     rename_suffix_2: StringProperty(name="Suffix", default=".R")
     vg_prefix: StringProperty(name="Prefix", default="DEF-")
+
+    # Quick Set Bone Name
+    quick_rename_preset: EnumProperty(
+        name="Preset",
+        description="Select bone naming preset",
+        items=[
+            ("LEG_2", "2-Legged (2 ขา)", "Preset for 2-legged biped"),
+            ("LEG_4", "4-Legged (4 ขา)", "Preset for 4-legged biped"),
+        ],
+        default="LEG_2",
+    )
+    quick_rename_2leg_pole: StringProperty(name="Pole", default="POLE-IK_LEG.L")
+    quick_rename_2leg_mch: StringProperty(name="MCH-IK", default="MCH-IK_LEG.L")
+    quick_rename_2leg_foot: StringProperty(name="Foot", default="FOOT_LEG.L")
 
     # Quick Set Bone Name
     quick_rename_1: StringProperty(name="Front", default="POLE-IK_LEG_FRONT.L")
