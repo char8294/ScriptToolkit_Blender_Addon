@@ -26,6 +26,8 @@ from .features import biped_names, hair_check, empty_to_bone, align_bones, arp_r
 
 if "bpy" in locals():
     import importlib
+    if "unregister" in locals():
+        unregister()
     importlib.reload(biped_names)
     importlib.reload(hair_check)
     importlib.reload(empty_to_bone)
@@ -895,6 +897,8 @@ CLASSES = (
 
 
 def register():
+    if hasattr(bpy.types.Scene, "script_toolkit"):
+        unregister()
     biped_names.register()
     hair_check.register()
     empty_to_bone.register()
