@@ -1,6 +1,7 @@
 """Blender background smoke tests for the ARP retarget preset editor."""
 
 import os
+import shutil
 import sys
 import tempfile
 from types import SimpleNamespace
@@ -114,6 +115,14 @@ def run():
         def split(self, **_kwargs):
             return self
 
+        def box(self):
+            child = FakeListLayout(self.calls)
+            self.calls.append(("box", child))
+            return child
+
+        def label(self, **kwargs):
+            self.calls.append(("label", kwargs))
+
         def row(self, **_kwargs):
             child = FakeListLayout(self.calls)
             self.calls.append(("row", child))
@@ -125,6 +134,21 @@ def run():
 
         def prop(self, item, property_name, **kwargs):
             self.calls.append(("prop", item, property_name, kwargs))
+
+        def prop_search(self, item, property_name, search_data, search_property, **kwargs):
+            self.calls.append(
+                (
+                    "prop_search",
+                    item,
+                    property_name,
+                    search_data,
+                    search_property,
+                    kwargs,
+                )
+            )
+
+        def template_list(self, *args, **kwargs):
+            self.calls.append(("template_list", args, kwargs))
 
     fake_layout = FakeListLayout()
     fake_item = SimpleNamespace(source_name="Source", target_name="Target", selected=False)
@@ -356,6 +380,41 @@ def run():
     assert bpy.ops.script_toolkit.arp_import_bmap(filepath=import_path) == {"FINISHED"}
     assert scene.arp_retarget_selection_anchor == -1
     os.remove(import_path)
+
+    preset_directory = tempfile.mkdtemp(prefix="script-toolkit-presets-")
+    nested_directory = os.path.join(preset_directory, "Nested")
+    os.mkdir(nested_directory)
+    preset_path = os.path.join(preset_directory, "Example.bmap")
+    with open(preset_path, "w", encoding="utf-8", newline="\n") as preset:
+        preset.write("CTRL.L%False%ABSOLUTE%0,0,0%0,0,0%1%False%False%Y%\n")
+        preset.write("Arm.L\nFalse\nFalse\n\n")
+    with open(os.path.join(preset_directory, "notes.txt"), "w", encoding="utf-8") as ignored:
+        ignored.write("ignore")
+    with open(os.path.join(nested_directory, "Nested.bmap"), "w", encoding="utf-8") as nested:
+        nested.write("ignored")
+    assert addon._preset_files(preset_directory) == [("Example.bmap", preset_path)]
+    addon._refresh_preset_items(scene, preset_directory)
+    assert [item.name for item in scene.arp_retarget_preset_items] == ["Example.bmap"]
+
+    default_preset_directory = addon._default_preset_directory
+    addon._default_preset_directory = lambda: preset_directory
+    try:
+        scene.arp_retarget_preset_selection = "Example.bmap"
+        assert len(scene.arp_retarget_mapping_items) == 1
+        assert scene.arp_retarget_mapping_items[0].source_name == "Arm.L"
+        assert scene.arp_retarget_mapping_items[0].target_name == "CTRL.L"
+    finally:
+        addon._default_preset_directory = default_preset_directory
+        scene.arp_retarget_preset_selection = ""
+
+    panel_layout = FakeListLayout()
+    addon.draw_ui(panel_layout, SimpleNamespace(scene=scene))
+    first_label = next(call for call in panel_layout.calls if call[0] == "label")
+    assert first_label[1]["text"] == "Mapping Preset"
+    prop_search_calls = [call for call in panel_layout.calls if call[0] == "prop_search"]
+    assert prop_search_calls[0][2] == "arp_retarget_preset_selection"
+    assert prop_search_calls[0][4] == "arp_retarget_preset_items"
+    shutil.rmtree(preset_directory)
 
     addon.unregister()
     print("ARP_RETARGET_TESTS_OK")

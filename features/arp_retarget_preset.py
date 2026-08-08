@@ -32,6 +32,8 @@ _SCENE_PROPERTIES = (
     "arp_retarget_replace",
     "arp_retarget_prefix",
     "arp_retarget_suffix",
+    "arp_retarget_preset_items",
+    "arp_retarget_preset_selection",
 )
 
 _IK_AXES = (
@@ -428,6 +430,56 @@ def _get_target_name_inline(item):
 def _set_target_name_inline(item, value):
     item.target_name = value
     item.target_manual = True
+
+
+def _default_preset_directory():
+    return os.path.join(
+        os.path.expanduser("~"),
+        "Documents",
+        "AutoRigPro",
+        "Remap Presets",
+    )
+
+
+def _preset_files(directory=None):
+    directory = directory or _default_preset_directory()
+    try:
+        entries = os.scandir(directory)
+    except OSError:
+        return []
+
+    with entries:
+        files = [
+            (entry.name, entry.path)
+            for entry in entries
+            if entry.is_file() and entry.name.lower().endswith(".bmap")
+        ]
+    return sorted(files, key=lambda value: value[0].casefold())
+
+
+def _refresh_preset_items(scene, directory=None):
+    files = _preset_files(directory)
+    selected = scene.arp_retarget_preset_selection
+    scene.arp_retarget_preset_items.clear()
+    for name, filepath in files:
+        item = scene.arp_retarget_preset_items.add()
+        item.name = name
+        item.filepath = filepath
+    if selected and selected not in {name for name, _filepath in files}:
+        scene.arp_retarget_preset_selection = ""
+    return files
+
+
+def _selected_preset_filepath(scene, preset_name, directory=None):
+    for name, filepath in _preset_files(directory):
+        if name == preset_name:
+            return filepath
+    return ""
+
+
+class STARP_PresetItem(PropertyGroup):
+    name: StringProperty(name="Preset")
+    filepath: StringProperty(name="File Path", subtype="FILE_PATH", options={"HIDDEN"})
 
 
 class STARP_MappingItem(PropertyGroup):
@@ -1010,6 +1062,86 @@ class STARP_OT_export_bmap(Operator):
         return {"FINISHED"}
 
 
+def _import_bmap_file(scene, filepath, clear_current=True):
+    filepath = bpy.path.abspath(filepath)
+    try:
+        with open(filepath, "r", encoding="utf-8") as file:
+            lines = file.read().splitlines()
+    except (OSError, UnicodeError) as error:
+        return 0, f"Could not read preset: {error}"
+
+    if len(lines) % 5 != 0:
+        return 0, "This does not look like a 5-line Auto-Rig Pro .bmap preset"
+
+    if clear_current:
+        scene.arp_retarget_mapping_items.clear()
+
+    by_source = {item.source_name: item for item in scene.arp_retarget_mapping_items}
+    imported = 0
+    for index in range(0, len(lines), 5):
+        first_line, source_name, root, ik, ik_pole = lines[index : index + 5]
+        parts = first_line.split("%")
+        target_name = parts[0] if parts else ""
+        target_armature = scene.arp_retarget_target_armature
+        if target_name == "None" and not (target_armature and target_armature.data.bones.get("None")):
+            target_name = ""
+        item = by_source.get(source_name)
+        if item is None:
+            item = scene.arp_retarget_mapping_items.add()
+            item.source_name = source_name
+            by_source[source_name] = item
+
+        item.target_name = target_name
+        item.target_manual = True
+        if len(parts) >= 9:
+            item.location = _parse_bool(parts[1])
+            item.ik_auto_pole = parts[2] if parts[2] in {"ABSOLUTE", "RELATIVE_TARGET", "RELATIVE_CHAIN"} else "ABSOLUTE"
+            item.rot_add = _parse_vector(parts[3])
+            item.loc_add = _parse_vector(parts[4])
+            try:
+                item.loc_mult = float(parts[5])
+            except ValueError:
+                item.loc_mult = 1.0
+            item.ik_create_constraints = _parse_bool(parts[6])
+            item.ik_world = _parse_bool(parts[7])
+            if parts[8] in {"X", "Y", "Z", "-X", "-Y", "-Z"}:
+                item.ik_axis_correction = parts[8]
+        item.set_as_root = _parse_bool(root)
+        item.ik = _parse_bool(ik)
+        item.ik_pole = ik_pole
+        item.selected = False
+        imported += 1
+
+    scene.arp_retarget_mapping_index = 0
+    scene.arp_retarget_selection_anchor = -1
+    return imported, ""
+
+
+def _on_preset_selection_update(scene, context):
+    del context
+    if not scene.arp_retarget_preset_selection:
+        return
+    filepath = _selected_preset_filepath(
+        scene,
+        scene.arp_retarget_preset_selection,
+    )
+    if not filepath:
+        return
+    _import_bmap_file(scene, filepath)
+
+
+class STARP_OT_refresh_preset_items(Operator):
+    bl_idname = "script_toolkit.arp_refresh_preset_items"
+    bl_label = "Refresh Mapping Presets"
+    bl_description = "Refresh .bmap files from the Auto-Rig Pro Remap Presets folder"
+    bl_options = {"INTERNAL"}
+
+    def execute(self, context):
+        files = _refresh_preset_items(context.scene)
+        self.report({"INFO"}, f"Found {len(files)} .bmap presets")
+        return {"FINISHED"}
+
+
 class STARP_OT_import_bmap(Operator):
     bl_idname = "script_toolkit.arp_import_bmap"
     bl_label = "Import .bmap Preset"
@@ -1025,60 +1157,14 @@ class STARP_OT_import_bmap(Operator):
         return {"RUNNING_MODAL"}
 
     def execute(self, context):
-        filepath = bpy.path.abspath(self.filepath)
-        try:
-            with open(filepath, "r", encoding="utf-8") as file:
-                lines = file.read().splitlines()
-        except (OSError, UnicodeError) as error:
-            self.report({"ERROR"}, f"Could not read preset: {error}")
+        imported, error = _import_bmap_file(
+            context.scene,
+            self.filepath,
+            clear_current=self.clear_current,
+        )
+        if error:
+            self.report({"ERROR"}, error)
             return {"CANCELLED"}
-
-        if len(lines) % 5 != 0:
-            self.report({"ERROR"}, "This does not look like a 5-line Auto-Rig Pro .bmap preset")
-            return {"CANCELLED"}
-
-        scene = context.scene
-        if self.clear_current:
-            scene.arp_retarget_mapping_items.clear()
-
-        by_source = {item.source_name: item for item in scene.arp_retarget_mapping_items}
-        imported = 0
-        for index in range(0, len(lines), 5):
-            first_line, source_name, root, ik, ik_pole = lines[index : index + 5]
-            parts = first_line.split("%")
-            target_name = parts[0] if parts else ""
-            target_armature = scene.arp_retarget_target_armature
-            if target_name == "None" and not (target_armature and target_armature.data.bones.get("None")):
-                target_name = ""
-            item = by_source.get(source_name)
-            if item is None:
-                item = scene.arp_retarget_mapping_items.add()
-                item.source_name = source_name
-                by_source[source_name] = item
-
-            item.target_name = target_name
-            item.target_manual = True
-            if len(parts) >= 9:
-                item.location = _parse_bool(parts[1])
-                item.ik_auto_pole = parts[2] if parts[2] in {"ABSOLUTE", "RELATIVE_TARGET", "RELATIVE_CHAIN"} else "ABSOLUTE"
-                item.rot_add = _parse_vector(parts[3])
-                item.loc_add = _parse_vector(parts[4])
-                try:
-                    item.loc_mult = float(parts[5])
-                except ValueError:
-                    item.loc_mult = 1.0
-                item.ik_create_constraints = _parse_bool(parts[6])
-                item.ik_world = _parse_bool(parts[7])
-                if parts[8] in {"X", "Y", "Z", "-X", "-Y", "-Z"}:
-                    item.ik_axis_correction = parts[8]
-            item.set_as_root = _parse_bool(root)
-            item.ik = _parse_bool(ik)
-            item.ik_pole = ik_pole
-            item.selected = False
-            imported += 1
-
-        scene.arp_retarget_mapping_index = 0
-        scene.arp_retarget_selection_anchor = -1
         self.report({"INFO"}, f"Imported {imported} mappings")
         return {"FINISHED"}
 
@@ -1109,6 +1195,23 @@ def draw_ui(layout, context):
     source = scene.arp_retarget_source_armature
     target = scene.arp_retarget_target_armature
     items = scene.arp_retarget_mapping_items
+
+    presets = layout.box()
+    preset_header = presets.row(align=True)
+    preset_header.label(text="Mapping Preset", icon="FILE_TEXT")
+    preset_header.operator(STARP_OT_refresh_preset_items.bl_idname, text="", icon="FILE_REFRESH")
+    row = presets.row(align=True)
+    row.prop_search(
+        scene,
+        "arp_retarget_preset_selection",
+        scene,
+        "arp_retarget_preset_items",
+        text="Preset",
+        icon="FILE",
+    )
+    row = presets.row(align=True)
+    row.operator(STARP_OT_import_bmap.bl_idname, text="Import")
+    row.operator(STARP_OT_export_bmap.bl_idname, text="Export .bmap")
 
     inputs = layout.box()
     inputs.label(text="Auto-Rig Pro Remap Preset", icon="ARMATURE_DATA")
@@ -1166,12 +1269,6 @@ def draw_ui(layout, context):
     if 0 <= scene.arp_retarget_mapping_index < len(items):
         _draw_mapping_options(layout, items[scene.arp_retarget_mapping_index], target)
 
-    presets = layout.box()
-    presets.label(text="Mapping Preset")
-    row = presets.row(align=True)
-    row.operator(STARP_OT_import_bmap.bl_idname, text="Import")
-    row.operator(STARP_OT_export_bmap.bl_idname, text="Export .bmap")
-
     if source and target:
         layout.label(text=f"Ready: {source.name} → {target.name}", icon="CHECKMARK")
     elif not items:
@@ -1179,6 +1276,7 @@ def draw_ui(layout, context):
 
 
 CLASSES = (
+    STARP_PresetItem,
     STARP_MappingItem,
     STARP_OT_select_mapping_row,
     STARP_OT_target_mapping_cell,
@@ -1195,6 +1293,7 @@ CLASSES = (
     STARP_OT_mirror_bone_list,
     STARP_OT_rename_source_to_target,
     STARP_OT_rename_target,
+    STARP_OT_refresh_preset_items,
     STARP_OT_export_bmap,
     STARP_OT_import_bmap,
 )
@@ -1218,6 +1317,14 @@ def register():
     bpy.types.Scene.arp_retarget_replace = StringProperty(name="Replace", default="")
     bpy.types.Scene.arp_retarget_prefix = StringProperty(name="Prefix", default="")
     bpy.types.Scene.arp_retarget_suffix = StringProperty(name="Suffix", default="")
+    bpy.types.Scene.arp_retarget_preset_items = CollectionProperty(type=STARP_PresetItem)
+    bpy.types.Scene.arp_retarget_preset_selection = StringProperty(
+        name="Preset",
+        default="",
+        update=_on_preset_selection_update,
+    )
+    for scene in bpy.data.scenes:
+        _refresh_preset_items(scene)
 
 
 def unregister():
