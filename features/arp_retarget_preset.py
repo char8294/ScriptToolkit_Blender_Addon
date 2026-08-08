@@ -470,6 +470,43 @@ def _refresh_preset_items(scene, directory=None):
     return files
 
 
+def _refresh_all_preset_items(data=None):
+    data = bpy.data if data is None else data
+    scenes = getattr(data, "scenes", ())
+    refreshed = 0
+    for scene in scenes:
+        _refresh_preset_items(scene)
+        refreshed += 1
+    return refreshed
+
+
+def _refresh_preset_items_timer():
+    _refresh_all_preset_items()
+    return None
+
+
+def _schedule_preset_items_refresh():
+    timers = getattr(bpy.app, "timers", None)
+    if timers is None:
+        return
+    try:
+        if not timers.is_registered(_refresh_preset_items_timer):
+            timers.register(_refresh_preset_items_timer, first_interval=0.1)
+    except (RuntimeError, ValueError):
+        pass
+
+
+def _cancel_preset_items_refresh():
+    timers = getattr(bpy.app, "timers", None)
+    if timers is None:
+        return
+    try:
+        if timers.is_registered(_refresh_preset_items_timer):
+            timers.unregister(_refresh_preset_items_timer)
+    except (RuntimeError, ValueError):
+        pass
+
+
 def _selected_preset_filepath(scene, preset_name, directory=None):
     for name, filepath in _preset_files(directory):
         if name == preset_name:
@@ -1300,6 +1337,7 @@ CLASSES = (
 
 
 def register():
+    _cancel_preset_items_refresh()
     for cls in CLASSES:
         bpy.utils.register_class(cls)
 
@@ -1323,11 +1361,11 @@ def register():
         default="",
         update=_on_preset_selection_update,
     )
-    for scene in bpy.data.scenes:
-        _refresh_preset_items(scene)
+    _schedule_preset_items_refresh()
 
 
 def unregister():
+    _cancel_preset_items_refresh()
     for name in reversed(_SCENE_PROPERTIES):
         if hasattr(bpy.types.Scene, name):
             delattr(bpy.types.Scene, name)
