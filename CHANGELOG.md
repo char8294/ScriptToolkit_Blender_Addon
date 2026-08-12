@@ -1,5 +1,9 @@
 # Script Toolkit Changelog
 
+## v0.4.8
+
+- Added a 4-Legged preset to IK Helper Bones with separate Front/Back names for Pole, MCH-IK, and Foot helpers.
+
 ## v0.4.7
 
 - Removed Target selector from Batch Rename; Batch Rename now strictly operates on Armature Bones.

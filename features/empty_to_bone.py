@@ -102,12 +102,14 @@ def _create_ik_helper_bone(operator, context, helper_type):
         return {'CANCELLED'}
 
     props = context.scene.script_toolkit
-    name_property = {
+    default_name_property = {
         IK_HELPER_POLE: "ik_pole_name",
         IK_HELPER_MCH: "ik_mch_ik_name",
         IK_HELPER_FOOT: "ik_foot_name",
     }[helper_type]
-    helper_name = getattr(props, name_property, "").strip()
+    helper_name = getattr(operator, "target_name", "").strip()
+    if not helper_name:
+        helper_name = getattr(props, default_name_property, "").strip()
     if not helper_name:
         operator.report({'ERROR'}, "The new bone name cannot be empty.")
         return {'CANCELLED'}
@@ -368,6 +370,7 @@ class ST_OT_CreatePoleBone(Operator):
         "Create an unparented Pole bone from the active bone and add a Y-axis Damped Track"
     )
     bl_options = {'REGISTER', 'UNDO'}
+    target_name: StringProperty(options={'HIDDEN'})
 
     @classmethod
     def poll(cls, context):
@@ -383,6 +386,7 @@ class ST_OT_CreateMCHIKBone(Operator):
     bl_label = "Create MCH-IK"
     bl_description = "Create an unparented MCH-IK bone from the active bone along global +Y"
     bl_options = {'REGISTER', 'UNDO'}
+    target_name: StringProperty(options={'HIDDEN'})
 
     @classmethod
     def poll(cls, context):
@@ -398,6 +402,7 @@ class ST_OT_CreateFootBone(Operator):
     bl_label = "Create Foot"
     bl_description = "Create an unparented Foot bone from the active bone along global +Y"
     bl_options = {'REGISTER', 'UNDO'}
+    target_name: StringProperty(options={'HIDDEN'})
 
     @classmethod
     def poll(cls, context):
@@ -455,18 +460,50 @@ def draw_ui(layout, context):
     else:
         ik_box.label(text="Select an active bone in an armature first", icon='INFO')
 
+    ik_box.prop(props, "ik_helper_preset", text="Preset")
     ik_box.prop(props, "ik_helper_bone_length", text="Bone Length")
     ik_box.prop(props, "ik_pole_distance", text="Pole Distance")
 
-    helper_rows = (
-        ("ik_pole_name", "Pole:", "script_toolkit.create_pole_bone"),
-        ("ik_mch_ik_name", "MCH-IK:", "script_toolkit.create_mch_ik_bone"),
-        ("ik_foot_name", "Foot:", "script_toolkit.create_foot_bone"),
-    )
-    for property_name, label, operator_id in helper_rows:
-        row = ik_box.row(align=True)
-        row.prop(props, property_name, text=label)
-        row.operator(operator_id, text="Create", icon='BONE_DATA')
+    if props.ik_helper_preset == "LEG_2":
+        helper_rows = (
+            ("ik_pole_name", "Pole:", "script_toolkit.create_pole_bone"),
+            ("ik_mch_ik_name", "MCH-IK:", "script_toolkit.create_mch_ik_bone"),
+            ("ik_foot_name", "Foot:", "script_toolkit.create_foot_bone"),
+        )
+        for property_name, label, operator_id in helper_rows:
+            row = ik_box.row(align=True)
+            row.prop(props, property_name, text=label)
+            operator = row.operator(operator_id, text="Create", icon='BONE_DATA')
+            operator.target_name = getattr(props, property_name)
+    else:
+        helper_rows = (
+            (
+                "ik_pole_front_name",
+                "ik_pole_back_name",
+                "script_toolkit.create_pole_bone",
+            ),
+            (
+                "ik_mch_ik_front_name",
+                "ik_mch_ik_back_name",
+                "script_toolkit.create_mch_ik_bone",
+            ),
+            (
+                "ik_foot_front_name",
+                "ik_foot_back_name",
+                "script_toolkit.create_foot_bone",
+            ),
+        )
+        for front_property, back_property, operator_id in helper_rows:
+            split = ik_box.split(factor=0.5)
+            front_row = split.row(align=True)
+            front_row.prop(props, front_property, text="Front:")
+            front_operator = front_row.operator(operator_id, text="Create", icon='BONE_DATA')
+            front_operator.target_name = getattr(props, front_property)
+
+            back_row = split.row(align=True)
+            back_row.prop(props, back_property, text="Back:")
+            back_operator = back_row.operator(operator_id, text="Create", icon='BONE_DATA')
+            back_operator.target_name = getattr(props, back_property)
 
 @bpy.app.handlers.persistent
 def auto_refresh_bone_hierarchy(scene, depsgraph):

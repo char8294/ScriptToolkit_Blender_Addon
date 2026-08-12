@@ -1,6 +1,7 @@
 import importlib.util
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import bpy
 from mathutils import Matrix, Vector
@@ -28,6 +29,37 @@ def make_armature(name):
 
 def assert_vector_close(actual, expected, tolerance=1e-5):
     assert (Vector(actual) - Vector(expected)).length <= tolerance
+
+
+class FakeLayout:
+    def __init__(self):
+        self.calls = []
+
+    def box(self):
+        return self
+
+    def row(self, **_kwargs):
+        return self
+
+    def split(self, **_kwargs):
+        return self
+
+    def separator(self):
+        self.calls.append(("separator",))
+
+    def label(self, **kwargs):
+        self.calls.append(("label", kwargs))
+
+    def prop(self, _data, property_name, **kwargs):
+        self.calls.append(("prop", property_name, kwargs))
+
+    def operator(self, operator_id, **kwargs):
+        operator = SimpleNamespace(target_name="")
+        self.calls.append(("operator", operator_id, kwargs, operator))
+        return operator
+
+    def template_list(self, *args, **kwargs):
+        self.calls.append(("template_list", args, kwargs))
 
 
 def run():
@@ -110,6 +142,10 @@ def run():
         props.target_armature = target
         assert abs(props.ik_helper_bone_length - 0.05) <= 1e-6
         assert abs(props.ik_pole_distance - 0.21) <= 1e-6
+        assert props.ik_helper_preset == "LEG_2"
+        assert props.ik_pole_name == "POLE-IK_LEG.L"
+        assert props.ik_mch_ik_name == "MCH-IK_LEG.L"
+        assert props.ik_foot_name == "FOOT_LEG.L"
         props.ik_helper_bone_length = 0.4
         props.ik_pole_distance = 0.8
         props.ik_pole_name = "POLE-IK_LEG.L"
@@ -166,6 +202,85 @@ def run():
 
         assert bpy.ops.script_toolkit.create_foot_bone() == {"CANCELLED"}
         assert len(helper_rig.data.bones) == 4
+
+        props.ik_helper_preset = "LEG_4"
+        assert props.ik_pole_front_name == "POLE-IK_LEG_FRONT.L"
+        assert props.ik_pole_back_name == "POLE-IK_LEG_BACK.L"
+        assert props.ik_mch_ik_front_name == "MCH-IK_LEG_FRONT.L"
+        assert props.ik_mch_ik_back_name == "MCH-IK_LEG_BACK.L"
+        assert props.ik_foot_front_name == "FOOT_LEG_FRONT.L"
+        assert props.ik_foot_back_name == "FOOT_LEG_BACK.L"
+
+        assert bpy.ops.script_toolkit.create_pole_bone(
+            target_name=props.ik_pole_front_name
+        ) == {"FINISHED"}
+        assert bpy.ops.script_toolkit.create_pole_bone(
+            target_name=props.ik_pole_back_name
+        ) == {"FINISHED"}
+        assert bpy.ops.script_toolkit.create_mch_ik_bone(
+            target_name=props.ik_mch_ik_front_name
+        ) == {"FINISHED"}
+        assert bpy.ops.script_toolkit.create_mch_ik_bone(
+            target_name=props.ik_mch_ik_back_name
+        ) == {"FINISHED"}
+        assert bpy.ops.script_toolkit.create_foot_bone(
+            target_name=props.ik_foot_front_name
+        ) == {"FINISHED"}
+        assert bpy.ops.script_toolkit.create_foot_bone(
+            target_name=props.ik_foot_back_name
+        ) == {"FINISHED"}
+        assert {
+            bone.name
+            for bone in helper_rig.data.bones
+            if bone.name.endswith("_FRONT.L") or bone.name.endswith("_BACK.L")
+        } == {
+            "POLE-IK_LEG_FRONT.L",
+            "POLE-IK_LEG_BACK.L",
+            "MCH-IK_LEG_FRONT.L",
+            "MCH-IK_LEG_BACK.L",
+            "FOOT_LEG_FRONT.L",
+            "FOOT_LEG_BACK.L",
+        }
+        assert all(
+            helper_rig.data.bones[name].parent is None
+            for name in (
+                "POLE-IK_LEG_FRONT.L",
+                "POLE-IK_LEG_BACK.L",
+                "MCH-IK_LEG_FRONT.L",
+                "MCH-IK_LEG_BACK.L",
+                "FOOT_LEG_FRONT.L",
+                "FOOT_LEG_BACK.L",
+            )
+        )
+
+        fake_layout = FakeLayout()
+        addon.empty_to_bone.draw_ui(
+            fake_layout,
+            SimpleNamespace(active_object=helper_rig, scene=bpy.context.scene),
+        )
+        assert any(
+            call[0] == "prop" and call[1] == "ik_helper_preset"
+            for call in fake_layout.calls
+        )
+        helper_operator_calls = [
+            call
+            for call in fake_layout.calls
+            if call[0] == "operator"
+            and call[1]
+            in {
+                "script_toolkit.create_pole_bone",
+                "script_toolkit.create_mch_ik_bone",
+                "script_toolkit.create_foot_bone",
+            }
+        ]
+        assert [call[3].target_name for call in helper_operator_calls[-6:]] == [
+            "POLE-IK_LEG_FRONT.L",
+            "POLE-IK_LEG_BACK.L",
+            "MCH-IK_LEG_FRONT.L",
+            "MCH-IK_LEG_BACK.L",
+            "FOOT_LEG_FRONT.L",
+            "FOOT_LEG_BACK.L",
+        ]
         print("IK_HELPER_BONES_OK")
     finally:
         addon.unregister()

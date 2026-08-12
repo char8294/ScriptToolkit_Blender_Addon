@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 4, 7),
+    "version": (0, 4, 8),
     "blender": (5, 1, 0),
     "location": "3D View > Sidebar > Script Toolkit",
     "description": "FBX batch tools in an isolated Blender worker plus selected-object cleanup tools.",
@@ -293,9 +293,24 @@ class ST_Properties(PropertyGroup):
         default=0.21,
         min=0.0,
     )
+    ik_helper_preset: EnumProperty(
+        name="Preset",
+        description="Select the IK helper naming preset",
+        items=[
+            ("LEG_2", "2-Legged (2 ขา)", "Use one Pole, MCH-IK and Foot name"),
+            ("LEG_4", "4-Legged (4 ขา)", "Use Front and Back Pole, MCH-IK and Foot names"),
+        ],
+        default="LEG_2",
+    )
     ik_pole_name: StringProperty(name="Pole", default="POLE-IK_LEG.L")
     ik_mch_ik_name: StringProperty(name="MCH-IK", default="MCH-IK_LEG.L")
     ik_foot_name: StringProperty(name="Foot", default="FOOT_LEG.L")
+    ik_pole_front_name: StringProperty(name="Front", default="POLE-IK_LEG_FRONT.L")
+    ik_pole_back_name: StringProperty(name="Back", default="POLE-IK_LEG_BACK.L")
+    ik_mch_ik_front_name: StringProperty(name="Front", default="MCH-IK_LEG_FRONT.L")
+    ik_mch_ik_back_name: StringProperty(name="Back", default="MCH-IK_LEG_BACK.L")
+    ik_foot_front_name: StringProperty(name="Front", default="FOOT_LEG_FRONT.L")
+    ik_foot_back_name: StringProperty(name="Back", default="FOOT_LEG_BACK.L")
     align_axis: EnumProperty(
         name="Align Axis",
         items=align_bones.BONE_AXIS_ITEMS,

@@ -35,6 +35,7 @@ def reload_addon(addon):
 
 def run():
     addon = load_addon()
+    assert addon.bl_info["version"] == (0, 4, 8)
     assert addon.arp_retarget_preset._refresh_all_preset_items(SimpleNamespace()) == 0
     addon.register()
     addon.register()
