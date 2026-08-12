@@ -1,6 +1,6 @@
 import bpy
 from bpy.types import Operator, UIList, PropertyGroup
-from bpy.props import StringProperty, IntProperty
+from bpy.props import BoolProperty, StringProperty, IntProperty
 from mathutils import Vector
 
 
@@ -42,6 +42,79 @@ def _active_armature_bone(context):
     return armature, _active_bone_name(context, armature)
 
 
+def _selected_pose_bone_pair(operator, context, role):
+    """Return (armature, selected_role_name, active_ik_name) from two pose bones."""
+    armature = getattr(context, "active_object", None)
+    if not armature or armature.type != 'ARMATURE' or armature.mode != 'POSE':
+        operator.report({'ERROR'}, "Select two bones in Pose Mode on one armature.")
+        return None
+
+    selected_armatures = [
+        obj
+        for obj in getattr(context, "selected_objects", ())
+        if obj.type == 'ARMATURE'
+    ]
+    if len(selected_armatures) != 1 or selected_armatures[0] != armature:
+        operator.report(
+            {'WARNING'},
+            "Select the two bones on one armature only; multi-armature selection is not supported.",
+        )
+        return None
+
+    selected_pose_bones = [
+        pose_bone
+        for pose_bone in armature.pose.bones
+        if getattr(pose_bone, "select", False)
+    ]
+    if len(selected_pose_bones) != 2:
+        operator.report(
+            {'WARNING'},
+            f"Select exactly two bones: {role} first and the IK bone active last.",
+        )
+        return None
+
+    active_pose_bone = getattr(context, "active_pose_bone", None)
+    if not active_pose_bone:
+        active_data_bone = getattr(armature.data.bones, "active", None)
+        active_pose_bone = (
+            armature.pose.bones.get(active_data_bone.name)
+            if active_data_bone
+            else None
+        )
+    if not active_pose_bone or not active_pose_bone.select:
+        operator.report({'WARNING'}, "The IK bone must be the active selected bone.")
+        return None
+
+    selected_role_bones = [
+        pose_bone
+        for pose_bone in selected_pose_bones
+        if pose_bone.name != active_pose_bone.name
+    ]
+    if len(selected_role_bones) != 1:
+        operator.report({'WARNING'}, "Could not identify the selected role bone.")
+        return None
+
+    return armature, selected_role_bones[0].name, active_pose_bone.name
+
+
+def _ik_constraints(pose_bone):
+    return [constraint for constraint in pose_bone.constraints if constraint.type == 'IK']
+
+
+def _pole_track_cycle_constraints(armature, pole_name, ik_name):
+    """Find Pole Damped Track constraints that point back to the IK bone."""
+    pole_pose_bone = armature.pose.bones.get(pole_name)
+    if not pole_pose_bone:
+        return []
+    return [
+        constraint
+        for constraint in pole_pose_bone.constraints
+        if constraint.type == 'DAMPED_TRACK'
+        and constraint.target == armature
+        and constraint.subtarget == ik_name
+    ]
+
+
 def _global_y_direction_in_armature_space(armature, sign):
     """Convert a global Y direction into a normalized armature-space vector."""
     world_direction = Vector((0.0, float(sign), 0.0))
@@ -69,7 +142,7 @@ def _selected_bone_names(armature, mode):
         return {
             pose_bone.name
             for pose_bone in armature.pose.bones
-            if getattr(pose_bone.bone, "select", False)
+            if getattr(pose_bone, "select", False)
         }
     return set()
 
@@ -86,7 +159,7 @@ def _restore_bone_selection(armature, bone_name, mode, selected_names):
             bone.select = bone.name in selected_names or bone.name == bone_name
     elif mode == 'POSE':
         for pose_bone in armature.pose.bones:
-            pose_bone.bone.select = (
+            pose_bone.select = (
                 pose_bone.name in selected_names or pose_bone.name == bone_name
             )
 
@@ -413,6 +486,123 @@ class ST_OT_CreateFootBone(Operator):
         return _create_ik_helper_bone(self, context, IK_HELPER_FOOT)
 
 
+class ST_OT_CreateIKTarget(Operator):
+    bl_idname = "script_toolkit.create_ik_target"
+    bl_label = "IK Target"
+    bl_description = (
+        "Create an IK constraint: select the Target first and the IK bone active last"
+    )
+    bl_options = {'REGISTER', 'UNDO'}
+    confirm_duplicate: BoolProperty(options={'HIDDEN'})
+
+    @classmethod
+    def poll(cls, context):
+        return bool(
+            getattr(context, "active_object", None)
+            and getattr(context.active_object, "type", None) == 'ARMATURE'
+            and getattr(context.active_object, "mode", None) == 'POSE'
+        )
+
+    def _selection(self, context):
+        return _selected_pose_bone_pair(self, context, "Target")
+
+    def invoke(self, context, event):
+        selection = self._selection(context)
+        if not selection:
+            return {'CANCELLED'}
+
+        armature, _target_name, ik_name = selection
+        if _ik_constraints(armature.pose.bones[ik_name]):
+            self.confirm_duplicate = True
+            return context.window_manager.invoke_props_dialog(self, width=360)
+        return self.execute(context)
+
+    def draw(self, context):
+        if self.confirm_duplicate:
+            self.layout.label(
+                text="An IK Constraint already exists. Create another?",
+                icon='QUESTION',
+            )
+
+    def execute(self, context):
+        selection = self._selection(context)
+        if not selection:
+            return {'CANCELLED'}
+
+        armature, target_name, ik_name = selection
+        ik_pose_bone = armature.pose.bones[ik_name]
+        if _ik_constraints(ik_pose_bone) and not self.confirm_duplicate:
+            self.report(
+                {'WARNING'},
+                "An IK Constraint already exists; confirm before creating another.",
+            )
+            return {'CANCELLED'}
+
+        constraint = ik_pose_bone.constraints.new(type='IK')
+        constraint.name = "IK Target"
+        constraint.target = armature
+        constraint.subtarget = target_name
+        constraint.chain_count = 2
+        constraint.pole_angle = 0.0
+        self.report(
+            {'INFO'},
+            f"Created IK on '{ik_name}' targeting '{target_name}' with chain length 2.",
+        )
+        return {'FINISHED'}
+
+
+class ST_OT_SetPoleTarget(Operator):
+    bl_idname = "script_toolkit.set_pole_target"
+    bl_label = "Pole Target"
+    bl_description = (
+        "Set the Pole Target on every IK constraint: select the Pole first and the IK bone active last"
+    )
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return bool(
+            getattr(context, "active_object", None)
+            and getattr(context.active_object, "type", None) == 'ARMATURE'
+            and getattr(context.active_object, "mode", None) == 'POSE'
+        )
+
+    def execute(self, context):
+        selection = _selected_pose_bone_pair(self, context, "Pole Target")
+        if not selection:
+            return {'CANCELLED'}
+
+        armature, pole_name, ik_name = selection
+        ik_constraints = _ik_constraints(armature.pose.bones[ik_name])
+        if not ik_constraints:
+            self.report(
+                {'WARNING'},
+                f"No IK Constraint found on '{ik_name}'. Create IK Target first.",
+            )
+            return {'CANCELLED'}
+
+        cycle_constraints = _pole_track_cycle_constraints(armature, pole_name, ik_name)
+        if cycle_constraints:
+            self.report(
+                {'WARNING'},
+                (
+                    f"Pole Target '{pole_name}' was not set because its Damped Track back to "
+                    f"'{ik_name}' would create a Blender dependency cycle."
+                ),
+            )
+            return {'CANCELLED'}
+
+        for constraint in ik_constraints:
+            constraint.pole_target = armature
+            constraint.pole_subtarget = pole_name
+
+        self.report(
+            {'INFO'},
+            f"Set Pole Target '{pole_name}' on {len(ik_constraints)} IK constraint(s) on '{ik_name}'.",
+        )
+        return {'FINISHED'}
+
+
 
 def draw_ui(layout, context):
     props = context.scene.script_toolkit
@@ -505,6 +695,22 @@ def draw_ui(layout, context):
             back_operator = back_row.operator(operator_id, text="Create", icon='BONE_DATA')
             back_operator.target_name = getattr(props, back_property)
 
+    constraint_box = layout.box()
+    constraint_box.label(text="IK Constraint", icon='CONSTRAINT')
+    constraint_box.label(text="IK Target: select Target, then IK Bone (active last).")
+    constraint_box.operator(
+        "script_toolkit.create_ik_target",
+        text="IK Target",
+        icon='CONSTRAINT_BONE',
+    )
+    constraint_box.label(text="Pole Target: select Pole, then IK Bone (active last).")
+    constraint_box.operator(
+        "script_toolkit.set_pole_target",
+        text="Pole Target",
+        icon='CONSTRAINT_BONE',
+    )
+    constraint_box.label(text="Chain Length: 2 | Pole Angle: 0°", icon='INFO')
+
 @bpy.app.handlers.persistent
 def auto_refresh_bone_hierarchy(scene, depsgraph):
     props = getattr(scene, "script_toolkit", None)
@@ -547,6 +753,8 @@ classes = (
     ST_OT_CreatePoleBone,
     ST_OT_CreateMCHIKBone,
     ST_OT_CreateFootBone,
+    ST_OT_CreateIKTarget,
+    ST_OT_SetPoleTarget,
 )
 
 def register():

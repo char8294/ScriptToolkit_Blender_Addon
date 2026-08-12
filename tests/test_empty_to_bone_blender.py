@@ -281,6 +281,112 @@ def run():
             "FOOT_LEG_FRONT.L",
             "FOOT_LEG_BACK.L",
         ]
+
+        constraint_operator_ids = [
+            call[1]
+            for call in fake_layout.calls
+            if call[0] == "operator"
+            and call[1]
+            in {
+                "script_toolkit.create_ik_target",
+                "script_toolkit.set_pole_target",
+            }
+        ]
+        assert constraint_operator_ids == [
+            "script_toolkit.create_ik_target",
+            "script_toolkit.set_pole_target",
+        ]
+        assert any(
+            call[0] == "label"
+            and call[1]["text"] == "IK Target: select Target, then IK Bone (active last)."
+            for call in fake_layout.calls
+        )
+        assert any(
+            call[0] == "label"
+            and call[1]["text"] == "Pole Target: select Pole, then IK Bone (active last)."
+            for call in fake_layout.calls
+        )
+
+        bpy.ops.object.mode_set(mode="POSE")
+        for pose_bone in helper_rig.pose.bones:
+            pose_bone.select = False
+        helper_rig.pose.bones["FOOT_LEG_FRONT.L"].select = True
+        helper_rig.pose.bones["DEF-Leg"].select = True
+        helper_rig.data.bones.active = helper_rig.data.bones["DEF-Leg"]
+
+        assert bpy.ops.script_toolkit.create_ik_target() == {"FINISHED"}
+        ik_pose_bone = helper_rig.pose.bones["DEF-Leg"]
+        ik_constraints = [
+            constraint for constraint in ik_pose_bone.constraints if constraint.type == "IK"
+        ]
+        assert len(ik_constraints) == 1
+        assert ik_constraints[0].name == "IK Target"
+        assert ik_constraints[0].target == helper_rig
+        assert ik_constraints[0].subtarget == "FOOT_LEG_FRONT.L"
+        assert ik_constraints[0].chain_count == 2
+        assert abs(ik_constraints[0].pole_angle) <= 1e-6
+
+        assert bpy.ops.script_toolkit.create_ik_target() == {"CANCELLED"}
+        assert bpy.ops.script_toolkit.create_ik_target(
+            confirm_duplicate=True
+        ) == {"FINISHED"}
+        ik_constraints = [
+            constraint for constraint in ik_pose_bone.constraints if constraint.type == "IK"
+        ]
+        assert len(ik_constraints) == 2
+
+        for pose_bone in helper_rig.pose.bones:
+            pose_bone.select = False
+        helper_rig.pose.bones["POLE-IK_LEG_FRONT.L"].select = True
+        helper_rig.pose.bones["DEF-Leg"].select = True
+        helper_rig.data.bones.active = helper_rig.data.bones["DEF-Leg"]
+        assert bpy.ops.script_toolkit.set_pole_target() == {"CANCELLED"}
+        for constraint in ik_constraints:
+            assert constraint.pole_target is None
+            assert constraint.pole_subtarget == ""
+
+        for pose_bone in helper_rig.pose.bones:
+            pose_bone.select = False
+        helper_rig.pose.bones["MCH-IK_LEG_FRONT.L"].select = True
+        helper_rig.pose.bones["DEF-Leg"].select = True
+        helper_rig.data.bones.active = helper_rig.data.bones["DEF-Leg"]
+        assert bpy.ops.script_toolkit.set_pole_target() == {"FINISHED"}
+        for constraint in ik_constraints:
+            assert constraint.pole_target == helper_rig
+            assert constraint.pole_subtarget == "MCH-IK_LEG_FRONT.L"
+
+        for pose_bone in helper_rig.pose.bones:
+            pose_bone.select = False
+        helper_rig.pose.bones["POLE-IK_LEG_BACK.L"].select = True
+        helper_rig.pose.bones["FOOT_LEG_BACK.L"].select = True
+        helper_rig.data.bones.active = helper_rig.data.bones["FOOT_LEG_BACK.L"]
+        assert bpy.ops.script_toolkit.set_pole_target() == {"CANCELLED"}
+        bpy.ops.object.mode_set(mode="OBJECT")
+
+        foreign_rig = make_armature("ForeignRig")
+        bpy.ops.object.select_all(action="DESELECT")
+        foreign_rig.select_set(True)
+        bpy.context.view_layer.objects.active = foreign_rig
+        bpy.ops.object.mode_set(mode="EDIT")
+        foreign_bone = foreign_rig.data.edit_bones.new("Foreign")
+        foreign_bone.head = (0.0, 0.0, 0.0)
+        foreign_bone.tail = (0.0, 0.0, 1.0)
+        bpy.ops.object.mode_set(mode="OBJECT")
+        bpy.ops.object.select_all(action="DESELECT")
+        helper_rig.select_set(True)
+        foreign_rig.select_set(True)
+        bpy.context.view_layer.objects.active = helper_rig
+        bpy.ops.object.mode_set(mode="POSE")
+        for pose_bone in helper_rig.pose.bones:
+            pose_bone.select = False
+        for pose_bone in foreign_rig.pose.bones:
+            pose_bone.select = False
+        helper_rig.pose.bones["FOOT_LEG_FRONT.L"].select = True
+        helper_rig.pose.bones["DEF-Leg"].select = True
+        foreign_rig.pose.bones["Foreign"].select = True
+        helper_rig.data.bones.active = helper_rig.data.bones["DEF-Leg"]
+        assert bpy.ops.script_toolkit.create_ik_target() == {"CANCELLED"}
+        bpy.ops.object.mode_set(mode="OBJECT")
         print("IK_HELPER_BONES_OK")
     finally:
         addon.unregister()
