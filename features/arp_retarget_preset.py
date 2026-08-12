@@ -1336,6 +1336,35 @@ class STARP_OT_match_target_names(Operator):
         return {"FINISHED"}
 
 
+class STARP_OT_remove_duplicate_targets(Operator):
+    bl_idname = "script_toolkit.arp_remove_duplicate_targets"
+    bl_label = "Remove Duplicate Targets"
+    bl_description = (
+        "Keep the first mapping for each non-empty Target Bone and clear later duplicates"
+    )
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        seen_targets = set()
+        removed = 0
+        for item in context.scene.arp_retarget_mapping_items:
+            target_name = item.target_name
+            if not target_name:
+                continue
+            if target_name in seen_targets:
+                item.target_name = ""
+                item.target_manual = True
+                removed += 1
+                continue
+            seen_targets.add(target_name)
+
+        self.report(
+            {"INFO"},
+            f"Removed {removed} duplicate Target Bone entr{'y' if removed == 1 else 'ies'}",
+        )
+        return {"FINISHED"}
+
+
 class STARP_OT_select_all(Operator):
     bl_idname = "script_toolkit.arp_select_all"
     bl_label = "Select All"
@@ -1898,6 +1927,11 @@ def draw_ui(layout, context):
     actions.operator(STARP_OT_swap_source_target.bl_idname, icon="ARROW_LEFTRIGHT")
     actions.operator(STARP_OT_mirror_bone_list.bl_idname, icon="MOD_MIRROR")
     actions.operator(STARP_OT_match_target_names.bl_idname, icon="BONE_DATA")
+    actions.operator(
+        STARP_OT_remove_duplicate_targets.bl_idname,
+        text="Remove Duplicate Targets",
+        icon="X",
+    )
 
     rename_box = layout.box()
     rename_box.label(text="Rename", icon="SORTALPHA")
@@ -1933,6 +1967,7 @@ CLASSES = (
     STARP_OT_build_list,
     STARP_OT_update_list,
     STARP_OT_match_target_names,
+    STARP_OT_remove_duplicate_targets,
     STARP_OT_select_all,
     STARP_OT_select_none,
     STARP_OT_select_invert,

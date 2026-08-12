@@ -51,6 +51,16 @@ def run():
     assert len(scene.arp_retarget_mapping_items) == len(source.data.bones)
     assert {item.source_name for item in scene.arp_retarget_mapping_items} == set(source_names)
 
+    first_target = item_by_source(scene, "Arm.L")
+    duplicate_target = item_by_source(scene, "Arm.R")
+    first_target.target_name = "CTRL.L"
+    duplicate_target.target_name = "CTRL.L"
+    duplicate_target.target_manual = False
+    assert bpy.ops.script_toolkit.arp_remove_duplicate_targets() == {"FINISHED"}
+    assert first_target.target_name == "CTRL.L"
+    assert duplicate_target.target_name == ""
+    assert duplicate_target.target_manual
+
     # Viewport -> list synchronization follows whichever configured armature
     # is active, and the list -> viewport action supports multiple rows.
     bpy.ops.object.select_all(action="DESELECT")
@@ -538,12 +548,14 @@ def run():
             addon.STARP_OT_synchro_select.bl_idname,
             addon.STARP_OT_select_source_bones.bl_idname,
             addon.STARP_OT_add_selected_bone_pair.bl_idname,
+            addon.STARP_OT_remove_duplicate_targets.bl_idname,
         }
     }
     assert button_texts == {
         addon.STARP_OT_synchro_select.bl_idname: "Select Viewport Bone in List",
         addon.STARP_OT_select_source_bones.bl_idname: "Select Source Bones in Viewport",
         addon.STARP_OT_add_selected_bone_pair.bl_idname: "Add/Update Selected Pair",
+        addon.STARP_OT_remove_duplicate_targets.bl_idname: "Remove Duplicate Targets",
     }
 
     bpy.ops.object.select_all(action="DESELECT")
