@@ -1,6 +1,7 @@
 """Biped Names Helper, embedded in Script Toolkit without a separate panel tab."""
 
 import json
+import re
 
 import bpy
 from bpy.types import Operator, UIList
@@ -106,6 +107,93 @@ def restore_original_names(obj):
             del obj["biped_vg_mapping"]
         except Exception:
             pass
+
+
+def _tinyk_get_renamed_name(bone_name):
+    """Convert TinyK Rig Manual bone names to Blender .L/.R symmetry names."""
+    if "connect" in bone_name.lower() or bone_name.endswith("ex") or "jtsex" in bone_name:
+        return bone_name
+    if bone_name.startswith("Bone"):
+        return bone_name
+
+    name = bone_name
+
+    # Four-legged naming: LF/RF become Front.L/Front.R and LB/RB become Back.L/Back.R.
+    name = re.sub(r" LF jts$", " Front.L", name)
+    name = re.sub(r" RF jts$", " Front.R", name)
+    name = re.sub(r" LB jts$", " Back.L", name)
+    name = re.sub(r" RB jts$", " Back.R", name)
+    name = re.sub(r" LF$", " Front.L", name)
+    name = re.sub(r" RF$", " Front.R", name)
+    name = re.sub(r" LB$", " Back.L", name)
+    name = re.sub(r" RB$", " Back.R", name)
+
+    # Two-legged naming and other left/right suffixes become Blender .L/.R.
+    name = re.sub(r" L jts$", ".L", name)
+    name = re.sub(r" R jts$", ".R", name)
+    name = re.sub(r" L$", ".L", name)
+    name = re.sub(r" R$", ".R", name)
+
+    return name
+
+
+def _selected_armatures(context):
+    selected_armatures = [obj for obj in context.selected_objects if obj.type == "ARMATURE"]
+    if not selected_armatures and context.active_object and context.active_object.type == "ARMATURE":
+        selected_armatures = [context.active_object]
+    return selected_armatures
+
+
+class STBN_OT_tinyk_rename_symmetry_names(Operator):
+    bl_idname = "script_toolkit.tinyk_rename_symmetry_names"
+    bl_label = "Rename Symmetry Names"
+    bl_description = "Rename TinyK Rig Manual armature bones to Blender .L/.R symmetry names"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        selected_armatures = _selected_armatures(context)
+
+        if not selected_armatures:
+            message = "Please select an Armature in the Viewport or Outliner before renaming."
+            self.report({"WARNING"}, message)
+
+            def draw_popup(self, _context):
+                self.layout.label(text=message, icon="ERROR")
+
+            if not bpy.app.background and getattr(context, "window", None):
+                context.window_manager.popup_menu(draw_popup, title="TinyK Rename", icon="ERROR")
+            return {"CANCELLED"}
+
+        total_renamed = 0
+        report_lines = []
+
+        for armature in selected_armatures:
+            count = 0
+            for bone in armature.data.bones:
+                new_name = _tinyk_get_renamed_name(bone.name)
+                if new_name != bone.name:
+                    bone.name = new_name
+                    count += 1
+            report_lines.append(f"{armature.name}: {count} bones")
+            total_renamed += count
+
+        success_message = (
+            f"Renamed {total_renamed} bones in {len(selected_armatures)} Armature(s)."
+        )
+        self.report({"INFO"}, success_message)
+
+        def draw_success(self, _context):
+            self.layout.label(text=success_message, icon="CHECKMARK")
+            for line in report_lines:
+                self.layout.label(text=line)
+
+        if not bpy.app.background and getattr(context, "window", None):
+            context.window_manager.popup_menu(
+                draw_success,
+                title="TinyK Rename Completed",
+                icon="INFO",
+            )
+        return {"FINISHED"}
 
 
 def _related_objects(context):
@@ -365,6 +453,16 @@ def draw_ui(layout, context):
     
     layout.separator()
 
+    tinyk_box = layout.box()
+    tinyk_box.label(text="TinyK Rig Manual", icon="ARMATURE_DATA")
+    tinyk_box.operator(
+        "script_toolkit.tinyk_rename_symmetry_names",
+        text="Rename Symmetry Names",
+        icon="MOD_MIRROR",
+    )
+
+    layout.separator()
+
     quick_box = layout.box()
     quick_box.label(text="Set Bone Name", icon="BONE_DATA")
     quick_box.prop(props, "quick_rename_preset", text="Preset")
@@ -465,6 +563,7 @@ def draw_ui(layout, context):
 CLASSES = (
     STBN_OT_setup_mirror,
     STBN_OT_restore_names,
+    STBN_OT_tinyk_rename_symmetry_names,
     STBN_OT_set_bone_name,
     STBN_OT_batch_rename,
     STBN_OT_add_vg_prefix,
