@@ -78,7 +78,7 @@ def _tool_description(tool):
         "CLEAR_PROPS": "ลบ custom properties จาก object ที่เลือกในไฟล์ปัจจุบัน.",
         "HAIR_CHECK": "Cycle hair objects ทีละชิ้น โดยตรึง Hat Object ให้แสดงอยู่ ตามรูปแบบ Check Hair And Cap เดิม.",
         "BIPED_NAMES": "เปลี่ยนชื่อ Biped bones/vertex groups เพื่อใช้ Symmetry และคืนชื่อเดิม ตามรูปแบบ Biped Names Helper เดิม.",
-        "ALIGN_BONES": "เครื่องมือจัดเรียงแกนกระดูกและ Snapping หางกระดูก",
+        "ALIGN_BONES": "เครื่องมือจัดเรียงแกนกระดูก, Snapping และแปลงแกนแบบ FBX",
         "EMPTY_TO_BONE": "เครื่องมือแปลง Empty ให้กลายเป็น Bone พร้อมจัด Hierarchy",
         "ARP_REMAP_PRESET": "สร้างรายการ mapping แบบหลายรายการและ export เป็น Auto-Rig Pro .bmap preset.",
         "KJ_EXPORT": "Batch export meshes with a pinned armature using the Better FBX exporter.",
@@ -283,15 +283,32 @@ class ST_Properties(PropertyGroup):
     )
     align_axis: EnumProperty(
         name="Align Axis",
-        items=[
-            ("X", "+X Axis", "Align tail to local +X axis"),
-            ("Y", "+Y Axis", "Align tail to local +Y axis"),
-            ("Z", "+Z Axis", "Align tail to local +Z axis"),
-            ("-X", "-X Axis", "Align tail to local -X axis"),
-            ("-Y", "-Y Axis", "Align tail to local -Y axis"),
-            ("-Z", "-Z Axis", "Align tail to local -Z axis"),
-        ],
+        items=align_bones.BONE_AXIS_ITEMS,
         default="Z"
+    )
+    bone_axis_source_primary: EnumProperty(
+        name="Source Primary Bone Axis",
+        description="Primary bone axis convention currently used by the selected bones",
+        items=align_bones.BONE_AXIS_ITEMS,
+        default="Y",
+    )
+    bone_axis_source_secondary: EnumProperty(
+        name="Source Secondary Bone Axis",
+        description="Secondary bone axis convention currently used by the selected bones",
+        items=align_bones.BONE_AXIS_ITEMS,
+        default="X",
+    )
+    bone_axis_target_primary: EnumProperty(
+        name="Target Primary Bone Axis",
+        description="Primary bone axis convention to apply to the selected bones",
+        items=align_bones.BONE_AXIS_ITEMS,
+        default="X",
+    )
+    bone_axis_target_secondary: EnumProperty(
+        name="Target Secondary Bone Axis",
+        description="Secondary bone axis convention to apply to the selected bones",
+        items=align_bones.BONE_AXIS_ITEMS,
+        default="Y",
     )
     snap_radius: FloatProperty(
         name="Snap Radius", 
