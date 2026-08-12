@@ -91,6 +91,80 @@ def run():
         assert_vector_close(self_bone.tail_local, (0.0, 0.5, 0.0))
         assert len(self_target.data.bones) == 1
         print("EMPTY_TO_BONE_ARMATURE_ORIGIN_OK")
+
+        helper_rig = make_armature("IKHelperRig")
+        helper_rig.matrix_world = (
+            Matrix.Translation((1.0, 2.0, 3.0))
+            @ Matrix.Rotation(0.6, 4, "Z")
+        )
+        bpy.ops.object.select_all(action="DESELECT")
+        helper_rig.select_set(True)
+        bpy.context.view_layer.objects.active = helper_rig
+        bpy.ops.object.mode_set(mode="EDIT")
+        source_bone = helper_rig.data.edit_bones.new("DEF-Leg")
+        source_bone.head = (0.25, 0.5, 0.75)
+        source_bone.tail = (0.25, 0.5, 1.75)
+        bpy.ops.object.mode_set(mode="OBJECT")
+        helper_rig.data.bones.active = helper_rig.data.bones["DEF-Leg"]
+
+        props.target_armature = target
+        props.ik_helper_bone_length = 0.4
+        props.ik_pole_distance = 0.8
+        props.ik_pole_name = "POLE-IK_LEG.L"
+        props.ik_mch_ik_name = "MCH-IK_LEG.L"
+        props.ik_foot_name = "FOOT_LEG.L"
+
+        negative_global_y = (
+            helper_rig.matrix_world.to_3x3().inverted_safe()
+            @ Vector((0.0, -1.0, 0.0))
+        ).normalized()
+        positive_global_y = -negative_global_y
+        source_head = Vector((0.25, 0.5, 0.75))
+
+        assert bpy.ops.script_toolkit.create_pole_bone() == {"FINISHED"}
+        pole = helper_rig.data.bones["POLE-IK_LEG.L"]
+        assert_vector_close(
+            pole.head_local,
+            source_head + negative_global_y * (props.ik_pole_distance + props.ik_helper_bone_length),
+        )
+        assert_vector_close(
+            pole.tail_local,
+            source_head + negative_global_y * props.ik_pole_distance,
+        )
+        assert pole.parent is None
+        pole_constraint = next(
+            constraint
+            for constraint in helper_rig.pose.bones["POLE-IK_LEG.L"].constraints
+            if constraint.type == "DAMPED_TRACK"
+        )
+        assert pole_constraint.target == helper_rig
+        assert pole_constraint.subtarget == "DEF-Leg"
+        assert pole_constraint.track_axis == "TRACK_Y"
+        assert helper_rig.data.bones.active.name == "DEF-Leg"
+
+        assert bpy.ops.script_toolkit.create_mch_ik_bone() == {"FINISHED"}
+        mch_ik = helper_rig.data.bones["MCH-IK_LEG.L"]
+        assert_vector_close(mch_ik.head_local, source_head)
+        assert_vector_close(
+            mch_ik.tail_local,
+            source_head + positive_global_y * props.ik_helper_bone_length,
+        )
+        assert mch_ik.parent is None
+        assert helper_rig.data.bones.active.name == "DEF-Leg"
+
+        assert bpy.ops.script_toolkit.create_foot_bone() == {"FINISHED"}
+        foot = helper_rig.data.bones["FOOT_LEG.L"]
+        assert_vector_close(foot.head_local, source_head)
+        assert_vector_close(
+            foot.tail_local,
+            source_head + positive_global_y * props.ik_helper_bone_length,
+        )
+        assert foot.parent is None
+        assert helper_rig.data.bones.active.name == "DEF-Leg"
+
+        assert bpy.ops.script_toolkit.create_foot_bone() == {"CANCELLED"}
+        assert len(helper_rig.data.bones) == 4
+        print("IK_HELPER_BONES_OK")
     finally:
         addon.unregister()
 

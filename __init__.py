@@ -281,6 +281,21 @@ class ST_Properties(PropertyGroup):
         ],
         default="CHILD"
     )
+    ik_helper_bone_length: FloatProperty(
+        name="IK Helper Bone Length",
+        description="Length used when creating Pole, MCH-IK and Foot helper bones",
+        default=0.1,
+        min=0.001,
+    )
+    ik_pole_distance: FloatProperty(
+        name="Pole Distance",
+        description="Additional global -Y offset applied to the Pole bone before reversing it",
+        default=0.5,
+        min=0.0,
+    )
+    ik_pole_name: StringProperty(name="Pole", default="POLE-IK_LEG.L")
+    ik_mch_ik_name: StringProperty(name="MCH-IK", default="MCH-IK_LEG.L")
+    ik_foot_name: StringProperty(name="Foot", default="FOOT_LEG.L")
     align_axis: EnumProperty(
         name="Align Axis",
         items=align_bones.BONE_AXIS_ITEMS,
