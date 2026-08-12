@@ -41,6 +41,7 @@ import bpy
 
 
 BATCH_TOOLS = {"REEXPORT", "OVERLAP", "MATERIAL_CLEANUP", "SEPARATE"}
+STATUS_TOOLS = BATCH_TOOLS | {"DELETE_FACES", "CLEAR_PROPS"}
 
 
 def _abs_path(path):
@@ -873,11 +874,12 @@ class ST_PT_panel(Panel):
         elif props.tool == "KJ_EXPORT":
             kj_export.draw_ui(layout, context)
 
-        status = layout.box()
-        status.label(text="Status", icon="INFO")
-        status.label(text=props.last_status)
-        if props.last_summary:
-            status.label(text=props.last_summary)
+        if props.tool in STATUS_TOOLS:
+            status = layout.box()
+            status.label(text="Status", icon="INFO")
+            status.label(text=props.last_status)
+            if props.last_summary:
+                status.label(text=props.last_summary)
 
     def _draw_batch(self, layout, props):
         paths = layout.box()
