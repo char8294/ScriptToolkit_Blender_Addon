@@ -101,20 +101,6 @@ def _ik_constraints(pose_bone):
     return [constraint for constraint in pose_bone.constraints if constraint.type == 'IK']
 
 
-def _pole_track_cycle_constraints(armature, pole_name, ik_name):
-    """Find Pole Damped Track constraints that point back to the IK bone."""
-    pole_pose_bone = armature.pose.bones.get(pole_name)
-    if not pole_pose_bone:
-        return []
-    return [
-        constraint
-        for constraint in pole_pose_bone.constraints
-        if constraint.type == 'DAMPED_TRACK'
-        and constraint.target == armature
-        and constraint.subtarget == ik_name
-    ]
-
-
 def _global_y_direction_in_armature_space(armature, sign):
     """Convert a global Y direction into a normalized armature-space vector."""
     world_direction = Vector((0.0, float(sign), 0.0))
@@ -578,17 +564,6 @@ class ST_OT_SetPoleTarget(Operator):
             self.report(
                 {'WARNING'},
                 f"No IK Constraint found on '{ik_name}'. Create IK Target first.",
-            )
-            return {'CANCELLED'}
-
-        cycle_constraints = _pole_track_cycle_constraints(armature, pole_name, ik_name)
-        if cycle_constraints:
-            self.report(
-                {'WARNING'},
-                (
-                    f"Pole Target '{pole_name}' was not set because its Damped Track back to "
-                    f"'{ik_name}' would create a Blender dependency cycle."
-                ),
             )
             return {'CANCELLED'}
 

@@ -340,10 +340,16 @@ def run():
         helper_rig.pose.bones["POLE-IK_LEG_FRONT.L"].select = True
         helper_rig.pose.bones["DEF-Leg"].select = True
         helper_rig.data.bones.active = helper_rig.data.bones["DEF-Leg"]
-        assert bpy.ops.script_toolkit.set_pole_target() == {"CANCELLED"}
+        assert bpy.ops.script_toolkit.set_pole_target() == {"FINISHED"}
+        pole_constraint = next(
+            constraint
+            for constraint in helper_rig.pose.bones["POLE-IK_LEG_FRONT.L"].constraints
+            if constraint.type == "DAMPED_TRACK"
+        )
+        assert pole_constraint.mute is False
         for constraint in ik_constraints:
-            assert constraint.pole_target is None
-            assert constraint.pole_subtarget == ""
+            assert constraint.pole_target == helper_rig
+            assert constraint.pole_subtarget == "POLE-IK_LEG_FRONT.L"
 
         for pose_bone in helper_rig.pose.bones:
             pose_bone.select = False
