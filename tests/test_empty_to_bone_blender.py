@@ -84,6 +84,11 @@ def run():
         bpy.context.view_layer.objects.active = source
 
         props = bpy.context.scene.script_toolkit
+        assert (
+            props.bl_rna.properties["tool"].enum_items["EMPTY_TO_BONE"].name
+            == "Create Bones"
+        )
+        assert addon.empty_to_bone.ST_OT_EmptyToBone.bl_label == "Create Bones"
         props.target_armature = target
         props.bone_length = 0.75
 
@@ -280,6 +285,17 @@ def run():
         )
         assert any(
             call[0] == "prop" and call[1] == "ik_helper_preset"
+            for call in fake_layout.calls
+        )
+        assert any(
+            call[0] == "label"
+            and call[1]["text"] == "Create Bones"
+            for call in fake_layout.calls
+        )
+        assert any(
+            call[0] == "operator"
+            and call[1] == "script_toolkit.empty_to_bone"
+            and call[2]["text"] == "Create Bones from Selected Empties / Armatures"
             for call in fake_layout.calls
         )
         helper_operator_calls = [

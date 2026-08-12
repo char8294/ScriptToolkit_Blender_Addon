@@ -79,7 +79,7 @@ def _tool_description(tool):
         "HAIR_CHECK": "Cycle hair objects ทีละชิ้น โดยตรึง Hat Object ให้แสดงอยู่ ตามรูปแบบ Check Hair And Cap เดิม.",
         "BIPED_NAMES": "เปลี่ยนชื่อ Biped bones/vertex groups เพื่อใช้ Symmetry และคืนชื่อเดิม ตามรูปแบบ Biped Names Helper เดิม.",
         "ALIGN_BONES": "เครื่องมือจัดเรียงแกนกระดูก, Snapping และแปลงแกนแบบ FBX",
-        "EMPTY_TO_BONE": "เครื่องมือแปลง Empty ให้กลายเป็น Bone พร้อมจัด Hierarchy",
+        "EMPTY_TO_BONE": "เครื่องมือ Create Bones จาก Empty และ Armature พร้อมจัด Hierarchy",
         "ARP_REMAP_PRESET": "สร้างรายการ mapping แบบหลายรายการและ export เป็น Auto-Rig Pro .bmap preset.",
         "KJ_EXPORT": "Batch export meshes with a pinned armature using the Better FBX exporter.",
     }[tool]
@@ -125,7 +125,7 @@ class ST_Properties(PropertyGroup):
             ("ALIGN_BONES", "Align Bones", "Align and snap bones"),
             (
                 "EMPTY_TO_BONE",
-                "Empty to Bone",
+                "Create Bones",
                 "Convert empties and armature origins to bones",
             ),
             ("ARP_REMAP_PRESET", "ARP Retarget Preset", "Build and export an Auto-Rig Pro mapping preset"),
@@ -265,7 +265,7 @@ class ST_Properties(PropertyGroup):
     preview_index: IntProperty()
     preview_summary: StringProperty(default="")
 
-    # Empty to Bone
+    # Create Bones
     target_armature: bpy.props.PointerProperty(
         name="Target Armature",
         type=bpy.types.Object,

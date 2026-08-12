@@ -337,7 +337,7 @@ class ST_OT_PickTargetArmature(Operator):
 
 class ST_OT_EmptyToBone(Operator):
     bl_idname = "script_toolkit.empty_to_bone"
-    bl_label = "Convert to Bone"
+    bl_label = "Create Bones"
     bl_description = (
         "Convert selected Empties and Armature origins to Bones in the target Armature"
     )
@@ -586,9 +586,9 @@ class ST_OT_SetPoleTarget(Operator):
 def draw_ui(layout, context):
     props = context.scene.script_toolkit
     
-    # --- Empty to Bone ---
+    # --- Create Bones ---
     conv_box = layout.box()
-    conv_box.label(text="Empty to Bone Converter", icon='GROUP_BONE')
+    conv_box.label(text="Create Bones", icon='GROUP_BONE')
     
     row = conv_box.row(align=True)
     row.prop(props, "target_armature", text="Target")
@@ -617,7 +617,7 @@ def draw_ui(layout, context):
         conv_box.operator(
             "script_toolkit.empty_to_bone",
             icon='GROUP_BONE',
-            text="Convert Selected Empties / Armatures to Bones",
+            text="Create Bones from Selected Empties / Armatures",
         )
 
     ik_box = layout.box()
