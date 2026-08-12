@@ -1,6 +1,7 @@
 """Build and export a compact Auto-Rig Pro-compatible bone mapping preset."""
 
 import difflib
+import json
 import os
 import re
 import time
@@ -1506,6 +1507,89 @@ class STARP_OT_export_bmap(Operator):
         return {"FINISHED"}
 
 
+def _bone_hierarchy_payload(armature):
+    """Serialize an armature's complete rest-bone hierarchy for AI tools."""
+    bones = sorted(armature.data.bones, key=lambda bone: bone.name.casefold())
+    serialized = []
+    for bone in bones:
+        head = getattr(bone, "head_local", bone.head)
+        tail = getattr(bone, "tail_local", bone.tail)
+        serialized.append(
+            {
+                "name": bone.name,
+                "parent": bone.parent.name if bone.parent else None,
+                "children": sorted(
+                    (child.name for child in bone.children),
+                    key=str.casefold,
+                ),
+                "head": [float(value) for value in head],
+                "tail": [float(value) for value in tail],
+                "length": float(bone.length),
+                "use_deform": bool(bone.use_deform),
+                "use_connect": bool(bone.use_connect),
+            }
+        )
+    return {
+        "name": armature.name,
+        "data_name": armature.data.name,
+        "bone_count": len(serialized),
+        "bones": serialized,
+    }
+
+
+class STARP_OT_export_bone_hierarchy(Operator):
+    """Export both configured armature hierarchies in one AI-friendly file."""
+
+    bl_idname = "script_toolkit.arp_export_bone_hierarchy"
+    bl_label = "Export Bone Hierarchy"
+    bl_description = (
+        "Export every Source and Target bone with parent/child hierarchy to one JSON file"
+    )
+
+    filepath: StringProperty(subtype="FILE_PATH")
+    filter_glob: StringProperty(default="*.json", options={"HIDDEN"})
+
+    def invoke(self, context, _event):
+        self.filepath = "arp_bone_hierarchy.json"
+        context.window_manager.fileselect_add(self)
+        return {"RUNNING_MODAL"}
+
+    def execute(self, context):
+        scene = context.scene
+        armatures = _validated_armatures(self, scene)
+        if armatures is None:
+            return {"CANCELLED"}
+        source, target = armatures
+
+        filepath = bpy.path.abspath(self.filepath)
+        if not filepath.lower().endswith(".json"):
+            filepath += ".json"
+        payload = {
+            "format": "script_toolkit.arp_bone_hierarchy",
+            "version": 1,
+            "purpose": "Use Source and Target armature hierarchies to create an Auto-Rig Pro .bmap mapping",
+            "source_armature": _bone_hierarchy_payload(source),
+            "target_armature": _bone_hierarchy_payload(target),
+        }
+
+        try:
+            parent = os.path.dirname(filepath)
+            if parent:
+                os.makedirs(parent, exist_ok=True)
+            with open(filepath, "w", encoding="utf-8", newline="\n") as file:
+                json.dump(payload, file, ensure_ascii=False, indent=2)
+                file.write("\n")
+        except (OSError, TypeError, ValueError, UnicodeError) as error:
+            self.report({"ERROR"}, f"Could not write bone hierarchy: {error}")
+            return {"CANCELLED"}
+
+        self.report(
+            {"INFO"},
+            f"Exported {len(source.data.bones)} Source and {len(target.data.bones)} Target bones to {filepath}",
+        )
+        return {"FINISHED"}
+
+
 def _import_bmap_file(scene, filepath, clear_current=True):
     filepath = bpy.path.abspath(filepath)
     try:
@@ -1659,7 +1743,9 @@ def draw_ui(layout, context):
     presets.operator(STARP_OT_send_to_arp.bl_idname, text="Send to ARP", icon="EXPORT")
 
     inputs = layout.box()
-    inputs.label(text="Auto-Rig Pro Remap Preset", icon="ARMATURE_DATA")
+    inputs_header = inputs.row(align=True)
+    inputs_header.label(text="Auto-Rig Pro Remap Preset", icon="ARMATURE_DATA")
+    inputs_header.operator(STARP_OT_export_bone_hierarchy.bl_idname, text="", icon="EXPORT")
     row = inputs.row(align=True)
     row.prop(scene, "arp_retarget_source_armature", text="Source Armature")
     pickup = row.operator(STARP_OT_pick_selected_armature.bl_idname, text="", icon="EYEDROPPER")
@@ -1754,6 +1840,7 @@ CLASSES = (
     STARP_OT_rename_target,
     STARP_OT_refresh_preset_items,
     STARP_OT_export_bmap,
+    STARP_OT_export_bone_hierarchy,
     STARP_OT_import_bmap,
 )
 

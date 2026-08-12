@@ -1,5 +1,6 @@
 """Blender background smoke tests for the ARP retarget preset editor."""
 
+import json
 import os
 import shutil
 import sys
@@ -259,14 +260,18 @@ def run():
 
     file_selector = FakeWindowManager()
     fake_context = SimpleNamespace(window_manager=file_selector)
-    for operator_type in (addon.STARP_OT_import_bmap, addon.STARP_OT_export_bmap):
+    for operator_type in (
+        addon.STARP_OT_import_bmap,
+        addon.STARP_OT_export_bmap,
+        addon.STARP_OT_export_bone_hierarchy,
+    ):
         operator = SimpleNamespace(filepath="")
         result = operator_type.invoke(operator, fake_context, None)
         assert result == {"RUNNING_MODAL"}, (
             f"{operator_type.__name__}.invoke incompatible return value: "
             f"expected a set, got {type(result).__name__} ({result!r})"
         )
-    assert len(file_selector.operators) == 2
+    assert len(file_selector.operators) == 3
 
     target_operator = SimpleNamespace(index=0)
     target_event = SimpleNamespace(shift=False, ctrl=False, alt=False, value="PRESS")
@@ -474,6 +479,36 @@ def run():
         addon._default_preset_directory = default_preset_directory
         scene.arp_retarget_preset_selection = ""
 
+    bpy.ops.object.select_all(action="DESELECT")
+    source.select_set(True)
+    bpy.context.view_layer.objects.active = source
+    bpy.ops.object.mode_set(mode="EDIT")
+    source.data.edit_bones["Arm.L"].parent = source.data.edit_bones["Center"]
+    bpy.ops.object.mode_set(mode="OBJECT")
+    hierarchy_file = tempfile.NamedTemporaryFile(
+        suffix=".json",
+        prefix="script-toolkit-hierarchy-",
+        delete=False,
+    )
+    hierarchy_path = hierarchy_file.name
+    hierarchy_file.close()
+    assert bpy.ops.script_toolkit.arp_export_bone_hierarchy(filepath=hierarchy_path) == {"FINISHED"}
+    with open(hierarchy_path, "r", encoding="utf-8") as exported:
+        hierarchy = json.load(exported)
+    assert hierarchy["format"] == "script_toolkit.arp_bone_hierarchy"
+    assert hierarchy["source_armature"]["name"] == source.name
+    assert hierarchy["target_armature"]["name"] == target.name
+    source_bones = {
+        bone["name"]: bone for bone in hierarchy["source_armature"]["bones"]
+    }
+    assert set(source_bones) == set(source_names)
+    assert source_bones["Arm.L"]["parent"] == "Center"
+    assert "Arm.L" in source_bones["Center"]["children"]
+    assert set(
+        bone["name"] for bone in hierarchy["target_armature"]["bones"]
+    ) == set(target_names)
+    os.remove(hierarchy_path)
+
     panel_layout = FakeListLayout()
     addon.draw_ui(panel_layout, SimpleNamespace(scene=scene))
     first_label = next(call for call in panel_layout.calls if call[0] == "label")
@@ -483,10 +518,19 @@ def run():
     assert prop_search_calls[0][4] == "arp_retarget_preset_items"
     panel_operator_calls = [call for call in panel_layout.calls if call[0] == "operator"]
     panel_operator_ids = [call[1] for call in panel_operator_calls]
+    hierarchy_index = panel_operator_ids.index(addon.STARP_OT_export_bone_hierarchy.bl_idname)
+    refresh_index = panel_operator_ids.index(addon.STARP_OT_refresh_preset_items.bl_idname)
     send_index = panel_operator_ids.index(addon.STARP_OT_send_to_arp.bl_idname)
     export_index = panel_operator_ids.index(addon.STARP_OT_export_bmap.bl_idname)
+    assert hierarchy_index > refresh_index
+    assert hierarchy_index > send_index
+    assert panel_operator_calls[hierarchy_index][2]["text"] == ""
     assert send_index > export_index
     assert panel_operator_calls[send_index][2]["text"] == "Send to ARP"
+    assert any(
+        call[0] == "label" and call[1]["text"] == "Auto-Rig Pro Remap Preset"
+        for call in panel_layout.calls
+    )
     button_texts = {
         call[1]: call[2]["text"]
         for call in panel_operator_calls
