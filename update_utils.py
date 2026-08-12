@@ -30,6 +30,7 @@ REQUIRED_RUNTIME_FILES = (
     "features/align_bones.py",
     "features/arp_retarget_preset.py",
     "features/kj_export.py",
+    "features/root_motion.py",
 )
 
 

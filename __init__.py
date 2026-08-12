@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 4, 8),
+    "version": (0, 4, 9),
     "blender": (5, 1, 0),
     "location": "3D View > Sidebar > Script Toolkit",
     "description": "FBX batch tools in an isolated Blender worker plus selected-object cleanup tools.",
@@ -22,7 +22,15 @@ import bmesh
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, StringProperty
 from bpy.types import Operator, Panel, PropertyGroup
 
-from .features import biped_names, hair_check, empty_to_bone, align_bones, arp_retarget_preset, kj_export
+from .features import (
+    align_bones,
+    arp_retarget_preset,
+    biped_names,
+    empty_to_bone,
+    hair_check,
+    kj_export,
+    root_motion,
+)
 
 if "bpy" in locals():
     import importlib
@@ -34,6 +42,7 @@ if "bpy" in locals():
     importlib.reload(align_bones)
     importlib.reload(arp_retarget_preset)
     importlib.reload(kj_export)
+    importlib.reload(root_motion)
 
 import bpy
 
@@ -83,6 +92,7 @@ def _tool_description(tool):
         "EMPTY_TO_BONE": "เครื่องมือ Create Bones จาก Empty และ Armature พร้อมจัด Hierarchy",
         "ARP_REMAP_PRESET": "สร้างรายการ mapping แบบหลายรายการและ export เป็น Auto-Rig Pro .bmap preset.",
         "KJ_EXPORT": "Batch export meshes with a pinned armature using the Better FBX exporter.",
+        "ROOT_MOTION": "Create Root Motion helper shapes and bake their animation back onto the selected bones.",
     }[tool]
 
 
@@ -131,6 +141,11 @@ class ST_Properties(PropertyGroup):
             ),
             ("ARP_REMAP_PRESET", "ARP Retarget Preset", "Build and export an Auto-Rig Pro mapping preset"),
             ("KJ_EXPORT", "KJ Export", "Batch export meshes with a pinned armature using Better FBX"),
+            (
+                "ROOT_MOTION",
+                "Create Root Motion",
+                "Create helper shapes and invert their baked animation constraints",
+            ),
         ],
         default="REEXPORT",
     )
@@ -873,6 +888,8 @@ class ST_PT_panel(Panel):
             arp_retarget_preset.draw_ui(layout, context)
         elif props.tool == "KJ_EXPORT":
             kj_export.draw_ui(layout, context)
+        elif props.tool == "ROOT_MOTION":
+            root_motion.draw_ui(layout, context)
 
         if props.tool in STATUS_TOOLS:
             status = layout.box()
@@ -960,6 +977,7 @@ def register():
     align_bones.register()
     arp_retarget_preset.register()
     kj_export.register()
+    root_motion.register()
     for cls in CLASSES:
         bpy.utils.register_class(cls)
     bpy.types.Scene.script_toolkit = bpy.props.PointerProperty(type=ST_Properties)
@@ -973,6 +991,7 @@ def unregister():
     hair_check.unregister()
     empty_to_bone.unregister()
     align_bones.unregister()
+    root_motion.unregister()
     kj_export.unregister()
     arp_retarget_preset.unregister()
 

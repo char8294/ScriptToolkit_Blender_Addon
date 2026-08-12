@@ -1,5 +1,10 @@
 # Script Toolkit Changelog
 
+## v0.4.9
+
+- Added Create Root Motion with per-bone helper shape creation for Root, Pelvis, Foot, Foot Front, and Foot Back bones.
+- Added Root Motion animation baking that keys the selected helper object, removes its Root Motion constraints, and makes the selected bone copy the baked object's location and rotation while preserving the bone's existing Action.
+
 ## v0.4.8
 
 - Added a 4-Legged preset to IK Helper Bones with separate Front/Back names for Pole, MCH-IK, and Foot helpers.

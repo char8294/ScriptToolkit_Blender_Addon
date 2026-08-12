@@ -11,6 +11,7 @@ A collection of handy scripts and utilities for Rigging, Animation, and Workflow
 - **KJ Export**: Batch export selected meshes with a pinned armature through the Better FBX exporter, including presets, smooth shading, Biped name restoration, and per-mesh unused-bone removal.
 - **Align Bones**: Snap selected tails to nearby selected heads or point them along a World Axis, and convert selected bone axes with FBX-style Primary/Secondary source and target settings while preserving the current pose.
 - **Clear Custom Properties**: Strip all custom properties/metadata from selected objects to clean up imported models (like from 3ds Max/Maya).
+- **Create Root Motion**: Create colored helper shapes for supported bones, copy their motion from bones, then bake the helper objects and make the bones follow the baked animation.
 - **Built-in Auto Updater**: Keep your add-on up to date directly from Blender.
 
 Runtime feature modules are grouped under `features/`; the add-on is installed and updated as one package.

@@ -28,6 +28,7 @@ def test_release_archive_includes_feature_modules(tmp_path):
         "features/align_bones.py",
         "features/arp_retarget_preset.py",
         "features/kj_export.py",
+        "features/root_motion.py",
     ):
         target = source_dir / relative_path
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -41,3 +42,4 @@ def test_release_archive_includes_feature_modules(tmp_path):
 
     assert "script_toolkit/features/__init__.py" in names
     assert "script_toolkit/features/kj_export.py" in names
+    assert "script_toolkit/features/root_motion.py" in names
