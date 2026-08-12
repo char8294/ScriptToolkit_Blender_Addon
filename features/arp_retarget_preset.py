@@ -327,6 +327,18 @@ def _active_armature_bone_names(context, armature):
     return _unique_names(names)
 
 
+def _selected_pose_bone_names(armature):
+    """Return selected Pose Bone names without relying on the active object."""
+    if not armature or getattr(armature, "mode", "") != "POSE":
+        return []
+    pose_bones = getattr(getattr(armature, "pose", None), "bones", ())
+    selected = []
+    for pose_bone in pose_bones:
+        if getattr(pose_bone, "select", False):
+            selected.append(pose_bone.name)
+    return _unique_names(selected)
+
+
 def _activate_object(context, obj):
     """Make an object active while tolerating restricted/fake test contexts."""
     if not obj:
@@ -424,6 +436,46 @@ def _select_armature_bones(context, armature, names):
                 pass
 
     return [bone.name for bone in found], [name for name in names if not data_bones.get(name)]
+
+
+def _add_or_update_mapping_pair(scene, source_name, target_name):
+    """Map one Source/Target pair, removing any previous use of the Target."""
+    items = scene.arp_retarget_mapping_items
+    conflict_indices = [
+        index
+        for index, item in enumerate(items)
+        if item.target_name == target_name and item.source_name != source_name
+    ]
+    for index in sorted(conflict_indices, reverse=True):
+        items.remove(index)
+
+    source_indices = [
+        index for index, item in enumerate(items) if item.source_name == source_name
+    ]
+    if source_indices:
+        for index in reversed(source_indices[1:]):
+            items.remove(index)
+        item = items[source_indices[0]]
+        operation = "Updated"
+    else:
+        item = items.add()
+        item.source_name = source_name
+        operation = "Added"
+
+    item.target_name = target_name
+    item.target_manual = True
+    for mapping_item in items:
+        mapping_item.selected = False
+    item.selected = True
+    item_index = next(
+        index
+        for index, mapping_item in enumerate(items)
+        if mapping_item.source_name == source_name
+    )
+    scene.arp_retarget_mapping_index = item_index
+    scene.arp_retarget_selection_anchor = item_index
+    scene.arp_retarget_inline_edit_index = -1
+    return operation, len(conflict_indices), item_index
 
 
 def _arp_collection(scene):
@@ -960,6 +1012,51 @@ class STARP_OT_select_source_bones(Operator):
             )
         else:
             self.report({"INFO"}, f"Selected {len(found)} Source Bones in the viewport")
+        return {"FINISHED"}
+
+
+class STARP_OT_add_selected_bone_pair(Operator):
+    """Add or update one mapping from the selected Source/Target Pose Bones."""
+
+    bl_idname = "script_toolkit.arp_add_selected_bone_pair"
+    bl_label = "Add/Update Selected Pair"
+    bl_description = (
+        "Add one selected Source-to-Target Pose Bone pair; update an existing Source "
+        "and remove any previous row using the Target"
+    )
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        scene = context.scene
+        armatures = _validated_armatures(self, scene)
+        if armatures is None:
+            return {"CANCELLED"}
+        source, target = armatures
+        if source.mode != "POSE" or target.mode != "POSE":
+            self.report(
+                {"ERROR"},
+                "Put both Source and Target Armatures in Pose Mode first",
+            )
+            return {"CANCELLED"}
+
+        source_names = _selected_pose_bone_names(source)
+        target_names = _selected_pose_bone_names(target)
+        if len(source_names) != 1 or len(target_names) != 1:
+            self.report(
+                {"WARNING"},
+                "Select exactly one Source Bone and one Target Bone",
+            )
+            return {"CANCELLED"}
+
+        operation, removed, _item_index = _add_or_update_mapping_pair(
+            scene,
+            source_names[0],
+            target_names[0],
+        )
+        message = f"{operation} {source_names[0]} → {target_names[0]}"
+        if removed:
+            message += f"; removed {removed} previous Target mapping"
+        self.report({"INFO"}, message)
         return {"FINISHED"}
 
 
@@ -1792,6 +1889,11 @@ def draw_ui(layout, context):
         text="Select Source Bones in Viewport",
         icon="BONE_DATA",
     )
+    mapping_box.operator(
+        STARP_OT_add_selected_bone_pair.bl_idname,
+        text="Add/Update Selected Pair",
+        icon="ADD",
+    )
     actions = mapping_box.row(align=True)
     actions.operator(STARP_OT_swap_source_target.bl_idname, icon="ARROW_LEFTRIGHT")
     actions.operator(STARP_OT_mirror_bone_list.bl_idname, icon="MOD_MIRROR")
@@ -1824,6 +1926,7 @@ CLASSES = (
     STARP_OT_target_mapping_cell,
     STARP_OT_synchro_select,
     STARP_OT_select_source_bones,
+    STARP_OT_add_selected_bone_pair,
     STARP_OT_send_to_arp,
     STARP_OT_pick_selected_armature,
     STARP_UL_mapping,

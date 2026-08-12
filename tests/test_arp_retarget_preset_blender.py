@@ -537,12 +537,43 @@ def run():
         if call[1] in {
             addon.STARP_OT_synchro_select.bl_idname,
             addon.STARP_OT_select_source_bones.bl_idname,
+            addon.STARP_OT_add_selected_bone_pair.bl_idname,
         }
     }
     assert button_texts == {
         addon.STARP_OT_synchro_select.bl_idname: "Select Viewport Bone in List",
         addon.STARP_OT_select_source_bones.bl_idname: "Select Source Bones in Viewport",
+        addon.STARP_OT_add_selected_bone_pair.bl_idname: "Add/Update Selected Pair",
     }
+
+    bpy.ops.object.select_all(action="DESELECT")
+    source.select_set(True)
+    target.select_set(True)
+    bpy.context.view_layer.objects.active = source
+    bpy.ops.object.mode_set(mode="POSE")
+    for pose_bone in source.pose.bones:
+        pose_bone.select = False
+    for pose_bone in target.pose.bones:
+        pose_bone.select = False
+    source.pose.bones["Arm.L"].select = True
+    target.pose.bones["CTRL.L"].select = True
+    assert bpy.ops.script_toolkit.arp_add_selected_bone_pair() == {"FINISHED"}
+    assert item_by_source(scene, "Arm.L").target_name == "CTRL.L"
+    assert sum(item.source_name == "Arm.L" for item in scene.arp_retarget_mapping_items) == 1
+
+    # Reusing a Target removes its previous mapping row before updating the
+    # selected Source row, so the Target remains unique in the list.
+    for pose_bone in source.pose.bones:
+        pose_bone.select = False
+    for pose_bone in target.pose.bones:
+        pose_bone.select = False
+    source.pose.bones["Arm.R"].select = True
+    target.pose.bones["CTRL.L"].select = True
+    assert bpy.ops.script_toolkit.arp_add_selected_bone_pair() == {"FINISHED"}
+    assert not any(item.source_name == "Arm.L" for item in scene.arp_retarget_mapping_items)
+    assert item_by_source(scene, "Arm.R").target_name == "CTRL.L"
+    assert sum(item.target_name == "CTRL.L" for item in scene.arp_retarget_mapping_items) == 1
+    bpy.ops.object.mode_set(mode="OBJECT")
     shutil.rmtree(preset_directory)
 
     addon.unregister()
