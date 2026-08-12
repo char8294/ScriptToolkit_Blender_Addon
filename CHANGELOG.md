@@ -1,5 +1,11 @@
 # Script Toolkit Changelog
 
+## v0.4.10
+
+- Updated Create Root Motion Shape to offer CUBE, ICO_SPHERE, red CYLINDER, and blue CYLINDER presets for multiple selected Pose bones.
+- Replaced the custom Root Motion bake/inversion workflow with Blender's native Bake Action dialog.
+- Added Bone Constraint pairing that uses the first matching `RM_<Bone>` Object, including Blender numeric suffixes such as `.001` and `.002`.
+
 ## v0.4.9
 
 - Added Create Root Motion with per-bone helper shape creation for Root, Pelvis, Foot, Foot Front, and Foot Back bones.

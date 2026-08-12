@@ -3,6 +3,7 @@
 import importlib.util
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import bpy
 from mathutils import Vector
@@ -19,6 +20,28 @@ def load_addon():
     sys.modules[spec.name] = addon
     spec.loader.exec_module(addon)
     return addon
+
+
+class FakeLayout:
+    def __init__(self):
+        self.calls = []
+
+    def box(self):
+        return self
+
+    def row(self, **_kwargs):
+        return self
+
+    def separator(self):
+        self.calls.append(("separator",))
+
+    def label(self, **kwargs):
+        self.calls.append(("label", kwargs))
+
+    def operator(self, operator_id, **kwargs):
+        operator = SimpleNamespace(shape_key="")
+        self.calls.append(("operator", operator_id, kwargs, operator))
+        return operator
 
 
 def make_armature(name):
@@ -44,27 +67,47 @@ def add_bones(armature, names):
     bpy.ops.object.mode_set(mode="OBJECT")
 
 
-def select_pose_bone(armature, bone_name):
+def select_bones(armature, names, mode="POSE"):
     if armature.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
     bpy.ops.object.select_all(action="DESELECT")
     armature.select_set(True)
     bpy.context.view_layer.objects.active = armature
-    if armature.mode != "POSE":
-        bpy.ops.object.mode_set(mode="POSE")
-    for pose_bone in armature.pose.bones:
-        pose_bone.select = pose_bone.name == bone_name
-    armature.data.bones.active = armature.data.bones[bone_name]
+
+    if mode != "OBJECT":
+        bpy.ops.object.mode_set(mode=mode)
+
+    selected_names = set(names)
+    if mode == "POSE":
+        for pose_bone in armature.pose.bones:
+            pose_bone.select = pose_bone.name in selected_names
+    elif mode == "EDIT":
+        for edit_bone in armature.data.edit_bones:
+            edit_bone.select = edit_bone.name in selected_names
+
+    if names:
+        armature.data.bones.active = armature.data.bones[names[0]]
 
 
-def root_motion_objects(addon, armature, bone_name):
-    return [
-        obj
-        for obj in bpy.data.objects
-        if obj.get(addon.root_motion.ROOT_MOTION_MARKER, False)
-        and obj.get(addon.root_motion.ROOT_MOTION_ARMATURE) == armature.name
-        and obj.get(addon.root_motion.ROOT_MOTION_BONE) == bone_name
-    ]
+def generated_object(armature, bone_name, suffix=""):
+    return bpy.data.objects.get(f"RM_{bone_name}{suffix}")
+
+
+def assert_copy_constraints(constraints, target, subtarget=None):
+    assert {constraint.type for constraint in constraints} == {
+        "COPY_LOCATION",
+        "COPY_ROTATION",
+    }
+    assert all(constraint.target == target for constraint in constraints)
+    if subtarget is not None:
+        assert all(constraint.subtarget == subtarget for constraint in constraints)
+    assert all(
+        constraint.influence == 1.0
+        and constraint.use_x
+        and constraint.use_y
+        and constraint.use_z
+        for constraint in constraints
+    )
 
 
 def run():
@@ -74,156 +117,151 @@ def run():
     created_objects = []
 
     try:
-        names = tuple(addon.root_motion.SHAPE_SPECS)
-        add_bones(armature, names)
+        add_bones(
+            armature,
+            ("Root", "Hand.L", "EditBone", "ObjectBone", "SuffixBone", "Missing"),
+        )
         props = bpy.context.scene.script_toolkit
         assert props.tool == "REEXPORT"
         props.tool = "ROOT_MOTION"
-        assert (
-            props.bl_rna.properties["tool"].enum_items["ROOT_MOTION"].name
-            == "Create Root Motion"
+        assert props.bl_rna.properties["tool"].enum_items["ROOT_MOTION"].name == (
+            "Create Root Motion"
         )
 
-        for bone_name, spec in addon.root_motion.SHAPE_SPECS.items():
-            select_pose_bone(armature, bone_name)
-            assert bpy.ops.script_toolkit.create_root_motion_shape() == {"FINISHED"}
-            obj = next(
-                candidate
-                for candidate in bpy.data.objects
-                if candidate.get(addon.root_motion.ROOT_MOTION_BONE) == bone_name
-                and candidate.get(addon.root_motion.ROOT_MOTION_ARMATURE)
-                == armature.name
-                and candidate not in created_objects
-            )
-            created_objects.append(obj)
-
-            assert obj.name.startswith(f"RM_{bone_name}")
-            assert_vector_close(obj.location, (0.0, 0.0, 0.0))
-            for actual, expected in zip(obj.dimensions, spec["dimensions"]):
-                assert abs(actual - expected) <= 1e-5
-            assert obj.users_collection
-            current_collection = bpy.context.collection
-            if current_collection:
-                assert current_collection in obj.users_collection
-            assert {constraint.type for constraint in obj.constraints} == {
-                "COPY_LOCATION",
-                "COPY_ROTATION",
-            }
-            assert all(
-                constraint.target == armature
-                and constraint.subtarget == bone_name
-                for constraint in obj.constraints
-            )
-
-            if "color" in spec:
-                assert_vector_close(obj.color[:3], spec["color"][:3])
-
-        # Creating the same shape again is intentionally allowed and gets a
-        # Blender-generated suffix instead of replacing the first object.
-        select_pose_bone(armature, "Root")
-        assert bpy.ops.script_toolkit.create_root_motion_shape() == {"FINISHED"}
-        duplicate = next(
-            obj
-            for obj in root_motion_objects(addon, armature, "Root")
-            if obj not in created_objects
+        fake_layout = FakeLayout()
+        addon.root_motion.draw_ui(
+            fake_layout,
+            SimpleNamespace(scene=bpy.context.scene, active_object=armature),
         )
-        created_objects.append(duplicate)
-        assert duplicate.name != created_objects[0].name
-
-        # Keep the original Bone Action so the inverse constraint workflow can
-        # be verified without changing the source animation.
-        scene = bpy.context.scene
-        scene.frame_start = 1
-        scene.frame_end = 3
-        root_pose_bone = armature.pose.bones["Root"]
-        armature.animation_data_create()
-        scene.frame_set(1)
-        root_pose_bone.location = (0.0, 0.0, 0.0)
-        root_pose_bone.keyframe_insert(data_path="location", frame=1)
-        scene.frame_set(3)
-        root_pose_bone.location = (1.0, 0.0, 0.0)
-        root_pose_bone.keyframe_insert(data_path="location", frame=3)
-        original_action = armature.animation_data.action
-        original_frame_range = tuple(original_action.frame_range)
-
-        # Duplicate helper objects are supported, but Bake must be explicit
-        # about which one is selected.
-        bpy.ops.object.mode_set(mode="OBJECT")
-        bpy.ops.object.select_all(action="DESELECT")
-        armature.select_set(True)
-        created_objects[0].select_set(True)
-        duplicate.select_set(True)
-        bpy.context.view_layer.objects.active = armature
-        bpy.ops.object.mode_set(mode="POSE")
-        for pose_bone in armature.pose.bones:
-            pose_bone.select = pose_bone.name == "Root"
-        armature.data.bones.active = armature.data.bones["Root"]
-        assert bpy.ops.script_toolkit.bake_root_motion(
-            frame_start=1,
-            frame_end=3,
-            frame_step=1,
-        ) == {"CANCELLED"}
-
-        # Bake only the selected Root shape. The duplicate remains constrained
-        # to the bone and is not included in the bake.
-        select_pose_bone(armature, "Root")
-        bpy.ops.object.mode_set(mode="OBJECT")
-        bpy.ops.object.select_all(action="DESELECT")
-        armature.select_set(True)
-        created_objects[0].select_set(True)
-        bpy.context.view_layer.objects.active = armature
-        bpy.ops.object.mode_set(mode="POSE")
-        for pose_bone in armature.pose.bones:
-            pose_bone.select = pose_bone.name == "Root"
-        armature.data.bones.active = armature.data.bones["Root"]
-        assert bpy.ops.script_toolkit.bake_root_motion(
-            frame_start=1,
-            frame_end=3,
-            frame_step=1,
-        ) == {"FINISHED"}
-
-        baked_object = created_objects[0]
-        assert baked_object.animation_data
-        assert baked_object.animation_data.action
-        assert not any(
-            constraint.type in {"COPY_LOCATION", "COPY_ROTATION"}
-            for constraint in baked_object.constraints
-        )
-        assert armature.animation_data.action == original_action
-        assert tuple(original_action.frame_range) == original_frame_range
-
-        bone_constraints = [
-            constraint
-            for constraint in root_pose_bone.constraints
-            if constraint.target == baked_object
+        shape_operator_calls = [
+            call
+            for call in fake_layout.calls
+            if call[0] == "operator"
+            and call[1] == "script_toolkit.create_root_motion_shape"
         ]
-        assert {constraint.type for constraint in bone_constraints} == {
-            "COPY_LOCATION",
-            "COPY_ROTATION",
-        }
-        assert len(root_motion_objects(addon, armature, "Root")) == 2
+        assert [call[3].shape_key for call in shape_operator_calls] == [
+            "CUBE_BLUE",
+            "ICO_SPHERE_YELLOW",
+            "CYLINDER_RED",
+            "CYLINDER_BLUE",
+        ]
         assert any(
-            constraint.type == "COPY_LOCATION"
-            for constraint in duplicate.constraints
+            call[0] == "operator" and call[1] == "nla.bake"
+            for call in fake_layout.calls
+        )
+        assert any(
+            call[0] == "operator"
+            and call[1] == "script_toolkit.add_root_motion_bone_constraints"
+            for call in fake_layout.calls
+        )
+        assert not hasattr(addon.root_motion, "ST_OT_BakeRootMotion")
+
+        # One Create button applies its selected Shape to every selected bone.
+        select_bones(armature, ("Root", "Hand.L"), mode="POSE")
+        assert bpy.ops.script_toolkit.create_root_motion_shape(
+            shape_key="CUBE_BLUE"
+        ) == {"FINISHED"}
+        assert armature.mode == "POSE"
+        assert addon.root_motion._selected_bone_names(
+            bpy.context, armature
+        ) == ["Root", "Hand.L"]
+
+        root_cube = generated_object(armature, "Root")
+        hand_cube = generated_object(armature, "Hand.L")
+        created_objects.extend((root_cube, hand_cube))
+        for obj, bone_name in ((root_cube, "Root"), (hand_cube, "Hand.L")):
+            assert obj is not None
+            assert_vector_close(obj.location, (0.0, 0.0, 0.0))
+            assert_vector_close(obj.dimensions, (0.16, 0.16, 0.16))
+            assert_vector_close(obj.color[:3], (0.0, 0.5, 1.0))
+            assert obj.users_collection
+            assert_copy_constraints(obj.constraints, armature, bone_name)
+
+        # The remaining presets can be applied to arbitrary bone names.
+        preset_bones = (
+            ("ICO_SPHERE_YELLOW", "ObjectBone", (0.143, 0.15, 0.15), (1.0, 1.0, 0.0)),
+            ("CYLINDER_RED", "EditBone", (0.26, 0.26, 0.031), (1.0, 0.0, 0.0)),
+            ("CYLINDER_BLUE", "SuffixBone", (0.26, 0.26, 0.031), (0.0, 0.0, 1.0)),
+        )
+        for shape_key, bone_name, dimensions, color in preset_bones:
+            select_bones(armature, (bone_name,), mode="POSE")
+            assert bpy.ops.script_toolkit.create_root_motion_shape(
+                shape_key=shape_key
+            ) == {"FINISHED"}
+            obj = generated_object(armature, bone_name)
+            created_objects.append(obj)
+            assert obj is not None
+            assert_vector_close(obj.dimensions, dimensions)
+            assert_vector_close(obj.color[:3], color)
+            assert_copy_constraints(obj.constraints, armature, bone_name)
+            assert armature.mode == "POSE"
+
+        # Duplicates use Blender's numeric suffixes and are not replacements.
+        select_bones(armature, ("Root",), mode="POSE")
+        assert bpy.ops.script_toolkit.create_root_motion_shape(
+            shape_key="CYLINDER_BLUE"
+        ) == {"FINISHED"}
+        root_duplicate = generated_object(armature, "Root", ".001")
+        created_objects.append(root_duplicate)
+        assert root_duplicate is not None
+        assert root_duplicate.name == "RM_Root.001"
+
+        # Bone constraints pair by exact RM_<Bone> name first.
+        select_bones(armature, ("Root", "Hand.L"), mode="POSE")
+        assert bpy.ops.script_toolkit.add_root_motion_bone_constraints() == {
+            "FINISHED"
+        }
+        assert armature.mode == "POSE"
+        assert_copy_constraints(
+            armature.pose.bones["Root"].constraints,
+            root_cube,
+        )
+        assert_copy_constraints(
+            armature.pose.bones["Hand.L"].constraints,
+            hand_cube,
         )
 
-        scene.frame_set(3)
-        bpy.context.view_layer.update()
-        bone_world = armature.matrix_world @ root_pose_bone.matrix
-        assert_vector_close(
-            baked_object.matrix_world.translation,
-            bone_world.translation,
-            tolerance=1e-4,
+        # If the base name is absent, the first numeric suffix is accepted.
+        suffix_obj = generated_object(armature, "SuffixBone")
+        suffix_obj.name = "RM_SuffixBone.001"
+        select_bones(armature, ("SuffixBone",), mode="POSE")
+        assert bpy.ops.script_toolkit.add_root_motion_bone_constraints() == {
+            "FINISHED"
+        }
+        assert_copy_constraints(
+            armature.pose.bones["SuffixBone"].constraints,
+            suffix_obj,
         )
-        print("ROOT_MOTION_CREATE_AND_BAKE_OK")
+
+        # The pairing operator works in Object, Edit, and Pose modes while
+        # preserving whichever mode was active before the click.
+        for mode, bone_name in (("OBJECT", "ObjectBone"), ("EDIT", "EditBone")):
+            select_bones(armature, (bone_name,), mode=mode)
+            assert bpy.ops.script_toolkit.add_root_motion_bone_constraints() == {
+                "FINISHED"
+            }
+            assert armature.mode == mode
+            pose_constraints = armature.pose.bones[bone_name].constraints
+            assert any(
+                constraint.target == generated_object(armature, bone_name)
+                for constraint in pose_constraints
+            )
+
+        # Missing pairings are skipped while valid selected bones still work.
+        select_bones(armature, ("Missing", "Root"), mode="POSE")
+        assert bpy.ops.script_toolkit.add_root_motion_bone_constraints() == {
+            "FINISHED"
+        }
+        assert not armature.pose.bones["Missing"].constraints
+        print("ROOT_MOTION_PRESETS_AND_CONSTRAINT_PAIRING_OK")
     finally:
         if bpy.context.mode != "OBJECT":
             bpy.ops.object.mode_set(mode="OBJECT")
         for obj in list(created_objects):
-            if obj.name in bpy.data.objects:
-                mesh_data = obj.data
+            if obj and obj.name in bpy.data.objects:
+                mesh_data = obj.data if obj.type == "MESH" else None
                 bpy.data.objects.remove(obj, do_unlink=True)
-                if mesh_data.users == 0:
+                if mesh_data and mesh_data.users == 0:
                     bpy.data.meshes.remove(mesh_data)
         if armature.name in bpy.data.objects:
             armature_data = armature.data

@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 4, 9),
+    "version": (0, 4, 10),
     "blender": (5, 1, 0),
     "location": "3D View > Sidebar > Script Toolkit",
     "description": "FBX batch tools in an isolated Blender worker plus selected-object cleanup tools.",
@@ -92,7 +92,7 @@ def _tool_description(tool):
         "EMPTY_TO_BONE": "เครื่องมือ Create Bones จาก Empty และ Armature พร้อมจัด Hierarchy",
         "ARP_REMAP_PRESET": "สร้างรายการ mapping แบบหลายรายการและ export เป็น Auto-Rig Pro .bmap preset.",
         "KJ_EXPORT": "Batch export meshes with a pinned armature using the Better FBX exporter.",
-        "ROOT_MOTION": "Create Root Motion helper shapes and bake their animation back onto the selected bones.",
+        "ROOT_MOTION": "Create Root Motion helper shapes and pair selected bones with RM_ objects.",
     }[tool]
 
 
@@ -144,7 +144,7 @@ class ST_Properties(PropertyGroup):
             (
                 "ROOT_MOTION",
                 "Create Root Motion",
-                "Create helper shapes and invert their baked animation constraints",
+                "Create helper shapes and pair selected bones with RM_ objects",
             ),
         ],
         default="REEXPORT",
