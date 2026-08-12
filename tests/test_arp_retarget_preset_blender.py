@@ -481,6 +481,24 @@ def run():
     prop_search_calls = [call for call in panel_layout.calls if call[0] == "prop_search"]
     assert prop_search_calls[0][2] == "arp_retarget_preset_selection"
     assert prop_search_calls[0][4] == "arp_retarget_preset_items"
+    panel_operator_calls = [call for call in panel_layout.calls if call[0] == "operator"]
+    panel_operator_ids = [call[1] for call in panel_operator_calls]
+    send_index = panel_operator_ids.index(addon.STARP_OT_send_to_arp.bl_idname)
+    export_index = panel_operator_ids.index(addon.STARP_OT_export_bmap.bl_idname)
+    assert send_index > export_index
+    assert panel_operator_calls[send_index][2]["text"] == "Send to ARP"
+    button_texts = {
+        call[1]: call[2]["text"]
+        for call in panel_operator_calls
+        if call[1] in {
+            addon.STARP_OT_synchro_select.bl_idname,
+            addon.STARP_OT_select_source_bones.bl_idname,
+        }
+    }
+    assert button_texts == {
+        addon.STARP_OT_synchro_select.bl_idname: "Select Viewport Bone in List",
+        addon.STARP_OT_select_source_bones.bl_idname: "Select Source Bones in Viewport",
+    }
     shutil.rmtree(preset_directory)
 
     addon.unregister()

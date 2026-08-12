@@ -879,9 +879,9 @@ class STARP_OT_synchro_select(Operator):
     """Select mapping rows for the active Source or Target viewport bone."""
 
     bl_idname = "script_toolkit.arp_synchro_select"
-    bl_label = "Synchro Select"
+    bl_label = "Select Viewport Bone in List"
     bl_description = (
-        "Select the Source or Target mapping rows for the active bone in the viewport, "
+        "Find the active Source or Target viewport bone in the mapping list, "
         "like Auto-Rig Pro Remap"
     )
     bl_options = {"REGISTER"}
@@ -933,8 +933,8 @@ class STARP_OT_select_source_bones(Operator):
     """Select the Source Bones from the currently selected mapping rows."""
 
     bl_idname = "script_toolkit.arp_select_source_bones"
-    bl_label = "Select Source Bones"
-    bl_description = "Select the selected mapping rows' Source Bones in the viewport"
+    bl_label = "Select Source Bones in Viewport"
+    bl_description = "Select the mapping list's Source Bones in the viewport"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
@@ -1656,6 +1656,7 @@ def draw_ui(layout, context):
     row = presets.row(align=True)
     row.operator(STARP_OT_import_bmap.bl_idname, text="Import")
     row.operator(STARP_OT_export_bmap.bl_idname, text="Export .bmap")
+    presets.operator(STARP_OT_send_to_arp.bl_idname, text="Send to ARP", icon="EXPORT")
 
     inputs = layout.box()
     inputs.label(text="Auto-Rig Pro Remap Preset", icon="ARMATURE_DATA")
@@ -1697,19 +1698,18 @@ def draw_ui(layout, context):
     viewport_actions = mapping_box.row(align=True)
     viewport_actions.operator(
         STARP_OT_synchro_select.bl_idname,
-        text="Synchro Select",
+        text="Select Viewport Bone in List",
         icon="VIEWZOOM",
     )
     viewport_actions.operator(
         STARP_OT_select_source_bones.bl_idname,
-        text="Select Source Bones",
+        text="Select Source Bones in Viewport",
         icon="BONE_DATA",
     )
     actions = mapping_box.row(align=True)
     actions.operator(STARP_OT_swap_source_target.bl_idname, icon="ARROW_LEFTRIGHT")
     actions.operator(STARP_OT_mirror_bone_list.bl_idname, icon="MOD_MIRROR")
     actions.operator(STARP_OT_match_target_names.bl_idname, icon="BONE_DATA")
-    actions.operator(STARP_OT_send_to_arp.bl_idname, text="Send to ARP", icon="EXPORT")
 
     rename_box = layout.box()
     rename_box.label(text="Rename", icon="SORTALPHA")
