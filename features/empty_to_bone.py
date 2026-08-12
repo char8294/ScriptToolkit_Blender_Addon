@@ -210,7 +210,9 @@ def _create_ik_helper_bone(operator, context, helper_type):
             return {'CANCELLED'}
 
         if helper_type == IK_HELPER_POLE:
-            direction = _global_y_direction_in_armature_space(armature, -1.0)
+            pole_direction = getattr(operator, "pole_direction", -1)
+            direction_sign = 1.0 if int(pole_direction) > 0 else -1.0
+            direction = _global_y_direction_in_armature_space(armature, direction_sign)
         else:
             direction = _global_y_direction_in_armature_space(armature, 1.0)
 
@@ -223,7 +225,8 @@ def _create_ik_helper_bone(operator, context, helper_type):
 
         if helper_type == IK_HELPER_POLE:
             # Match the requested sequence: extrude from the source head,
-            # move the new bone farther along global -Y, then reverse it.
+            # move the new bone farther along the selected global Y direction,
+            # then reverse it.
             offset = direction * pole_distance
             moved_head = new_bone.head + offset
             moved_tail = new_bone.tail + offset
@@ -430,6 +433,7 @@ class ST_OT_CreatePoleBone(Operator):
     )
     bl_options = {'REGISTER', 'UNDO'}
     target_name: StringProperty(options={'HIDDEN'})
+    pole_direction: IntProperty(default=-1, min=-1, max=1, options={'HIDDEN'})
 
     @classmethod
     def poll(cls, context):
@@ -664,11 +668,15 @@ def draw_ui(layout, context):
             front_row.prop(props, front_property, text="Front:")
             front_operator = front_row.operator(operator_id, text="Create", icon='BONE_DATA')
             front_operator.target_name = getattr(props, front_property)
+            if operator_id == "script_toolkit.create_pole_bone":
+                front_operator.pole_direction = 1
 
             back_row = split.row(align=True)
             back_row.prop(props, back_property, text="Back:")
             back_operator = back_row.operator(operator_id, text="Create", icon='BONE_DATA')
             back_operator.target_name = getattr(props, back_property)
+            if operator_id == "script_toolkit.create_pole_bone":
+                back_operator.pole_direction = -1
 
     constraint_box = layout.box()
     constraint_box.label(text="IK Constraint", icon='CONSTRAINT')

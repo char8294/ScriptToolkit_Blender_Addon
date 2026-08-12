@@ -3,6 +3,7 @@
 ## v0.4.8
 
 - Added a 4-Legged preset to IK Helper Bones with separate Front/Back names for Pole, MCH-IK, and Foot helpers.
+- The 4-Legged preset now creates the Front Pole along global +Y and the Back Pole along global -Y.
 - Added IK Target and Pole Target actions for creating Chain Length 2 IK constraints and applying a Pole Target to all IK constraints on the active bone without muting the Pole bone's Damped Track.
 
 ## v0.4.7

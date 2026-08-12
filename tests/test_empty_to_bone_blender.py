@@ -212,10 +212,12 @@ def run():
         assert props.ik_foot_back_name == "FOOT_LEG_BACK.L"
 
         assert bpy.ops.script_toolkit.create_pole_bone(
-            target_name=props.ik_pole_front_name
+            target_name=props.ik_pole_front_name,
+            pole_direction=1,
         ) == {"FINISHED"}
         assert bpy.ops.script_toolkit.create_pole_bone(
-            target_name=props.ik_pole_back_name
+            target_name=props.ik_pole_back_name,
+            pole_direction=-1,
         ) == {"FINISHED"}
         assert bpy.ops.script_toolkit.create_mch_ik_bone(
             target_name=props.ik_mch_ik_front_name
@@ -229,6 +231,24 @@ def run():
         assert bpy.ops.script_toolkit.create_foot_bone(
             target_name=props.ik_foot_back_name
         ) == {"FINISHED"}
+        front_pole = helper_rig.data.bones[props.ik_pole_front_name]
+        back_pole = helper_rig.data.bones[props.ik_pole_back_name]
+        assert_vector_close(
+            front_pole.head_local,
+            source_head + positive_global_y * (props.ik_pole_distance + props.ik_helper_bone_length),
+        )
+        assert_vector_close(
+            front_pole.tail_local,
+            source_head + positive_global_y * props.ik_pole_distance,
+        )
+        assert_vector_close(
+            back_pole.head_local,
+            source_head + negative_global_y * (props.ik_pole_distance + props.ik_helper_bone_length),
+        )
+        assert_vector_close(
+            back_pole.tail_local,
+            source_head + negative_global_y * props.ik_pole_distance,
+        )
         assert {
             bone.name
             for bone in helper_rig.data.bones
@@ -281,6 +301,8 @@ def run():
             "FOOT_LEG_FRONT.L",
             "FOOT_LEG_BACK.L",
         ]
+        assert getattr(helper_operator_calls[-6][3], "pole_direction", None) == 1
+        assert getattr(helper_operator_calls[-5][3], "pole_direction", None) == -1
 
         constraint_operator_ids = [
             call[1]
