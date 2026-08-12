@@ -301,6 +301,12 @@ class ST_Properties(PropertyGroup):
         items=align_bones.BONE_AXIS_ITEMS,
         default="Z"
     )
+    align_bone_mode: EnumProperty(
+        name="Mode",
+        description="Choose between snapping to another selected head or pointing along a World Axis",
+        items=align_bones.ALIGN_BONE_MODE_ITEMS,
+        default="SNAP",
+    )
     bone_axis_source_primary: EnumProperty(
         name="Source Primary Bone Axis",
         description="Primary bone axis convention currently used by the selected bones",

@@ -1,6 +1,7 @@
 """Blender background tests for Align Bones axis conversion."""
 
 import importlib.util
+import math
 import sys
 from pathlib import Path
 
@@ -89,6 +90,34 @@ def run():
         untouched.select = False
         connected.select = False
 
+        props = bpy.context.scene.script_toolkit
+        assert props.align_bone_mode == "SNAP"
+        original_selected_tail = selected.tail.copy()
+        original_connected_head = connected.head.copy()
+        world_axis_length = selected.length
+
+        # World Axis mode does not search for another head. It points the
+        # selected tail along the requested world direction and preserves length.
+        armature.rotation_euler[2] = math.radians(90.0)
+        bpy.context.view_layer.update()
+        props.align_bone_mode = "WORLD_AXIS"
+        assert bpy.ops.script_toolkit.align_bones(axis="X") == {"FINISHED"}
+        world_head = armature.matrix_world @ selected.head
+        world_tail = armature.matrix_world @ selected.tail
+        assert_vector_close(
+            (world_tail - world_head).normalized(),
+            Vector((1.0, 0.0, 0.0)),
+        )
+        assert abs(selected.length - world_axis_length) <= 1e-5
+        assert_vector_close(connected.head, selected.tail)
+        assert (connected.head - original_connected_head).length > 1e-5
+
+        selected.tail = original_selected_tail
+        assert_vector_close(connected.head, original_connected_head)
+        armature.rotation_euler[2] = 0.0
+        bpy.context.view_layer.update()
+        props.align_bone_mode = "SNAP"
+
         mesh = make_weighted_mesh("AxisConversionMesh", armature)
 
         bpy.ops.object.mode_set(mode="POSE")
@@ -115,7 +144,6 @@ def run():
         untouched_matrix_before = edit_bones["Untouched"].matrix.copy()
         connected_matrix_before = edit_bones["Connected"].matrix.copy()
 
-        props = bpy.context.scene.script_toolkit
         assert props.bone_axis_source_primary == "Y"
         assert props.bone_axis_source_secondary == "X"
         assert props.bone_axis_target_primary == "X"

@@ -2,7 +2,7 @@ import bpy
 import math
 from bpy_extras.io_utils import axis_conversion
 from bpy.types import Operator
-from mathutils import Matrix
+from mathutils import Matrix, Vector
 
 
 BONE_AXIS_ITEMS = (
@@ -14,8 +14,38 @@ BONE_AXIS_ITEMS = (
     ('-Z', "-Z Axis", "Negative Z axis"),
 )
 
+ALIGN_BONE_MODE_ITEMS = (
+    (
+        'SNAP',
+        "Snap to Nearest Head",
+        "Move each selected bone's tail to the nearest head of another selected bone",
+    ),
+    (
+        'WORLD_AXIS',
+        "Point Along World Axis",
+        "Point each selected bone's tail along the chosen World Axis without snapping",
+    ),
+)
+
 JTS_EX_BONE_NAME = "jts ex"
 CONNECT_BONE_NAME = "connect"
+
+
+def _world_axis_vector(axis):
+    return {
+        'X': Vector((1.0, 0.0, 0.0)),
+        'Y': Vector((0.0, 1.0, 0.0)),
+        'Z': Vector((0.0, 0.0, 1.0)),
+        '-X': Vector((-1.0, 0.0, 0.0)),
+        '-Y': Vector((0.0, -1.0, 0.0)),
+        '-Z': Vector((0.0, 0.0, -1.0)),
+    }.get(axis, Vector((0.0, 0.0, 1.0)))
+
+
+def _world_axis_in_armature_space(armature_object, axis):
+    world_direction = _world_axis_vector(axis)
+    local_direction = armature_object.matrix_world.to_3x3().inverted_safe() @ world_direction
+    return local_direction.normalized()
 
 
 def _axis_pair_is_valid(primary, secondary):
@@ -258,9 +288,8 @@ class ST_OT_AlignBones(Operator):
     bl_idname = "script_toolkit.align_bones"
     bl_label = "Align Bones to Axis"
     bl_description = (
-        "Move each selected bone's tail to the nearest head of another selected bone "
-        "when it is within 45 degrees of the chosen local-axis direction; otherwise "
-        "reposition the tail along that axis while preserving the current bone length"
+        "Use the selected Mode to snap each selected bone's tail to another selected "
+        "head or point it along a World Axis while preserving its current length"
     )
     bl_options = {'REGISTER', 'UNDO'}
     
@@ -271,6 +300,7 @@ class ST_OT_AlignBones(Operator):
         return context.active_object and context.active_object.type == 'ARMATURE' and context.mode == 'EDIT_ARMATURE'
 
     def execute(self, context):
+        props = context.scene.script_toolkit
         edit_bones = context.active_object.data.edit_bones
         selected_bones = [b for b in edit_bones if b.select]
         
@@ -280,54 +310,76 @@ class ST_OT_AlignBones(Operator):
             
         snapped_count = 0
         aligned_count = 0
-            
+        affected_connected_children = []
+
         for bone in selected_bones:
-            mat3 = bone.matrix.to_3x3()
-            
-            if self.axis == 'X':
-                search_dir = mat3.col[0].normalized()
-            elif self.axis == 'Y':
-                search_dir = mat3.col[1].normalized()
-            elif self.axis == 'Z':
-                search_dir = mat3.col[2].normalized()
-            elif self.axis == '-X':
-                search_dir = -mat3.col[0].normalized()
-            elif self.axis == '-Y':
-                search_dir = -mat3.col[1].normalized()
-            elif self.axis == '-Z':
-                search_dir = -mat3.col[2].normalized()
-            else:
-                search_dir = mat3.col[2].normalized()
-                
-            best_candidate = None
-            min_dist = float('inf')
-            
-            for other_bone in selected_bones:
-                if other_bone == bone:
-                    continue
-                    
-                vec_to_other = other_bone.head - bone.head
-                dist = vec_to_other.length
-                if dist < 0.0001:
-                    continue
-                    
-                vec_dir = vec_to_other.normalized()
-                angle = search_dir.angle(vec_dir)
-                
-                # Snap if within 45 degrees
-                if angle < math.radians(45):
-                    if dist < min_dist:
-                        min_dist = dist
-                        best_candidate = other_bone
-                        
-            if best_candidate:
-                bone.tail = best_candidate.head
-                snapped_count += 1
-            else:
-                bone.tail = bone.head + (search_dir * bone.length)
+            old_tail = bone.tail.copy()
+            if props.align_bone_mode == 'WORLD_AXIS':
+                axis_direction = _world_axis_in_armature_space(context.active_object, self.axis)
+                bone.tail = bone.head + (axis_direction * bone.length)
                 aligned_count += 1
-            
-        self.report({'INFO'}, f"Snapped {snapped_count} bones, Aligned {aligned_count} bones.")
+            else:
+                mat3 = bone.matrix.to_3x3()
+                axis_index = {'X': 0, 'Y': 1, 'Z': 2}.get(self.axis.lstrip('-'), 2)
+                search_direction = mat3.col[axis_index].normalized()
+                if self.axis.startswith('-'):
+                    search_direction = -search_direction
+
+                best_candidate = None
+                min_dist = float('inf')
+
+                for other_bone in selected_bones:
+                    if other_bone == bone:
+                        continue
+
+                    vec_to_other = other_bone.head - bone.head
+                    dist = vec_to_other.length
+                    if dist < 0.0001:
+                        continue
+
+                    vec_dir = vec_to_other.normalized()
+                    angle = search_direction.angle(vec_dir)
+
+                    # Snap if within 45 degrees.
+                    if angle < math.radians(45):
+                        if dist < min_dist:
+                            min_dist = dist
+                            best_candidate = other_bone
+
+                if best_candidate:
+                    bone.tail = best_candidate.head
+                    snapped_count += 1
+                else:
+                    bone.tail = bone.head + (search_direction * bone.length)
+                    aligned_count += 1
+
+            if (bone.tail - old_tail).length > 0.000001:
+                for child in edit_bones:
+                    if (
+                        child.parent == bone
+                        and child.use_connect
+                        and child.name not in affected_connected_children
+                    ):
+                        affected_connected_children.append(child.name)
+
+        if props.align_bone_mode == 'WORLD_AXIS':
+            message = (
+                f"Pointed {len(selected_bones)} selected bone(s) along World Axis "
+                f"{self.axis}."
+            )
+        else:
+            message = f"Snapped {snapped_count} bones, Aligned {aligned_count} bones."
+
+        if affected_connected_children:
+            preview = ", ".join(affected_connected_children[:5])
+            if len(affected_connected_children) > 5:
+                preview += ", ..."
+            self.report(
+                {'WARNING'},
+                message + " Connected child head(s) also moved: " + preview,
+            )
+        else:
+            self.report({'INFO'}, message)
         return {'FINISHED'}
 
 class ST_OT_SnapTailToNearest(Operator):
@@ -490,8 +542,13 @@ def draw_ui(layout, context):
         sub.label(text="Axes Position")
             
     align_box.separator()
-    align_box.label(text="Move Selected Tail to Nearest Other Selected Head:")
-    align_box.label(text="Search follows the Bone's Local Axis; no match keeps its length.")
+    align_box.prop(props, "align_bone_mode", text="Mode")
+    if props.align_bone_mode == 'WORLD_AXIS':
+        align_box.label(text="Point Selected Tails Along World Axis:")
+        align_box.label(text="No snapping; each Bone keeps its current length.")
+    else:
+        align_box.label(text="Snap Selected Tail to Nearest Other Selected Head:")
+        align_box.label(text="Search follows each Bone's Local Axis; no match keeps its length.")
     
     col = align_box.column(align=True)
     
