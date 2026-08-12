@@ -284,13 +284,13 @@ class ST_Properties(PropertyGroup):
     ik_helper_bone_length: FloatProperty(
         name="IK Helper Bone Length",
         description="Length used when creating Pole, MCH-IK and Foot helper bones",
-        default=0.1,
+        default=0.05,
         min=0.001,
     )
     ik_pole_distance: FloatProperty(
         name="Pole Distance",
         description="Additional global -Y offset applied to the Pole bone before reversing it",
-        default=0.5,
+        default=0.21,
         min=0.0,
     )
     ik_pole_name: StringProperty(name="Pole", default="POLE-IK_LEG.L")

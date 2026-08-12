@@ -108,6 +108,8 @@ def run():
         helper_rig.data.bones.active = helper_rig.data.bones["DEF-Leg"]
 
         props.target_armature = target
+        assert abs(props.ik_helper_bone_length - 0.05) <= 1e-6
+        assert abs(props.ik_pole_distance - 0.21) <= 1e-6
         props.ik_helper_bone_length = 0.4
         props.ik_pole_distance = 0.8
         props.ik_pole_name = "POLE-IK_LEG.L"
