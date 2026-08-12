@@ -50,6 +50,73 @@ def run():
     assert len(scene.arp_retarget_mapping_items) == len(source.data.bones)
     assert {item.source_name for item in scene.arp_retarget_mapping_items} == set(source_names)
 
+    # Viewport -> list synchronization follows whichever configured armature
+    # is active, and the list -> viewport action supports multiple rows.
+    bpy.ops.object.select_all(action="DESELECT")
+    source.select_set(True)
+    bpy.context.view_layer.objects.active = source
+    bpy.ops.object.mode_set(mode="POSE")
+    for bone in source.pose.bones:
+        bone.select = False
+    source.pose.bones["Arm.L"].select = True
+    assert bpy.ops.script_toolkit.arp_synchro_select() == {"FINISHED"}
+    assert [
+        item.source_name
+        for item in scene.arp_retarget_mapping_items
+        if item.selected
+    ] == ["Arm.L"]
+
+    target_item = item_by_source(scene, "Arm.R")
+    target_item.target_name = "CTRL.R"
+    bpy.ops.object.mode_set(mode="OBJECT")
+    bpy.ops.object.select_all(action="DESELECT")
+    target.select_set(True)
+    bpy.context.view_layer.objects.active = target
+    bpy.ops.object.mode_set(mode="POSE")
+    for bone in target.pose.bones:
+        bone.select = False
+    target.pose.bones["CTRL.R"].select = True
+    assert bpy.ops.script_toolkit.arp_synchro_select() == {"FINISHED"}
+    assert [
+        item.source_name
+        for item in scene.arp_retarget_mapping_items
+        if item.selected
+    ] == ["Arm.R"]
+
+    bpy.ops.script_toolkit.arp_select_none()
+    item_by_source(scene, "Arm.L").selected = True
+    item_by_source(scene, "Arm.R").selected = True
+    bpy.ops.object.mode_set(mode="OBJECT")
+    bpy.ops.object.select_all(action="DESELECT")
+    target.select_set(True)
+    bpy.context.view_layer.objects.active = target
+    assert bpy.ops.script_toolkit.arp_select_source_bones() == {"FINISHED"}
+    assert bpy.context.active_object == source
+    assert bpy.context.mode == "POSE"
+    assert {
+        bone.name for bone in source.pose.bones if bone.select
+    } == {"Arm.L", "Arm.R"}
+    bpy.ops.object.mode_set(mode="OBJECT")
+
+    class FakeARPCollection(list):
+        def add(self):
+            item = SimpleNamespace()
+            self.append(item)
+            return item
+
+    fake_arp_collection = FakeARPCollection()
+    copied = addon._copy_mapping_to_arp(
+        scene,
+        fake_arp_collection,
+        [scene.arp_retarget_mapping_items[index] for index in range(2)],
+    )
+    assert copied == 2
+    assert [item.source_bone for item in fake_arp_collection] == ["Arm.L", "Arm.R"]
+    assert [item.name for item in fake_arp_collection] == [
+        item_by_source(scene, "Arm.L").target_name,
+        item_by_source(scene, "Arm.R").target_name,
+    ]
+
     filter_state = SimpleNamespace(
         filter_name="arm",
         bitflag_filter_item=1,

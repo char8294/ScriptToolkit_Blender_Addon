@@ -271,6 +271,272 @@ def _selected_or_active(scene):
     return []
 
 
+def _unique_names(names):
+    """Return non-empty bone names in their original order without duplicates."""
+    result = []
+    seen = set()
+    for name in names:
+        if not name or name in seen:
+            continue
+        seen.add(name)
+        result.append(name)
+    return result
+
+
+def _active_armature_bone_names(context, armature):
+    """Read the active bone from an armature in any Blender mode."""
+    if not armature or getattr(context, "active_object", None) != armature:
+        return []
+
+    data = getattr(armature, "data", None)
+    mode = getattr(context, "mode", "OBJECT")
+    names = []
+    if mode == "POSE":
+        active = getattr(context, "active_pose_bone", None)
+        if active:
+            names.append(active.name)
+        else:
+            selected = getattr(context, "selected_pose_bones", ()) or ()
+            if selected:
+                names.append(selected[0].name)
+        # In background contexts active_pose_bone is not always exposed, but
+        # the active data bone is still available.
+        if not names:
+            active = getattr(getattr(data, "bones", ()), "active", None)
+            if active:
+                names.append(active.name)
+    elif mode == "EDIT_ARMATURE":
+        bones = getattr(data, "edit_bones", ())
+        active = getattr(bones, "active", None)
+        if active:
+            names.append(active.name)
+        else:
+            selected = [bone for bone in bones if getattr(bone, "select", False)]
+            if selected:
+                names.append(selected[0].name)
+    else:
+        bones = getattr(data, "bones", ())
+        active = getattr(bones, "active", None)
+        if active:
+            names.append(active.name)
+        else:
+            selected = [bone for bone in bones if getattr(bone, "select", False)]
+            if selected:
+                names.append(selected[0].name)
+    return _unique_names(names)
+
+
+def _activate_object(context, obj):
+    """Make an object active while tolerating restricted/fake test contexts."""
+    if not obj:
+        return False
+    try:
+        for selected in context.selected_objects:
+            selected.select_set(False)
+    except (AttributeError, RuntimeError):
+        pass
+    try:
+        obj.select_set(True)
+    except (AttributeError, RuntimeError):
+        pass
+    try:
+        context.view_layer.objects.active = obj
+    except (AttributeError, RuntimeError):
+        try:
+            bpy.context.view_layer.objects.active = obj
+        except (AttributeError, RuntimeError):
+            return False
+    return True
+
+
+def _select_armature_bones(context, armature, names):
+    """Select named bones and make the first one active in the viewport."""
+    names = _unique_names(names)
+    if not armature or armature.type != "ARMATURE" or not names:
+        return [], names
+
+    previous_mode = getattr(context, "mode", "OBJECT")
+    data_bones = getattr(armature.data, "bones", ())
+    supports_object_selection = False
+    try:
+        supports_object_selection = bool(data_bones and hasattr(data_bones[0], "select"))
+    except (IndexError, TypeError):
+        pass
+    restore_mode = previous_mode if previous_mode in {"POSE", "EDIT_ARMATURE"} else ""
+    # Blender 5.x removed Bone.select in Object mode. Enter Pose mode so the
+    # selection is visible and behaves like Auto-Rig Pro's Remap controls.
+    selection_mode = restore_mode or ("OBJECT" if supports_object_selection else "POSE")
+    if previous_mode != "OBJECT":
+        try:
+            bpy.ops.object.mode_set(mode="OBJECT")
+        except (RuntimeError, TypeError):
+            selection_mode = ""
+
+    _activate_object(context, armature)
+
+    found = [data_bones.get(name) for name in names if data_bones.get(name)]
+    if selection_mode == "POSE":
+        try:
+            bpy.ops.object.mode_set(mode="POSE")
+        except (RuntimeError, TypeError):
+            pass
+        pose_bones = getattr(armature.pose, "bones", ())
+        for pose_bone in pose_bones:
+            pose_bone.select = False
+        pose_found = [pose_bones.get(name) for name in names if pose_bones.get(name)]
+        # Select the first requested bone last, which makes it the active
+        # bone in Blender versions that expose active-bone state implicitly.
+        for pose_bone in reversed(pose_found):
+            pose_bone.select = True
+        if pose_found:
+            try:
+                data_bones.active = pose_found[0].bone
+            except (AttributeError, RuntimeError):
+                pass
+        found = [pose_bone.bone for pose_bone in pose_found]
+    elif selection_mode == "EDIT_ARMATURE":
+        try:
+            bpy.ops.object.mode_set(mode="EDIT")
+        except (RuntimeError, TypeError):
+            pass
+        edit_bones = getattr(armature.data, "edit_bones", ())
+        for bone in edit_bones:
+            bone.select = False
+        edit_found = [edit_bones.get(name) for name in names if edit_bones.get(name)]
+        for bone in reversed(edit_found):
+            bone.select = True
+        if edit_found:
+            try:
+                edit_bones.active = edit_found[0]
+            except (AttributeError, RuntimeError):
+                pass
+        found = edit_found
+    else:
+        for bone in data_bones:
+            bone.select = False
+        for bone in found:
+            bone.select = True
+        if found:
+            try:
+                data_bones.active = found[0]
+            except (AttributeError, RuntimeError):
+                pass
+
+    return [bone.name for bone in found], [name for name in names if not data_bones.get(name)]
+
+
+def _arp_collection(scene):
+    """Return the ARP mapping collection, preferring the current v2 API."""
+    for property_name in ("bones_map_v2", "bones_map"):
+        try:
+            collection = getattr(scene, property_name)
+        except (AttributeError, RuntimeError):
+            continue
+        if collection is not None:
+            return property_name, collection
+    return "", None
+
+
+def _set_arp_scene_value(scene, property_name, value):
+    """Set an ARP scene property, with an ID-property fallback for callbacks."""
+    try:
+        setattr(scene, property_name, value)
+        return True
+    except (AttributeError, RuntimeError, TypeError, ValueError):
+        try:
+            scene[property_name] = value
+            return True
+        except (AttributeError, RuntimeError, TypeError, ValueError):
+            return False
+
+
+def _set_arp_item_value(item, property_name, value):
+    try:
+        setattr(item, property_name, value)
+        return True
+    except (AttributeError, RuntimeError, TypeError, ValueError):
+        return False
+
+
+def _clear_collection(collection):
+    try:
+        collection.clear()
+        return
+    except (AttributeError, RuntimeError):
+        pass
+    try:
+        for index in range(len(collection) - 1, -1, -1):
+            collection.remove(index)
+    except (AttributeError, RuntimeError, TypeError):
+        pass
+
+
+def _copy_mapping_to_arp(scene, collection, mapping_items):
+    """Copy this editor's rows to ARP's v2 (or legacy) mapping collection."""
+    _clear_collection(collection)
+    copied = 0
+    for index, mapping in enumerate(mapping_items):
+        try:
+            arp_item = collection.add()
+        except (AttributeError, RuntimeError):
+            break
+        source_set = _set_arp_item_value(arp_item, "source_bone", mapping.source_name)
+        target_set = _set_arp_item_value(arp_item, "name", mapping.target_name or "")
+        _set_arp_item_value(arp_item, "id", index)
+        for source_name, arp_name in (
+            ("set_as_root", "set_as_root"),
+            ("location", "location"),
+            ("ik", "ik"),
+            ("ik_pole", "ik_pole"),
+            ("ik_world", "ik_world"),
+            ("ik_auto_pole", "ik_auto_pole"),
+            ("ik_create_constraints", "ik_create_constraints"),
+            ("ik_axis_correction", "IK_axis_correc"),
+            ("rot_add", "rot_add"),
+            ("loc_add", "loc_add"),
+            ("loc_mult", "loc_mult"),
+        ):
+            _set_arp_item_value(arp_item, arp_name, getattr(mapping, source_name))
+        if source_set and target_set:
+            copied += 1
+
+    try:
+        scene.bones_map_index = min(
+            max(0, int(scene.arp_retarget_mapping_index)),
+            max(0, len(collection) - 1),
+        )
+    except (AttributeError, RuntimeError, TypeError, ValueError):
+        pass
+    return copied
+
+
+def _invoke_arp_build_bones_list(context, scene, source, target):
+    """Ask ARP to rebuild its Remap list when its operator is available."""
+    action = getattr(getattr(source, "animation_data", None), "action", None)
+    action_name = action.name if action else ""
+    if action_name and hasattr(scene, "source_action"):
+        _set_arp_scene_value(scene, "source_action", action_name)
+    _set_arp_scene_value(scene, "source_rig", source.name)
+    _set_arp_scene_value(scene, "target_rig", target.name)
+
+    arp_ops = getattr(bpy.ops, "arp", None)
+    build_operator = getattr(arp_ops, "build_bones_list", None)
+    if build_operator is None:
+        return False, "Auto-Rig Pro build_bones_list operator is unavailable"
+
+    if not action_name and not getattr(scene, "source_action", ""):
+        return False, "Auto-Rig Pro needs a Source Action to build its list"
+
+    _activate_object(context, source)
+    try:
+        result = build_operator()
+    except (RuntimeError, TypeError, ValueError) as error:
+        return False, str(error)
+    if result != {"FINISHED"}:
+        return False, f"Auto-Rig Pro build_bones_list returned {result}"
+    return True, ""
+
+
 def _mapping_state(item):
     state = {}
     for property_name in _MAPPING_STATE_PROPERTIES:
@@ -606,6 +872,147 @@ class STARP_OT_target_mapping_cell(Operator):
     def execute(self, context):
         if not _select_mapping_row(context.scene, self.index):
             return {"CANCELLED"}
+        return {"FINISHED"}
+
+
+class STARP_OT_synchro_select(Operator):
+    """Select mapping rows for the active Source or Target viewport bone."""
+
+    bl_idname = "script_toolkit.arp_synchro_select"
+    bl_label = "Synchro Select"
+    bl_description = (
+        "Select the Source or Target mapping rows for the active bone in the viewport, "
+        "like Auto-Rig Pro Remap"
+    )
+    bl_options = {"REGISTER"}
+
+    def execute(self, context):
+        scene = context.scene
+        source = scene.arp_retarget_source_armature
+        target = scene.arp_retarget_target_armature
+        active_object = getattr(context, "active_object", None)
+        if active_object == source:
+            bone_names = _active_armature_bone_names(context, source)
+            property_name = "source_name"
+            side_name = "Source"
+        elif active_object == target:
+            bone_names = _active_armature_bone_names(context, target)
+            property_name = "target_name"
+            side_name = "Target"
+        else:
+            self.report({"WARNING"}, "Select a Source or Target Armature in the viewport")
+            return {"CANCELLED"}
+
+        if not bone_names:
+            self.report({"WARNING"}, "Select a bone in the viewport first")
+            return {"CANCELLED"}
+
+        matches = [
+            index
+            for index, item in enumerate(scene.arp_retarget_mapping_items)
+            if getattr(item, property_name) in bone_names
+        ]
+        if not matches:
+            self.report({"WARNING"}, f"No mapping row found for {side_name} bone(s)")
+            return {"CANCELLED"}
+
+        for item in scene.arp_retarget_mapping_items:
+            item.selected = False
+        for index in matches:
+            scene.arp_retarget_mapping_items[index].selected = True
+        scene.arp_retarget_mapping_index = matches[0]
+        scene.arp_retarget_selection_anchor = matches[0]
+        scene.arp_retarget_inline_edit_index = -1
+        if getattr(context, "area", None):
+            context.area.tag_redraw()
+        self.report({"INFO"}, f"Selected {len(matches)} {side_name} mapping row(s)")
+        return {"FINISHED"}
+
+
+class STARP_OT_select_source_bones(Operator):
+    """Select the Source Bones from the currently selected mapping rows."""
+
+    bl_idname = "script_toolkit.arp_select_source_bones"
+    bl_label = "Select Source Bones"
+    bl_description = "Select the selected mapping rows' Source Bones in the viewport"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        source = context.scene.arp_retarget_source_armature
+        if not source or source.type != "ARMATURE":
+            self.report({"ERROR"}, "Choose a Source Armature first")
+            return {"CANCELLED"}
+        mapping_items = _selected_or_active(context.scene)
+        names = _unique_names(item.source_name for item in mapping_items)
+        if not names:
+            self.report({"WARNING"}, "Select at least one mapping row")
+            return {"CANCELLED"}
+
+        found, missing = _select_armature_bones(context, source, names)
+        if not found:
+            self.report({"WARNING"}, "None of the selected Source Bones exist in the armature")
+            return {"CANCELLED"}
+        if missing:
+            self.report(
+                {"WARNING"},
+                f"Selected {len(found)} Source Bones; skipped {len(missing)} missing bone(s)",
+            )
+        else:
+            self.report({"INFO"}, f"Selected {len(found)} Source Bones in the viewport")
+        return {"FINISHED"}
+
+
+class STARP_OT_send_to_arp(Operator):
+    """Send the current mapping rows to Auto-Rig Pro's open Remap UI."""
+
+    bl_idname = "script_toolkit.arp_send_to_remap"
+    bl_label = "Send to Auto-Rig Pro"
+    bl_description = "Copy this mapping list into Auto-Rig Pro Remap"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        scene = context.scene
+        armatures = _validated_armatures(self, scene)
+        if armatures is None:
+            return {"CANCELLED"}
+        source, target = armatures
+
+        _collection_name, collection = _arp_collection(scene)
+        if collection is None:
+            self.report(
+                {"ERROR"},
+                "Auto-Rig Pro Remap is not available; enable Auto-Rig Pro first",
+            )
+            return {"CANCELLED"}
+
+        built, build_message = _invoke_arp_build_bones_list(context, scene, source, target)
+        copied = _copy_mapping_to_arp(scene, collection, scene.arp_retarget_mapping_items)
+        if not copied and scene.arp_retarget_mapping_items:
+            self.report({"ERROR"}, "Could not write the mapping rows to Auto-Rig Pro")
+            return {"CANCELLED"}
+
+        try:
+            scene.bones_map_index = min(
+                max(0, int(scene.arp_retarget_mapping_index)),
+                max(0, len(collection) - 1),
+            )
+        except (AttributeError, RuntimeError, TypeError, ValueError):
+            pass
+        for area in getattr(getattr(context, "screen", None), "areas", ()) or ():
+            try:
+                area.tag_redraw()
+            except (AttributeError, RuntimeError):
+                pass
+
+        if built:
+            self.report({"INFO"}, f"Sent {copied} mapping row(s) to Auto-Rig Pro Remap")
+        elif build_message:
+            self.report(
+                {"INFO"},
+                f"Sent {copied} mapping row(s) to Auto-Rig Pro Remap ({build_message})",
+            )
+        else:
+            self.report({"INFO"}, f"Sent {copied} mapping row(s) to Auto-Rig Pro Remap")
         return {"FINISHED"}
 
 
@@ -1287,10 +1694,22 @@ def draw_ui(layout, context):
     controls.operator(STARP_OT_select_none.bl_idname, text="None")
     controls.operator(STARP_OT_select_invert.bl_idname, text="Invert")
     controls.operator(STARP_OT_clear_target.bl_idname, icon="X")
+    viewport_actions = mapping_box.row(align=True)
+    viewport_actions.operator(
+        STARP_OT_synchro_select.bl_idname,
+        text="Synchro Select",
+        icon="VIEWZOOM",
+    )
+    viewport_actions.operator(
+        STARP_OT_select_source_bones.bl_idname,
+        text="Select Source Bones",
+        icon="BONE_DATA",
+    )
     actions = mapping_box.row(align=True)
     actions.operator(STARP_OT_swap_source_target.bl_idname, icon="ARROW_LEFTRIGHT")
     actions.operator(STARP_OT_mirror_bone_list.bl_idname, icon="MOD_MIRROR")
     actions.operator(STARP_OT_match_target_names.bl_idname, icon="BONE_DATA")
+    actions.operator(STARP_OT_send_to_arp.bl_idname, text="Send to ARP", icon="EXPORT")
 
     rename_box = layout.box()
     rename_box.label(text="Rename", icon="SORTALPHA")
@@ -1317,6 +1736,9 @@ CLASSES = (
     STARP_MappingItem,
     STARP_OT_select_mapping_row,
     STARP_OT_target_mapping_cell,
+    STARP_OT_synchro_select,
+    STARP_OT_select_source_bones,
+    STARP_OT_send_to_arp,
     STARP_OT_pick_selected_armature,
     STARP_UL_mapping,
     STARP_OT_build_list,
