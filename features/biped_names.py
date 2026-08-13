@@ -109,6 +109,26 @@ def restore_original_names(obj):
             pass
 
 
+def _tinyk_move_side_token(name, token, side, replacement=None):
+    """Move a separated side token to a Blender-style suffix."""
+    for separator in (" ", "_"):
+        middle_marker = f"{separator}{token}{separator}"
+        if middle_marker in name:
+            prefix, _, suffix = name.rpartition(middle_marker)
+            if replacement is None:
+                return f"{prefix}{separator}{suffix}.{side}"
+            return f"{prefix}{separator}{replacement}{separator}{suffix}.{side}"
+
+        trailing_marker = f"{separator}{token}"
+        if name.endswith(trailing_marker):
+            prefix = name[: -len(trailing_marker)]
+            if replacement is None:
+                return f"{prefix}.{side}"
+            return f"{prefix}{separator}{replacement}.{side}"
+
+    return None
+
+
 def _tinyk_get_renamed_name(bone_name):
     """Convert TinyK Rig Manual bone names to Blender .L/.R symmetry names."""
     if "connect" in bone_name.lower() or bone_name.endswith("ex") or "jtsex" in bone_name:
@@ -118,7 +138,8 @@ def _tinyk_get_renamed_name(bone_name):
 
     name = bone_name
 
-    # Four-legged naming: LF/RF become Front.L/Front.R and LB/RB become Back.L/Back.R.
+    # Keep the original TinyK four-legged rules unchanged for the legacy
+    # space-separated names that end in ``jts`` or a side token.
     name = re.sub(r" LF jts$", " Front.L", name)
     name = re.sub(r" RF jts$", " Front.R", name)
     name = re.sub(r" LB jts$", " Back.L", name)
@@ -128,11 +149,29 @@ def _tinyk_get_renamed_name(bone_name):
     name = re.sub(r" LB$", " Back.L", name)
     name = re.sub(r" RB$", " Back.R", name)
 
-    # Two-legged naming and other left/right suffixes become Blender .L/.R.
+    # Keep the original two-legged legacy suffix rules unchanged.
     name = re.sub(r" L jts$", ".L", name)
     name = re.sub(r" R jts$", ".R", name)
     name = re.sub(r" L$", ".L", name)
     name = re.sub(r" R$", ".R", name)
+
+    # Support side tokens in the middle of both space-separated Biped names
+    # (``monBip001 L UpperArm``) and underscore-separated names
+    # (``monBip001_L_UpperArm``), while preserving the existing separator.
+    for token, replacement, side in (
+        ("LF", "Front", "L"),
+        ("RF", "Front", "R"),
+        ("LB", "Back", "L"),
+        ("RB", "Back", "R"),
+    ):
+        renamed = _tinyk_move_side_token(name, token, side, replacement)
+        if renamed is not None:
+            return renamed
+
+    for token, side in (("L", "L"), ("R", "R")):
+        renamed = _tinyk_move_side_token(name, token, side)
+        if renamed is not None:
+            return renamed
 
     return name
 
@@ -142,6 +181,36 @@ def _selected_armatures(context):
     if not selected_armatures and context.active_object and context.active_object.type == "ARMATURE":
         selected_armatures = [context.active_object]
     return selected_armatures
+
+
+def _tinyk_rename_armature(armature):
+    """Rename eligible bones, skipping all targets that would collide."""
+    bones = list(armature.data.bones)
+    current_names = {bone.name for bone in bones}
+    candidates = []
+    candidates_by_target = {}
+
+    for bone in bones:
+        new_name = _tinyk_get_renamed_name(bone.name)
+        if new_name == bone.name:
+            continue
+        candidates.append((bone, new_name))
+        candidates_by_target.setdefault(new_name, []).append(bone)
+
+    renames = []
+    skipped = []
+    for bone, new_name in candidates:
+        if len(candidates_by_target[new_name]) > 1:
+            skipped.append((bone.name, new_name, "multiple bones map to the same name"))
+        elif new_name in current_names:
+            skipped.append((bone.name, new_name, "target name already exists"))
+        else:
+            renames.append((bone, new_name))
+
+    for bone, new_name in renames:
+        bone.name = new_name
+
+    return len(renames), skipped
 
 
 class STBN_OT_tinyk_rename_symmetry_names(Operator):
@@ -165,33 +234,51 @@ class STBN_OT_tinyk_rename_symmetry_names(Operator):
             return {"CANCELLED"}
 
         total_renamed = 0
+        total_skipped = 0
         report_lines = []
+        conflict_lines = []
 
         for armature in selected_armatures:
-            count = 0
-            for bone in armature.data.bones:
-                new_name = _tinyk_get_renamed_name(bone.name)
-                if new_name != bone.name:
-                    bone.name = new_name
-                    count += 1
+            count, skipped = _tinyk_rename_armature(armature)
             report_lines.append(f"{armature.name}: {count} bones")
+            if skipped:
+                report_lines.append(f"{armature.name}: skipped {len(skipped)} conflicting names")
+                conflict_lines.extend(
+                    f"{armature.name}: {old_name} -> {new_name}"
+                    for old_name, new_name, _reason in skipped
+                )
             total_renamed += count
+            total_skipped += len(skipped)
 
         success_message = (
             f"Renamed {total_renamed} bones in {len(selected_armatures)} Armature(s)."
         )
-        self.report({"INFO"}, success_message)
+        if total_skipped:
+            success_message += f" Skipped {total_skipped} conflicting rename(s)."
+            self.report({"WARNING"}, success_message)
+        else:
+            self.report({"INFO"}, success_message)
 
         def draw_success(self, _context):
-            self.layout.label(text=success_message, icon="CHECKMARK")
+            self.layout.label(
+                text=success_message,
+                icon="ERROR" if total_skipped else "CHECKMARK",
+            )
             for line in report_lines:
                 self.layout.label(text=line)
+            for line in conflict_lines[:20]:
+                self.layout.label(text=f"Skipped: {line}", icon="ERROR")
+            if len(conflict_lines) > 20:
+                self.layout.label(
+                    text=f"... and {len(conflict_lines) - 20} more conflicting names",
+                    icon="ERROR",
+                )
 
         if not bpy.app.background and getattr(context, "window", None):
             context.window_manager.popup_menu(
                 draw_success,
                 title="TinyK Rename Completed",
-                icon="INFO",
+                icon="ERROR" if total_skipped else "INFO",
             )
         return {"FINISHED"}
 
