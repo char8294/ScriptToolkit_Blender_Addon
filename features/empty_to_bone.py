@@ -339,7 +339,7 @@ class ST_OT_EmptyToBone(Operator):
     bl_idname = "script_toolkit.empty_to_bone"
     bl_label = "Create Bones"
     bl_description = (
-        "Convert selected Empties and Armature origins to Bones in the target Armature"
+        "Convert selected Objects to Bones using each object's local +Y axis"
     )
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -353,11 +353,14 @@ class ST_OT_EmptyToBone(Operator):
         armature = props.target_armature
         source_objects = [
             obj for obj in context.selected_objects
-            if obj.type in {'EMPTY', 'ARMATURE'}
+            if obj.type not in {'CAMERA', 'LIGHT'}
         ]
         
         if not source_objects:
-            self.report({'WARNING'}, "No Empty or Armature objects selected.")
+            self.report(
+                {'WARNING'},
+                "No supported Objects selected. Cameras and Lights are not supported.",
+            )
             return {'CANCELLED'}
             
         if armature.type != 'ARMATURE':
@@ -387,20 +390,32 @@ class ST_OT_EmptyToBone(Operator):
             parent_bone = edit_bones[parent_bone_name]
 
         armature_matrix_inv = armature.matrix_world.inverted()
+        existing_bone_names = {bone.name for bone in edit_bones}
+        created_names = set()
+        skipped_names = []
+        created_count = 0
 
         for source_object in source_objects:
+            bone_name = source_object.name
+            if bone_name in existing_bone_names or bone_name in created_names:
+                skipped_names.append(bone_name)
+                continue
+
             # Calculate position in armature space
             armature_space_matrix = armature_matrix_inv @ source_object.matrix_world
             head_pos = armature_space_matrix.translation
             
-            # The source object's Y axis in armature space
+            # The source object's local +Y axis in armature space. Normalize it
+            # so the configured Bone Length remains independent of object scale.
             y_axis = (armature_space_matrix.to_3x3() @ Vector((0, 1, 0))).normalized()
             tail_pos = head_pos + (y_axis * props.bone_length)
 
             # Create new bone
-            new_bone = edit_bones.new(source_object.name)
+            new_bone = edit_bones.new(bone_name)
             new_bone.head = head_pos
             new_bone.tail = tail_pos
+            created_names.add(new_bone.name)
+            created_count += 1
             
             if parent_bone:
                 if props.bone_relation == 'CHILD':
@@ -418,10 +433,20 @@ class ST_OT_EmptyToBone(Operator):
             source_object.select_set(True)
         context.view_layer.objects.active = source_objects[0]
 
-        self.report(
-            {'INFO'},
-            f"Created {len(source_objects)} bones in '{armature.name}'.",
-        )
+        if skipped_names:
+            skipped_text = ", ".join(skipped_names)
+            if len(skipped_text) > 180:
+                skipped_text = f"{skipped_text[:177]}..."
+            self.report(
+                {'WARNING'},
+                f"Created {created_count} bones in '{armature.name}'. "
+                f"Skipped {len(skipped_names)} existing bone name(s): {skipped_text}",
+            )
+        else:
+            self.report(
+                {'INFO'},
+                f"Created {created_count} bones in '{armature.name}'.",
+            )
         return {'FINISHED'}
 
 
@@ -617,7 +642,7 @@ def draw_ui(layout, context):
         conv_box.operator(
             "script_toolkit.empty_to_bone",
             icon='GROUP_BONE',
-            text="Create Bones from Selected Empties / Armatures",
+            text="Create Bones from Selected Objects",
         )
 
     ik_box = layout.box()

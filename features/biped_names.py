@@ -129,6 +129,44 @@ def _tinyk_move_side_token(name, token, side, replacement=None):
     return None
 
 
+def _tinyk_move_numbered_side_token(name):
+    """Move a separated numbered side token such as ``_L1_`` to a suffix."""
+    match = re.search(
+        r"(?P<separator>[ _])(?P<side>[LR])(?P<number>\d+)"
+        r"(?=(?P=separator)|$)",
+        name,
+    )
+    if not match:
+        return None
+
+    separator = match.group("separator")
+    number = match.group("number")
+    side = match.group("side")
+    prefix = name[: match.start()]
+    suffix = name[match.end() :]
+    return f"{prefix}{separator}{number}{suffix}.{side}"
+
+
+def _tinyk_move_compact_numbered_side_token(name):
+    """Move a compact numbered side token such as ``armL1`` to a suffix."""
+    # Keep extension bones such as ``..._jtex001`` outside this rule. The
+    # numeric suffix is Blender's duplicate-name suffix and still represents
+    # the same ``jtex`` exception.
+    if re.search(r"jtex\d*$", name.lower()):
+        return None
+
+    match = re.search(
+        r"(?<![ _])(?P<side>[LR])(?P<number>\d+)(?=(?:_|$))",
+        name,
+    )
+    if not match:
+        return None
+
+    prefix = name[: match.start()]
+    suffix = name[match.end() :]
+    return f"{prefix}{match.group('number')}{suffix}.{match.group('side')}"
+
+
 def _tinyk_get_renamed_name(bone_name):
     """Convert TinyK Rig Manual bone names to Blender .L/.R symmetry names."""
     if "connect" in bone_name.lower() or bone_name.endswith("ex") or "jtsex" in bone_name:
@@ -154,6 +192,18 @@ def _tinyk_get_renamed_name(bone_name):
     name = re.sub(r" R jts$", ".R", name)
     name = re.sub(r" L$", ".L", name)
     name = re.sub(r" R$", ".R", name)
+
+    # Numbered side tokens such as ``..._L1_jt`` become
+    # ``..._1_jt.L`` while preserving the original separator.
+    renamed = _tinyk_move_numbered_side_token(name)
+    if renamed is not None:
+        return renamed
+
+    # Compact numbered side tokens such as ``...armL1_jt`` become
+    # ``...arm1_jt.L``.
+    renamed = _tinyk_move_compact_numbered_side_token(name)
+    if renamed is not None:
+        return renamed
 
     # Support side tokens in the middle of both space-separated Biped names
     # (``monBip001 L UpperArm``) and underscore-separated names

@@ -27,6 +27,13 @@ def make_armature(name):
     return armature
 
 
+def make_mesh(name):
+    mesh_data = bpy.data.meshes.new(f"{name}_Data")
+    mesh_object = bpy.data.objects.new(name, mesh_data)
+    bpy.context.scene.collection.objects.link(mesh_object)
+    return mesh_object
+
+
 def assert_vector_close(actual, expected, tolerance=1e-5):
     assert (Vector(actual) - Vector(expected)).length <= tolerance
 
@@ -107,6 +114,54 @@ def run():
         assert len(target.data.bones) == 1
         assert list(bpy.context.selected_objects) == [source]
         assert bpy.context.view_layer.objects.active == source
+
+        mesh_source = make_mesh("MeshSource")
+        mesh_source.matrix_world = (
+            Matrix.Translation((1.0, 4.0, -2.0))
+            @ Matrix.Rotation(-0.45, 4, "Y")
+        )
+        bpy.ops.object.select_all(action="DESELECT")
+        mesh_source.select_set(True)
+        bpy.context.view_layer.objects.active = mesh_source
+        props.bone_length = 0.6
+
+        mesh_in_target = target.matrix_world.inverted() @ mesh_source.matrix_world
+        mesh_head = mesh_in_target.translation
+        mesh_y_axis = (
+            mesh_in_target.to_3x3() @ Vector((0.0, 1.0, 0.0))
+        ).normalized()
+        mesh_tail = mesh_head + mesh_y_axis * props.bone_length
+
+        assert bpy.ops.script_toolkit.empty_to_bone() == {"FINISHED"}
+        mesh_bone = target.data.bones[mesh_source.name]
+        assert_vector_close(mesh_bone.head_local, mesh_head)
+        assert_vector_close(mesh_bone.tail_local, mesh_tail)
+        assert len(target.data.bones) == 2
+
+        bpy.ops.object.select_all(action="DESELECT")
+        target.select_set(True)
+        bpy.context.view_layer.objects.active = target
+        bpy.ops.object.mode_set(mode="EDIT")
+        collision_bone = target.data.edit_bones.new("CollisionSource")
+        collision_bone.head = (0.0, 0.0, 0.0)
+        collision_bone.tail = (0.0, 0.0, 1.0)
+        bpy.ops.object.mode_set(mode="OBJECT")
+
+        collision_source = make_mesh("CollisionSource")
+        bpy.ops.object.select_all(action="DESELECT")
+        collision_source.select_set(True)
+        bpy.context.view_layer.objects.active = collision_source
+        assert bpy.ops.script_toolkit.empty_to_bone() == {"FINISHED"}
+        assert len(target.data.bones) == 3
+
+        camera_data = bpy.data.cameras.new("CameraSource_Data")
+        camera_source = bpy.data.objects.new("CameraSource", camera_data)
+        bpy.context.scene.collection.objects.link(camera_source)
+        bpy.ops.object.select_all(action="DESELECT")
+        camera_source.select_set(True)
+        bpy.context.view_layer.objects.active = camera_source
+        assert bpy.ops.script_toolkit.empty_to_bone() == {"CANCELLED"}
+        assert len(target.data.bones) == 3
 
         # The target armature itself can also be the selected source. Its
         # origin maps to (0, 0, 0) in its own armature space.
@@ -295,7 +350,7 @@ def run():
         assert any(
             call[0] == "operator"
             and call[1] == "script_toolkit.empty_to_bone"
-            and call[2]["text"] == "Create Bones from Selected Empties / Armatures"
+            and call[2]["text"] == "Create Bones from Selected Objects"
             for call in fake_layout.calls
         )
         helper_operator_calls = [
