@@ -29,6 +29,15 @@ def test_release_archive_includes_feature_modules(tmp_path):
         "features/arp_retarget_preset.py",
         "features/kj_export.py",
         "features/root_motion.py",
+        "features/turntable_camera.py",
+        "features/quick_render.py",
+        "features/learn_node_blender.py",
+        "features/learn_node_data/curve_nodes.json",
+        "features/learn_node_data/geometry_nodes.json",
+        "features/learn_node_data/input_nodes.json",
+        "features/learn_node_data/math_nodes.json",
+        "features/learn_node_data/mesh_nodes.json",
+        "features/learn_node_data/misc_nodes.json",
     ):
         target = source_dir / relative_path
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -43,3 +52,7 @@ def test_release_archive_includes_feature_modules(tmp_path):
     assert "script_toolkit/features/__init__.py" in names
     assert "script_toolkit/features/kj_export.py" in names
     assert "script_toolkit/features/root_motion.py" in names
+    assert "script_toolkit/features/turntable_camera.py" in names
+    assert "script_toolkit/features/quick_render.py" in names
+    assert "script_toolkit/features/learn_node_blender.py" in names
+    assert "script_toolkit/features/learn_node_data/misc_nodes.json" in names

@@ -35,9 +35,12 @@ def reload_addon(addon):
 
 def run():
     addon = load_addon()
-    assert addon.bl_info["version"] == (0, 4, 10)
+    assert addon.bl_info["version"] == (0, 5, 0)
     assert addon.arp_retarget_preset._refresh_all_preset_items(SimpleNamespace()) == 0
     addon.register()
+    assert hasattr(bpy.types.Scene, "turntable_props")
+    assert hasattr(bpy.types.Scene, "qvr_props")
+    assert addon.learn_node_blender.get_node_data()
     addon.register()
     addon.unregister()
     addon.register()

@@ -1,5 +1,13 @@
 # Script Toolkit Changelog
 
+## v0.5.0
+
+- Added Turntable Camera, Quick Render, and Learn Node Blender to the top-level Tool dropdown.
+- Embedded Turntable Camera and Quick Render UI into the selected Script Toolkit Tool view and removed their standalone panels from the combined package.
+- Kept Learn Node's Geometry Node Editor panel and HUD running continuously, with a dropdown note pointing users to the Node page.
+- Removed the individual GitHub update features from the bundled tools while retaining the Script Toolkit package updater.
+- Bundled Learn Node JSON data and updated release packaging for the new modules and data files.
+
 ## v0.4.10
 
 - Updated Create Root Motion Shape to offer CUBE, ICO_SPHERE, red CYLINDER, and blue CYLINDER presets for multiple selected Pose bones.

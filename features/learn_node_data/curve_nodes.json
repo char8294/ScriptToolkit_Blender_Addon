@@ -1,0 +1,1139 @@
+{
+    "GeometryNodeInputCurveHandlePositions": {
+        "name": "Curve Handle Positions",
+        "description": "หลักการ: ดึงพิกัดของแขนดัด (Handles) ซ้าย-ขวาบนเส้นโค้ง Bézier\nการประยุกษ์ใช้: ใช้ดึงค่าความยาวของแขนเพื่อควบคุมความอ้วนของเส้น หรือขยับแขนให้เส้นโค้งพลิ้วตามลม",
+        "inputs": {},
+        "outputs": {
+            "Left": {
+                "name": "ซ้าย (Left)",
+                "description": "ตำแหน่งของแขนควบคุมฝั่งซ้าย"
+            },
+            "Right": {
+                "name": "ขวา (Right)",
+                "description": "ตำแหน่งของแขนควบคุมฝั่งขวา"
+            }
+        }
+    },
+    "GeometryNodeCurveLength": {
+        "name": "Curve Length",
+        "description": "หลักการ: คำนวณหาความยาวรวมทั้งหมดของเส้นโค้ง\nการประยุกษ์ใช้: ใช้คำนวณจำนวนวัตถุที่จะนำมาวางบนเส้นให้พอดี หรือใช้ทำเอฟเฟกต์เถาวัลย์ค่อยๆ โตตามสัดส่วนความยาว",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งที่ต้องการวัด"
+            }
+        },
+        "outputs": {
+            "Length": {
+                "name": "ความยาว (Length)",
+                "description": "ความยาวรวมทั้งหมดของเส้นโค้ง"
+            }
+        }
+    },
+    "GeometryNodeInputCurveTilt": {
+        "name": "Curve Tilt",
+        "description": "หลักการ: ดึงค่ามุมการบิดตัว (Tilt) ของแต่ละจุดบนเส้นโค้ง\nการประยุกษ์ใช้: ใช้อ่านองศาการบิดเพื่อนำไปหมุนวัตถุที่วิ่งตามเส้นโค้ง (เช่น รถไฟเอียงตามรางรถไฟเหาะ)",
+        "inputs": {},
+        "outputs": {
+            "Tilt": {
+                "name": "การบิดตัว (Tilt)",
+                "description": "ค่ามุมหรือการบิดของเส้น"
+            }
+        }
+    },
+    "GeometryNodeCurveEndpointSelection": {
+        "name": "Endpoint Selection",
+        "description": "หลักการ: สร้างเงื่อนไขเลือกเฉพาะจุดเริ่มต้นหรือจุดสิ้นสุดของเส้นโค้ง\nการประยุกษ์ใช้: ใช้เลือกว่าจะวางหัวลูกศรไว้ที่ปลายเส้นเท่านั้น หรือปล่อยเอฟเฟกต์แสงออกจากต้นทางเส้นผม",
+        "inputs": {
+            "Start Size": {
+                "name": "ขนาดจุดเริ่มต้น (Start Size)",
+                "description": "จำนวนจุดเริ่มต้นที่จะนับรวมการเลือก"
+            },
+            "End Size": {
+                "name": "ขนาดจุดปลาย (End Size)",
+                "description": "จำนวนจุดปลายที่จะนับรวมการเลือก"
+            }
+        },
+        "outputs": {
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "ผลลัพธ์การเลือก (True/False)"
+            }
+        }
+    },
+    "GeometryNodeCurveHandleTypeSelection": {
+        "name": "Handle Type Selection",
+        "description": "หลักการ: เลือกจุดบนเส้นโค้งโดยแยกตามประเภทของแขนดัด (Free, Auto, Vector)\nการประยุกษ์ใช้: ใช้เลือกเฉพาะจุดที่หักมุมแหลม (Vector) เพื่อลบมุม (Fillet) เฉพาะส่วนนั้น",
+        "inputs": {
+            "Handle Type": {
+                "name": "ประเภทแขนควบคุม (Handle Type)",
+                "description": "ประเภทแขนที่ต้องการใช้ตรวจสอบ"
+            }
+        },
+        "outputs": {
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "ผลลัพธ์การเลือก (True/False)"
+            }
+        },
+        "dropdowns": {
+            "handle_type": [
+                "FREE",
+                "AUTO",
+                "VECTOR",
+                "ALIGN"
+            ],
+            "mode": [
+                "LEFT",
+                "RIGHT"
+            ]
+        },
+        "sub_types": {
+            "handle_type": {
+                "FREE": {
+                    "name": "Handle Type Selection (อิสระ (Free))",
+                    "description": "ตัวเลือกโหมด: อิสระ (Free)"
+                },
+                "AUTO": {
+                    "name": "Handle Type Selection (อัตโนมัติ (Auto))",
+                    "description": "ตัวเลือกโหมด: อัตโนมัติ (Auto)"
+                },
+                "VECTOR": {
+                    "name": "Handle Type Selection (Vector)",
+                    "description": "ตัวเลือกโหมด: Vector"
+                },
+                "ALIGN": {
+                    "name": "Handle Type Selection (จัดแนว (Align))",
+                    "description": "ตัวเลือกโหมด: จัดแนว (Align)"
+                }
+            },
+            "mode": {
+                "LEFT": {
+                    "name": "ซ้าย (Left)",
+                    "description": "แขนบังคับหรือจุดควบคุมฝั่งซ้าย"
+                },
+                "RIGHT": {
+                    "name": "ขวา (Right)",
+                    "description": "แขนบังคับหรือจุดควบคุมฝั่งขวา"
+                }
+            }
+        }
+    },
+    "GeometryNodeInputSplineCyclic": {
+        "name": "Is Spline Cyclic",
+        "description": "หลักการ: เช็คว่าเส้นโค้งนี้เป็นวงปิด (หัวท้ายชนกัน) หรือไม่\nการประยุกษ์ใช้: ใช้แยกแยะระหว่างเส้นตรงกับเส้นวงกลม เพื่อใส่ Material หรือความหนาต่างกัน",
+        "inputs": {},
+        "outputs": {
+            "Cyclic": {
+                "name": "วงปิด (Cyclic)",
+                "description": "วงเส้นปิดสมบูรณ์จะเป็นจริง (True)"
+            }
+        }
+    },
+    "GeometryNodeSplineLength": {
+        "name": "Spline Length",
+        "description": "หลักการ: วัดความยาวหรือนับจำนวนจุดของเส้นโค้งย่อย (Spline) แต่ละเส้นที่อยู่รวมกัน\nการประยุกษ์ใช้: ใช้ลบเส้นผมที่สั้นเกินไปทิ้ง หรือไล่สีจากเส้นสั้นไปเส้นยาว",
+        "inputs": {},
+        "outputs": {
+            "Length": {
+                "name": "ความยาว (Length)",
+                "description": "ความยาว"
+            },
+            "Point Count": {
+                "name": "จำนวนจุด (Point Count)",
+                "description": "จำนวนจุดในเส้นย่อยนั้น"
+            }
+        }
+    },
+    "GeometryNodeSplineParameter": {
+        "name": "Spline Parameter",
+        "description": "หลักการ: อ่านค่าระยะร้อยละ (0 ถึง 1) ตามความยาวของเส้นโค้ง\nการประยุกษ์ใช้: ใช้ทำเกรเดียนท์ไล่สีจากหัวไปหาง หรือค่อยๆ บีบปลายเส้นผมให้แหลมตอนปลาย",
+        "inputs": {},
+        "outputs": {
+            "Factor": {
+                "name": "สัดส่วน (Factor)",
+                "description": "อัตราส่วนร้อยละ (0.0 ถึง 1.0)"
+            },
+            "Length": {
+                "name": "ความยาว (Length)",
+                "description": "ระยะที่วัดตามความยาวจริง"
+            },
+            "Index": {
+                "name": "Index",
+                "description": "ลำดับของจุดควบคุม"
+            }
+        }
+    },
+    "GeometryNodeInputSplineResolution": {
+        "name": "Spline Resolution",
+        "description": "หลักการ: ดึงระดับความละเอียด (Resolution) หรือจำนวนจุดสมมติของเส้นโค้ง\nการประยุกษ์ใช้: ใช้คำนวณระยะห่างเพื่อวางสำเนา (Instance) ให้ได้ระยะพอดีกับความละเอียดเส้น",
+        "inputs": {},
+        "outputs": {
+            "Resolution": {
+                "name": "ความละเอียด (Resolution)",
+                "description": "ค่าตัวเลขความละเอียด"
+            }
+        }
+    },
+    "GeometryNodeSampleCurve": {
+        "name": "Sample Curve",
+        "description": "หลักการ: ดูดข้อมูลจากจุดใดจุดหนึ่งบนเส้นโค้ง โดยระบุระยะหรือเปอร์เซ็นต์\nการประยุกษ์ใช้: ใช้สั่งให้กล้องวิ่งตามเส้นทาง หรือทำสลิงดึงวัตถุให้เลื่อนตามแนวสายไฟ",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งต้นทาง"
+            },
+            "Length": {
+                "name": "ความยาว (Length)",
+                "description": "ระยะความยาวจุดที่ต้องการค้นหา"
+            }
+        },
+        "outputs": {
+            "Value": {
+                "name": "ค่าตัวเลข (Value)",
+                "description": "ข้อมูลในจุดนั้น"
+            },
+            "Position": {
+                "name": "ตำแหน่ง (Position)",
+                "description": "ตำแหน่ง"
+            },
+            "Tangent": {
+                "name": "แทนเจนต์ (Tangent)",
+                "description": "ความลาดชันในจุดนั้น"
+            },
+            "Normal": {
+                "name": "Normal",
+                "description": "Vectorตั้งฉาก"
+            }
+        },
+        "dropdowns": {
+            "mode": [
+                "FACTOR",
+                "LENGTH"
+            ],
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "FLOAT_VECTOR",
+                "FLOAT_COLOR",
+                "QUATERNION",
+                "FLOAT4X4",
+                "STRING",
+                "INT8",
+                "INT16_2D",
+                "INT32_2D",
+                "FLOAT2",
+                "BYTE_COLOR"
+            ]
+        },
+        "sub_types": {
+            "mode": {
+                "FACTOR": {
+                    "name": "Sample Curve (สัดส่วน (Factor))",
+                    "description": "ตัวเลือกโหมด: สัดส่วน (Factor)"
+                },
+                "LENGTH": {
+                    "name": "Sample Curve (ความยาว (Length))",
+                    "description": "ตัวเลือกโหมด: ความยาว (Length)"
+                }
+            },
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "FLOAT_VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVectorหรือพิกัดทิศทาง"
+                },
+                "FLOAT_COLOR": {
+                    "name": "สี (Color)",
+                    "description": "ชนิดข้อมูลสี"
+                },
+                "QUATERNION": {
+                    "name": "ควอเทอร์เนียน (Quaternion)",
+                    "description": "ชนิดข้อมูลการหมุนในรูปแบบ Quaternion"
+                },
+                "FLOAT4X4": {
+                    "name": "เมทริกซ์ 4x4 (Float4x4)",
+                    "description": "ชนิดข้อมูลเมทริกซ์ 4x4"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "INT8": {
+                    "name": "จำนวนเต็ม 8 บิต (8-bit Integer)",
+                    "description": "ชนิดข้อมูลจำนวนเต็ม 8 บิต"
+                },
+                "INT16_2D": {
+                    "name": "16-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 16 บิต"
+                },
+                "INT32_2D": {
+                    "name": "32-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 32 บิต"
+                },
+                "FLOAT2": {
+                    "name": "Float 2D (Float2)",
+                    "description": "VectorFloatแบบ 2 แกน"
+                },
+                "BYTE_COLOR": {
+                    "name": "สีแบบไบต์ (Byte Color)",
+                    "description": "สีในระดับ 8 บิต (0-255)"
+                }
+            }
+        }
+    },
+    "GeometryNodeSetCurveNormal": {
+        "name": "Set Curve Normal",
+        "description": "หลักการ: บังคับหมุนทิศทางแกน Z (Normal) ของเส้นโค้งไปทางที่กำหนด\nการประยุกษ์ใช้: ใช้บังคับทิศทางการหันของใบไม้ที่เกิดบนกิ่งไม้ให้หันหน้าท้าแดด",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งต้นทาง"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "พื้นที่ที่เลือก"
+            },
+            "Normal": {
+                "name": "Normal",
+                "description": "ค่าทิศทางVectorใหม่"
+            }
+        },
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งที่เปลี่ยนทิศทางแล้ว"
+            }
+        }
+    },
+    "GeometryNodeSetCurveRadius": {
+        "name": "Set Curve Radius",
+        "description": "หลักการ: กำหนดความอ้วน (รัศมี) ให้กับแต่ละจุดบนเส้นโค้ง\nการประยุกษ์ใช้: ใช้ปั้นท่อให้มีรอยคอดตามจุดต่างๆ หรืองูดินที่มีหัวใหญ่หางแหลม",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งต้นทาง"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "พื้นที่ที่เลือก"
+            },
+            "Radius": {
+                "name": "รัศมี (Radius)",
+                "description": "ค่ารัศมีที่ต้องการ"
+            }
+        },
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งที่มีรัศมีเปลี่ยนไป"
+            }
+        }
+    },
+    "GeometryNodeSetCurveTilt": {
+        "name": "Set Curve Tilt",
+        "description": "หลักการ: กำหนดองศาการบิดหมุน (Tilt) ของเส้นโค้ง\nการประยุกษ์ใช้: ใช้บิดเกลียวสายไฟ เกลียวเชือก หรือทำรางรถไฟเหาะตีลังกา",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งต้นทาง"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "พื้นที่ที่เลือก"
+            },
+            "Tilt": {
+                "name": "การบิดตัว (Tilt)",
+                "description": "องศาการบิดที่ต้องการ"
+            }
+        },
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งที่ถูกบิดแล้ว"
+            }
+        }
+    },
+    "GeometryNodeSetCurveHandlePositions": {
+        "name": "Set Handle Positions",
+        "description": "หลักการ: ตั้งค่าตำแหน่งแขนควบคุม (Handle) ของเส้น Bézier ใหม่\nการประยุกษ์ใช้: ใช้สร้างแอนิเมชันหนวดปลาหมึกกระดิก โดยการขยับแขนดัดด้วย Noise",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งเป้าหมาย"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "พื้นที่ที่เลือก"
+            },
+            "Position": {
+                "name": "ตำแหน่ง (Position)",
+                "description": "ตำแหน่งใหม่ของแขนควบคุม"
+            }
+        },
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งที่แขนควบคุมเปลี่ยนไป"
+            }
+        },
+        "dropdowns": {
+            "mode": [
+                "LEFT",
+                "RIGHT"
+            ]
+        },
+        "sub_types": {
+            "mode": {
+                "LEFT": {
+                    "name": "ซ้าย (Left)",
+                    "description": "แขนบังคับหรือจุดควบคุมฝั่งซ้าย"
+                },
+                "RIGHT": {
+                    "name": "ขวา (Right)",
+                    "description": "แขนบังคับหรือจุดควบคุมฝั่งขวา"
+                }
+            }
+        }
+    },
+    "GeometryNodeCurveSetHandleType": {
+        "name": "Set Handle Type",
+        "description": "หลักการ: เปลี่ยนประเภทแขนควบคุมของจุด (เช่น เปลี่ยนมุมแหลมให้เป็นโค้งอัตโนมัติ)\nการประยุกษ์ใช้: ใช้คลายปมสายไฟที่หักงอให้กลายเป็นเส้นโค้งเนียนๆ โดยอัตโนมัติ",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งเป้าหมาย"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "พื้นที่ที่เลือก"
+            }
+        },
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งที่เปลี่ยนประเภทแขนควบคุมแล้ว"
+            }
+        }
+    },
+    "GeometryNodeSetSplineCyclic": {
+        "name": "Set Spline Cyclic",
+        "description": "หลักการ: บังคับเชื่อมปลายเส้นกับต้นเส้นเข้าด้วยกันให้เป็นวงปิด หรือตัดให้เปิดออก\nการประยุกษ์ใช้: ใช้ทำวงยางยืดที่ขาดออกจากกัน หรือเย็บขอบเสื้อให้ติดกัน",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งเป้าหมาย"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "พื้นที่ที่เลือก"
+            },
+            "Cyclic": {
+                "name": "วงปิด (Cyclic)",
+                "description": "กำหนดค่าความเป็นวงปิด (True/False)"
+            }
+        },
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งที่ถูกเปลี่ยนสถานะแล้ว"
+            }
+        }
+    },
+    "GeometryNodeSetSplineResolution": {
+        "name": "Set Spline Resolution",
+        "description": "หลักการ: ปรับความเนียน (ความละเอียด) ของเส้นโค้งเมื่อเรนเดอร์\nการประยุกษ์ใช้: ใช้ลดความละเอียดของเส้นผมในระยะไกล (LOD) เพื่อประหยัดเวลาเรนเดอร์",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งเป้าหมาย"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "พื้นที่ที่เลือก"
+            },
+            "Resolution": {
+                "name": "ความละเอียด (Resolution)",
+                "description": "ค่าความเนียนที่ต้องการกำหนด"
+            }
+        },
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งที่ปรับความเนียนแล้ว"
+            }
+        }
+    },
+    "GeometryNodeCurveSplineType": {
+        "name": "Set Spline Type",
+        "description": "หลักการ: เปลี่ยนโครงสร้างเส้นโค้งระหว่าง Bézier, NURBS หรือ Poly (เหลี่ยม)\nการประยุกษ์ใช้: ใช้แปลงเส้นสมูทให้กลายเป็นเส้นพับเหลี่ยมสไตล์ Low-poly หรือกลับกัน",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งเป้าหมาย"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "พื้นที่ที่เลือก"
+            }
+        },
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งที่แปลงรูปแบบแล้ว"
+            }
+        },
+        "dropdowns": {
+            "spline_type": [
+                "CATMULL_ROM",
+                "POLY",
+                "BEZIER",
+                "NURBS"
+            ]
+        },
+        "sub_types": {
+            "spline_type": {
+                "CATMULL_ROM": {
+                    "name": "Set Spline Type (แคทมัล-รอม (Catmull-Rom))",
+                    "description": "ตัวเลือกโหมด: แคทมัล-รอม (Catmull-Rom)"
+                },
+                "POLY": {
+                    "name": "Set Spline Type (โพลี (Poly))",
+                    "description": "ตัวเลือกโหมด: โพลี (Poly)"
+                },
+                "BEZIER": {
+                    "name": "Set Spline Type (เบซิเยร์ (Bezier))",
+                    "description": "ตัวเลือกโหมด: เบซิเยร์ (Bezier)"
+                },
+                "NURBS": {
+                    "name": "Set Spline Type (เนิร์บส์ (NURBS))",
+                    "description": "ตัวเลือกโหมด: เนิร์บส์ (NURBS)"
+                }
+            }
+        }
+    },
+    "GeometryNodeCurveToMesh": {
+        "name": "Curve to Mesh",
+        "description": "หลักการ: แปลงเส้นโค้งให้เป็นท่อหรือพื้นผิว 3 มิติ (Mesh) โดยกวาดรูปร่างหน้าตัดไปตามเส้น\nการประยุกษ์ใช้: ใช้ทำสายไฟ, ท่อน้ำ, กรอบหน้าต่าง หรือริบบิ้นที่มีความหนา",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งต้นทาง"
+            },
+            "Profile Curve": {
+                "name": "หน้าตัดเส้นโค้ง (Profile Curve)",
+                "description": "เส้นโค้งหน้าตัดที่จะใช้วิ่งตามเส้นหลัก"
+            },
+            "Fill Caps": {
+                "name": "ปิดฝา (Fill Caps)",
+                "description": "ปิดฝาหัวท้ายให้ทึบหรือไม่"
+            }
+        },
+        "outputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "พื้นผิว Mesh ที่ได้จากการแปลง"
+            }
+        }
+    },
+    "GeometryNodeCurveToPoints": {
+        "name": "Curve to Points",
+        "description": "หลักการ: วางจุด (Point) เรียงรายไปตามเส้นโค้งในระยะห่างที่เท่าๆ กัน\nการประยุกษ์ใช้: ใช้ปักเสาไฟฟ้าริมถนน วางตะเข็บด้ายบนเสื้อ หรือปลูกต้นไม้เรียงแถว",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งเป้าหมาย"
+            },
+            "Count": {
+                "name": "จำนวน (Count)",
+                "description": "จำนวนจุดทั้งหมด"
+            },
+            "Length": {
+                "name": "ความยาว (Length)",
+                "description": "ระยะห่างระหว่างจุด"
+            }
+        },
+        "outputs": {
+            "Points": {
+                "name": "จุด (Points)",
+                "description": "กลุ่มจุดที่กระจายตามเส้นโค้ง"
+            },
+            "Tangent": {
+                "name": "แทนเจนต์ (Tangent)",
+                "description": "ทิศทางสัมผัสที่แต่ละจุด"
+            },
+            "Normal": {
+                "name": "Normal",
+                "description": "แนวฉากที่แต่ละจุด"
+            },
+            "Rotation": {
+                "name": "การหมุน (Rotation)",
+                "description": "องศาการหมุน"
+            }
+        },
+        "dropdowns": {
+            "mode": [
+                "EVALUATED",
+                "COUNT",
+                "LENGTH"
+            ]
+        },
+        "sub_types": {
+            "mode": {
+                "EVALUATED": {
+                    "name": "ค่าที่คำนวณแล้ว (Evaluated)",
+                    "description": "อิงจากจุดที่คำนวณและประมวลผลแล้วบนเส้นโค้ง"
+                },
+                "COUNT": {
+                    "name": "จำนวน (Count)",
+                    "description": "ระบุด้วยจำนวนรวมที่แน่นอน"
+                },
+                "LENGTH": {
+                    "name": "ความยาว (Length)",
+                    "description": "หาขนาดหรือความยาวของVector"
+                }
+            }
+        }
+    },
+    "GeometryNodeCurvesToGreasePencil": {
+        "name": "Curves to Grease Pencil",
+        "description": "หลักการ: แปลงเส้นโค้ง 3 มิติให้กลายเป็นลายเส้นวาด Grease Pencil\nการประยุกษ์ใช้: ใช้สร้างโครงร่างขอบ (Outline) สไตล์การ์ตูนจากโมเดล 3 มิติ",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งต้นทาง"
+            }
+        },
+        "outputs": {
+            "Grease Pencil": {
+                "name": "ดินสอไข (Grease Pencil)",
+                "description": "เส้นวาดแบบ Grease Pencil"
+            }
+        }
+    },
+    "GeometryNodeDeformCurvesOnSurface": {
+        "name": "Deform Curves on Surface",
+        "description": "หลักการ: รีดเส้นโค้งให้แปะติดและดัดงอไปตามพื้นผิวของวัตถุ\nการประยุกษ์ใช้: ใช้แปะสติกเกอร์ รอยสัก หรือเถาวัลย์ให้แนบไปกับพื้นผิวขรุขระของก้อนหิน",
+        "inputs": {
+            "Curves": {
+                "name": "เส้นโค้ง (Curves)",
+                "description": "เส้นโค้งเป้าหมาย"
+            },
+            "Surface": {
+                "name": "พื้นผิว (Surface)",
+                "description": "รูปทรงพื้นผิว"
+            }
+        },
+        "outputs": {
+            "Curves": {
+                "name": "เส้นโค้ง (Curves)",
+                "description": "เส้นโค้งที่แนบพื้นผิวแล้ว"
+            }
+        }
+    },
+    "GeometryNodeFillCurve": {
+        "name": "Fill Curve",
+        "description": "หลักการ: ถมช่องว่างภายในเส้นโค้งวงปิดให้กลายเป็นแผ่นทึบ 2 มิติ\nการประยุกษ์ใช้: ใช้สร้างป้ายโลโก้ รูปลอก หรือปิดฝากระป๋องทรงแปลกๆ",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งวงปิด"
+            }
+        },
+        "outputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "รูปทรง 2 มิติที่เติมเต็มแล้ว"
+            }
+        }
+    },
+    "GeometryNodeFilletCurve": {
+        "name": "Fillet Curve",
+        "description": "หลักการ: ลบมุมแหลมของเส้นโค้งโพลีกอนให้โค้งมน (Fillet)\nการประยุกษ์ใช้: ใช้ทำขอบมนของตัวอักษร 3 มิติ โต๊ะเฟอร์นิเจอร์ หรือลู่ทางเดิน",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งต้นทาง"
+            },
+            "Radius": {
+                "name": "รัศมี (Radius)",
+                "description": "รัศมีความโค้งมน"
+            },
+            "Limit Radius": {
+                "name": "จำกัดรัศมี (Limit Radius)",
+                "description": "จำกัดรัศมีไม่ให้ทับซ้อนกัน"
+            }
+        },
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นที่ถูกลบมุมแล้ว"
+            }
+        }
+    },
+    "GeometryNodeInterpolateCurves": {
+        "name": "Interpolate Curves",
+        "description": "หลักการ: งอกเส้นโค้งใหม่แซมระหว่างเส้นหลักเพื่อเพิ่มจำนวนเส้น\nการประยุกษ์ใช้: ใช้สร้างขนสัตว์หรือผมที่ดกหนา โดยอิงทิศทางจากเส้นไกด์แค่ไม่กี่เส้น (ลดภาระการจำลอง)",
+        "inputs": {
+            "Guide Curves": {
+                "name": "เส้นโค้งไกด์ (Guide Curves)",
+                "description": "เส้นโค้งหลักที่ใช้อ้างอิง"
+            },
+            "Guide Up": {
+                "name": "ไกด์ทิศทางขึ้น (Guide Up)",
+                "description": "ทิศทางขึ้นของเส้นหลัก"
+            },
+            "Amount": {
+                "name": "จำนวน (Amount)",
+                "description": "จำนวนเส้นที่จะสร้างแทรก"
+            }
+        },
+        "outputs": {
+            "Curves": {
+                "name": "เส้นโค้ง (Curves)",
+                "description": "เส้นโค้งใหม่ที่แทรกเพิ่มขึ้นมา"
+            }
+        }
+    },
+    "GeometryNodeResampleCurve": {
+        "name": "Resample Curve",
+        "description": "หลักการ: สร้างจุดควบคุมบนเส้นใหม่ ให้มีจำนวนจุดคงที่หรือระยะห่างเท่าๆ กัน\nการประยุกษ์ใช้: ใช้จัดระเบียบเส้นที่วาดด้วยมือ (มีจุดเยอะเกินไป) ให้มีจุดเว้นระยะสม่ำเสมอกัน",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งต้นทาง"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "พื้นที่ที่ต้องการ"
+            },
+            "Count": {
+                "name": "จำนวน (Count)",
+                "description": "จำนวนจุดใหม่"
+            },
+            "Length": {
+                "name": "ความยาว (Length)",
+                "description": "ระยะห่างของจุด"
+            }
+        },
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งที่ปรับจำนวนจุดแล้ว"
+            }
+        }
+    },
+    "GeometryNodeReverseCurve": {
+        "name": "Reverse Curve",
+        "description": "หลักการ: สลับทิศทางการวิ่งของเส้น (หัวเป็นหาง หางเป็นหัว)\nการประยุกษ์ใช้: ใช้กลับทิศรถไฟที่วิ่งผิดทาง หรือพลิกการไล่สี (Gradient) บนเส้นโค้ง",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งต้นทาง"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "บริเวณเส้นที่ต้องการกลับด้าน"
+            }
+        },
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งที่ถูกสลับทิศทาง"
+            }
+        }
+    },
+    "GeometryNodeSubdivideCurve": {
+        "name": "Subdivide Curve",
+        "description": "หลักการ: แบ่งครึ่งแต่ละท่อนเส้นโค้งเพื่อเพิ่มจุดระหว่างกลาง\nการประยุกษ์ใช้: ใช้เพิ่มจุดให้เส้นเชือกเพื่อให้ดัดหรือย้วยตามแรงโน้มถ่วงได้ละเอียดยิ่งขึ้น",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งต้นทาง"
+            },
+            "Cuts": {
+                "name": "รอยตัด (Cuts)",
+                "description": "จำนวนรอยตัดที่เพิ่มเข้าไปในแต่ละท่อน"
+            }
+        },
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งที่มีรายละเอียดมากขึ้น"
+            }
+        }
+    },
+    "GeometryNodeTrimCurve": {
+        "name": "Trim Curve",
+        "description": "หลักการ: หดหรือตัดปลายหัวท้ายของเส้นโค้งออก\nการประยุกษ์ใช้: ใช้ทำแอนิเมชันวาดเส้น (ลายเซ็นโตขึ้น), ไฟวิ่งตามสายรุ้ง หรือทำเอฟเฟกต์ฟันดาบเลเซอร์",
+        "inputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งต้นทาง"
+            },
+            "Start": {
+                "name": "เริ่มต้น (Start)",
+                "description": "จุดเริ่มต้นการตัด"
+            },
+            "End": {
+                "name": "สิ้นสุด (End)",
+                "description": "จุดสิ้นสุดการตัด"
+            }
+        },
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งที่ถูกตัดแล้ว"
+            }
+        },
+        "dropdowns": {
+            "mode": [
+                "FACTOR",
+                "LENGTH"
+            ]
+        },
+        "sub_types": {
+            "mode": {
+                "FACTOR": {
+                    "name": "อัตราส่วน (Factor)",
+                    "description": "ใช้ค่าอัตราส่วนตั้งแต่ 0.0 ถึง 1.0"
+                },
+                "LENGTH": {
+                    "name": "ความยาว (Length)",
+                    "description": "หาขนาดหรือความยาวของVector"
+                }
+            }
+        }
+    },
+    "GeometryNodeCurveArc": {
+        "name": "Arc",
+        "description": "หลักการ: สร้างเส้นโค้งรูปเสี้ยววงกลม (Arc) กำหนดมุมและรัศมีได้\nการประยุกษ์ใช้: ใช้เป็นหน้าตัดทำซุ้มประตูโค้ง สเกลหน้าปัด หรือรุ้งกินน้ำ",
+        "inputs": {},
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งรูปส่วนโค้ง"
+            },
+            "Center": {
+                "name": "จุดศูนย์กลาง (Center)",
+                "description": "ตำแหน่งจุดศูนย์กลาง"
+            },
+            "Normal": {
+                "name": "Normal",
+                "description": "แนวทิศทางตั้งฉาก"
+            },
+            "Radius": {
+                "name": "รัศมี (Radius)",
+                "description": "รัศมีของวงกลม"
+            }
+        },
+        "dropdowns": {
+            "mode": [
+                "POINTS",
+                "RADIUS"
+            ]
+        },
+        "sub_types": {
+            "mode": {
+                "POINTS": {
+                    "name": "จุด (Points)",
+                    "description": "ทำงานในระดับจุดหรือคลาวด์พอยต์ (Point Cloud)"
+                },
+                "RADIUS": {
+                    "name": "รัศมี (Radius)",
+                    "description": "กำหนดด้วยรัศมี"
+                }
+            }
+        }
+    },
+    "GeometryNodeCurvePrimitiveBezierSegment": {
+        "name": "Bézier Segment",
+        "description": "หลักการ: สร้างเส้นโค้งเบซิเยร์ 1 ท่อนพร้อมแขนดัด\nการประยุกษ์ใช้: ใช้สร้างสะพานเชื่อมระหว่างวัตถุ 2 ชิ้นที่ลื่นไหลโค้งมน",
+        "inputs": {},
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งเบซิเยร์ 1 ท่อน"
+            }
+        },
+        "dropdowns": {
+            "mode": [
+                "POSITION",
+                "OFFSET"
+            ]
+        },
+        "sub_types": {
+            "mode": {
+                "POSITION": {
+                    "name": "ตำแหน่ง (Position)",
+                    "description": "อ้างอิงหรือใช้ค่าตำแหน่ง (Position)"
+                },
+                "OFFSET": {
+                    "name": "ระยะห่าง (Offset)",
+                    "description": "อ้างอิงหรือใช้ค่าการเลื่อนตำแหน่ง (Offset)"
+                }
+            }
+        }
+    },
+    "GeometryNodeCurvePrimitiveCircle": {
+        "name": "Curve Circle",
+        "description": "หลักการ: สร้างโครงวงกลมสมบูรณ์ที่ปรับรัศมีได้\nการประยุกษ์ใช้: ใช้ทำห่วงยาง หน้าตัดท่อ หรือวงล้อจักรยาน",
+        "inputs": {},
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งวงกลม"
+            }
+        },
+        "dropdowns": {
+            "mode": [
+                "POINTS",
+                "RADIUS"
+            ]
+        },
+        "sub_types": {
+            "mode": {
+                "POINTS": {
+                    "name": "จุด (Points)",
+                    "description": "ทำงานในระดับจุดหรือคลาวด์พอยต์ (Point Cloud)"
+                },
+                "RADIUS": {
+                    "name": "รัศมี (Radius)",
+                    "description": "กำหนดด้วยรัศมี"
+                }
+            }
+        }
+    },
+    "GeometryNodeCurvePrimitiveLine": {
+        "name": "Curve Line",
+        "description": "หลักการ: สร้างเส้นตรงยาวกำหนดจุดเริ่มและจุดจบ\nการประยุกษ์ใช้: ใช้เป็นเสาหลัก ลำต้นต้นไม้ หรือแนวการสร้างบันไดวน",
+        "inputs": {},
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นตรง"
+            }
+        },
+        "dropdowns": {
+            "mode": [
+                "POINTS",
+                "DIRECTION"
+            ]
+        },
+        "sub_types": {
+            "mode": {
+                "POINTS": {
+                    "name": "จุด (Points)",
+                    "description": "ทำงานในระดับจุดหรือคลาวด์พอยต์ (Point Cloud)"
+                },
+                "DIRECTION": {
+                    "name": "ทิศทาง (Direction)",
+                    "description": "อ้างอิงหรือระบุค่าด้วยทิศทางVector"
+                }
+            }
+        }
+    },
+    "GeometryNodeCurvePrimitiveSpiral": {
+        "name": "Spiral",
+        "description": "หลักการ: สร้างเส้นเกลียวสปริงหรือก้นหอย 3 มิติ\nการประยุกษ์ใช้: ใช้ทำขดลวดโช้คอัพ เปลือกหอยทาก หรือทอร์นาโด",
+        "inputs": {},
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นเกลียวสปริง"
+            }
+        }
+    },
+    "GeometryNodeCurvePrimitiveQuadraticBezier": {
+        "name": "Quadratic Bézier",
+        "description": "หลักการ: สร้างเส้นโค้งพาราโบลาด้วยจุดควบคุม 3 จุด\nการประยุกษ์ใช้: ใช้ทำสายไฟตกท้องช้าง หรือเส้นโค้งโยนลูกบอล",
+        "inputs": {},
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งกำลังสอง"
+            }
+        }
+    },
+    "GeometryNodeCurvePrimitiveQuadrilateral": {
+        "name": "Quadrilateral",
+        "description": "หลักการ: สร้างกรอบสี่เหลี่ยมหลายรูปทรง (ผืนผ้า, คางหมู, ว่าว)\nการประยุกษ์ใช้: ใช้เป็นกรอบหน้าต่าง โครงว่าว หรือฐานพีระมิด",
+        "inputs": {},
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "รูปสี่เหลี่ยม"
+            }
+        },
+        "dropdowns": {
+            "mode": [
+                "RECTANGLE",
+                "PARALLELOGRAM",
+                "TRAPEZOID",
+                "KITE",
+                "POINTS"
+            ]
+        },
+        "sub_types": {
+            "mode": {
+                "RECTANGLE": {
+                    "name": "สี่เหลี่ยมผืนผ้า (Rectangle)",
+                    "description": "รูปทรงสี่เหลี่ยมผืนผ้า"
+                },
+                "PARALLELOGRAM": {
+                    "name": "สี่เหลี่ยมด้านขนาน (Parallelogram)",
+                    "description": "รูปทรงสี่เหลี่ยมด้านขนาน"
+                },
+                "TRAPEZOID": {
+                    "name": "สี่เหลี่ยมคางหมู (Trapezoid)",
+                    "description": "รูปทรงสี่เหลี่ยมคางหมู"
+                },
+                "KITE": {
+                    "name": "รูปว่าว (Kite)",
+                    "description": "รูปทรงว่าว"
+                },
+                "POINTS": {
+                    "name": "จุด (Points)",
+                    "description": "ทำงานในระดับจุดหรือคลาวด์พอยต์ (Point Cloud)"
+                }
+            }
+        }
+    },
+    "GeometryNodeCurvePrimitiveStar": {
+        "name": "Star",
+        "description": "หลักการ: สร้างเส้นโค้งรูปดาวหลายแฉก ปรับรัศมีใน-นอกได้\nการประยุกษ์ใช้: ใช้ทำเฟืองเกียร์ รูปดาวประดับต้นคริสต์มาส หรือตราสัญลักษณ์",
+        "inputs": {},
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งรูปดาว"
+            }
+        }
+    },
+    "GeometryNodeGreasePencilToCurves": {
+        "name": "Grease Pencil to Curves",
+        "description": "หลักการ: ดึงเส้นวาด Grease Pencil มาเป็น Curve 3D\nการประยุกษ์ใช้: ใช้ให้ผู้ใช้ใช้ปากกาวาดเถาวัลย์บนจอ แล้วแปลงเป็นท่อเถาวัลย์ 3 มิติ",
+        "inputs": {},
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้ง 3 มิติ"
+            }
+        }
+    },
+    "GeometryNodeEdgePathsToCurves": {
+        "name": "Edge Paths to Curves",
+        "description": "หลักการ: สร้างเส้น Curve งอกตามรอยต่อขอบ Mesh แบบ Shortest Path\nการประยุกษ์ใช้: ใช้ทำเอฟเฟกต์สายฟ้าแลบวิ่งตามพื้นผิว หรือรอยแตกของแผ่นดิน",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeMeshToCurve": {
+        "name": "Mesh to Curve",
+        "description": "หลักการ: ลอกเส้นขอบ (Edge) ของรูปทรงตาข่ายออกมาเป็นเส้นลวด (Curve)\nการประยุกษ์ใช้: ใช้ทำโครงเหล็กดัด (Wireframe), สุ่มเส้นใยแมงมุม หรือกรอบแว่นตา",
+        "inputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "ตาข่ายเป้าหมาย"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "เส้นขอบที่ต้องการแปลง"
+            }
+        },
+        "outputs": {
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้งที่แปลงได้"
+            }
+        },
+        "dropdowns": {
+            "mode": [
+                "EDGES",
+                "FACES"
+            ]
+        },
+        "sub_types": {
+            "mode": {
+                "EDGES": {
+                    "name": "เส้น (Edges)",
+                    "description": "ทำงานในระดับเส้นขอบ (Edges)"
+                },
+                "FACES": {
+                    "name": "หน้าตัด (Faces)",
+                    "description": "ทำงานในระดับพื้นผิวหรือหน้าตัด (Faces)"
+                }
+            }
+        }
+    },
+    "GeometryNodeCurveOfPoint": {
+        "name": "Curve of Point",
+        "description": "หลักการ: เช็คว่าจุดนี้สังกัดอยู่เส้นโค้งเส้นไหน\nการประยุกษ์ใช้: ใช้อ่านข้อมูลความยาวของเส้นแม่ นำมาปรับขนาดของจุดที่อยู่บนเส้นนั้น",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeOffsetPointInCurve": {
+        "name": "Offset Point in Curve",
+        "description": "หลักการ: ขยับจุดอ้างอิงไปหน้าหรือหลังตามแนวเส้น\nการประยุกษ์ใช้: ใช้คำนวณเวกเตอร์พุ่งไปหาจุดข้างหน้าเพื่อทำความสมูท (Smoothing) ให้เส้นงู",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodePointsOfCurve": {
+        "name": "Points of Curve",
+        "description": "หลักการ: ค้นหาจุดทั้งหมดของเส้นโค้งเส้นหนึ่ง\nการประยุกษ์ใช้: ใช้หาจุดกึ่งกลางของเส้น หรือลบจุดทั้งหมดของเส้นทิ้งในคราวเดียว",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodePointsToCurves": {
+        "name": "Points to Curves",
+        "description": "หลักการ: ลากเส้นเชื่อมกลุ่มจุดที่ลอยๆ อยู่เข้าด้วยกัน\nการประยุกษ์ใช้: ใช้ลากเส้นเชื่อมต่อกลุ่มแสงหิ่งห้อย หรือทำเอฟเฟกต์ Trail เส้นแสงไฟหน้ารถ",
+        "inputs": {},
+        "outputs": {}
+    },
+    "ShaderNodeRGBCurve": {
+        "name": "RGB Curves",
+        "description": "หลักการ: ปรับแต่งช่วงสี RGB ผ่านกราฟโค้งเพื่อดัดแปลงโทนสี\nการประยุกษ์ใช้: ใช้ทำ Color Grading ย้อมสีวัตถุ หรือเร่งความสว่างของค่าสี (Contrast)",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeStringToCurves": {
+        "name": "String to Curves",
+        "description": "หลักการ: พิมพ์ข้อความให้กลายเป็นเส้นขอบตัวอักษร 3 มิติ\nการประยุกษ์ใช้: ใช้สร้างป้ายชื่อลอยตัว ตัวหนังสือนับคะแนน 3 มิติ หรือหลอดไฟนีออนดัดรูปอักษร",
+        "inputs": {
+            "String": {
+                "name": "ข้อความ (String)",
+                "description": "ข้อความ"
+            },
+            "Size": {
+                "name": "ขนาด (Size)",
+                "description": "ขนาด"
+            },
+            "Character Spacing": {
+                "name": "ระยะห่างตัวอักษร (Character Spacing)",
+                "description": "ช่องไฟ"
+            },
+            "Line Spacing": {
+                "name": "ระยะห่างบรรทัด (Line Spacing)",
+                "description": "ระยะห่างบรรทัด"
+            }
+        },
+        "outputs": {
+            "Curve Instances": {
+                "name": "Instanceเส้นโค้ง (Curve Instances)",
+                "description": "ตัวอักษรที่แปลงเป็น Instance"
+            }
+        }
+    }
+}
+

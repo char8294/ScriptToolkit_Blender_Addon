@@ -1,0 +1,4973 @@
+{
+    "GeometryNodeTransform": {
+        "name": "Transform",
+        "description": "หลักการ: เลื่อน (Translate), หมุน (Rotate), และปรับขนาด (Scale) รูปทรงทั้งชิ้น\nการประยุกษ์ใช้: ใช้จัดวางตำแหน่งอ็อบเจกต์, หมุนกังหันลม, หรือย่อขยายขนาดชิ้นส่วน",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงเรขาคณิตที่ต้องการปรับ"
+            },
+            "Translation": {
+                "name": "การเลื่อน (Translation)",
+                "description": "ระยะทางในการเลื่อนตำแหน่ง (X, Y, Z)"
+            },
+            "Rotation": {
+                "name": "การหมุน (Rotation)",
+                "description": "องศาในการหมุน"
+            },
+            "Scale": {
+                "name": "ขนาด (Scale)",
+                "description": "สัดส่วนการย่อ/ขยาย"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "ผลลัพธ์รูปทรงที่ปรับแก้แล้ว"
+            }
+        }
+    },
+    "GeometryNodeSetPosition": {
+        "name": "Set Position",
+        "description": "หลักการ: เปลี่ยนพิกัดตำแหน่งของแต่ละจุด (Points) ในรูปทรง\nการประยุกษ์ใช้: ใช้ทำคลื่นน้ำโดยขยับจุดแกน Z ขึ้นลงด้วย Noise หรือดึงจุดให้ติดกับพื้นผิวอื่น",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงต้นฉบับ"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "เลือกจุดที่ต้องการเปลี่ยนตำแหน่ง"
+            },
+            "Position": {
+                "name": "ตำแหน่ง (Position)",
+                "description": "พิกัดใหม่ที่ต้องการให้จุดไปอยู่"
+            },
+            "Offset": {
+                "name": "ระยะชดเชย (Offset)",
+                "description": "ระยะที่ต้องการขยับจากตำแหน่งเดิม"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "ผลลัพธ์รูปทรงที่ถูกเปลี่ยนตำแหน่งจุดแล้ว"
+            }
+        }
+    },
+    "GeometryNodeGroup": {
+        "name": "Group",
+        "description": "หลักการ: สร้างกรุ๊ปรวมโหนดย่อยๆ เข้าด้วยกันเพื่อความสะอาดของหน้าต่างทำงาน\nการประยุกษ์ใช้: ใช้แพ็คโหนดที่ใช้บ่อยๆ เป็นโมดูล (Custom Node) เพื่อเรียกใช้ซ้ำในโปรเจกต์อื่น",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeImportCSV": {
+        "name": "CSV (.csv)",
+        "description": "หลักการ: นำเข้าตารางข้อมูลค่าต่างๆ จากไฟล์ CSV\nการประยุกษ์ใช้: ใช้อ่านพิกัดแผนที่เพื่อสร้างตึกตามจุด หรือทำกราฟแท่ง 3 มิติจากข้อมูลสถิติ",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeImportOBJ": {
+        "name": "Wavefront (.obj)",
+        "description": "หลักการ: โหลดรูปทรงเรขาคณิต 3 มิติจากไฟล์นามสกุล .obj\nการประยุกษ์ใช้: ใช้ดึงโมเดลต้นไม้หรือหินจากภายนอกเข้ามาเป็น Instance ในระบบ Geometry Nodes",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeImportPLY": {
+        "name": "Stanford PLY (.ply)",
+        "description": "หลักการ: โหลดรูปทรงและข้อมูลสี (Vertex Color) จากไฟล์ .ply\nการประยุกษ์ใช้: ใช้ดึงข้อมูลสแกน 3 มิติ (Photogrammetry) เข้ามาประมวลผลต่อ",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeImportSTL": {
+        "name": "STL (.stl)",
+        "description": "หลักการ: โหลดรูปทรง 3 มิติจากไฟล์ .stl\nการประยุกษ์ใช้: ใช้ดึงโมเดลสำหรับงานพิมพ์ 3 มิติเข้ามาแก้ไขหรือจัดเรียงก่อนพิมพ์",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeImportText": {
+        "name": "Text (.txt)",
+        "description": "หลักการ: นำเข้าข้อมูลข้อความจากไฟล์ .txt\nการประยุกษ์ใช้: ใช้ดึงรายการชื่อมาทำเป็นป้ายชื่อ 3 มิติ (Text Object) อัตโนมัติ",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeImportVDB": {
+        "name": "OpenVDB (.vdb)",
+        "description": "หลักการ: โหลดข้อมูลปริมาตร (Volume/Voxel) จากไฟล์ OpenVDB\nการประยุกษ์ใช้: ใช้ดึงไฟล์ควัน ระเบิด หรือก้อนเมฆจากโปรแกรมอื่นเข้ามาจัดวาง",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeActiveCamera": {
+        "name": "Active Camera",
+        "description": "หลักการ: ดึงข้อมูลกล้องที่กำลังเป็นมุมมองหลัก (Active Camera) ของฉาก\nการประยุกษ์ใช้: ใช้สร้างเอฟเฟกต์ที่ตอบสนองต่อกล้อง เช่น ปรับให้แผ่นป้ายหันหน้าเข้าหากล้องเสมอ (Billboard)",
+        "inputs": {},
+        "outputs": {
+            "Camera": {
+                "name": "กล้อง (Camera)",
+                "description": "กล้องที่กำลังถูกใช้งาน"
+            }
+        }
+    },
+    "GeometryNodeBoneInfo": {
+        "name": "Bone Info",
+        "description": "หลักการ: ดึงพิกัดตำแหน่ง การหมุน และสเกลของกระดูก (Bone) ใน Armature\nการประยุกษ์ใช้: ใช้ตรึงวัตถุเวทมนตร์หรือเอฟเฟกต์ให้ติดอยู่กับมือของตัวละครที่กำลังขยับ",
+        "inputs": {
+            "Object": {
+                "name": "อ็อบเจกต์ (Object)",
+                "description": "อ็อบเจกต์กระดูกอ้างอิง"
+            }
+        },
+        "outputs": {
+            "Location": {
+                "name": "ตำแหน่ง (Location)",
+                "description": "ตำแหน่งของกระดูก"
+            },
+            "Rotation": {
+                "name": "การหมุน (Rotation)",
+                "description": "การหมุนของกระดูก"
+            },
+            "Scale": {
+                "name": "ขนาด (Scale)",
+                "description": "ขนาดของกระดูก"
+            }
+        },
+        "dropdowns": {
+            "transform_space": [
+                "ORIGINAL",
+                "RELATIVE"
+            ]
+        },
+        "sub_types": {
+            "transform_space": {
+                "ORIGINAL": {
+                    "name": "Bone Info (ต้นฉบับ (Original))",
+                    "description": "ตัวเลือกโหมด: ต้นฉบับ (Original)"
+                },
+                "RELATIVE": {
+                    "name": "Bone Info (สัมพัทธ์ (Relative))",
+                    "description": "ตัวเลือกโหมด: สัมพัทธ์ (Relative)"
+                }
+            }
+        }
+    },
+    "GeometryNodeCollectionInfo": {
+        "name": "Collection Info",
+        "description": "หลักการ: ดึงโมเดลทั้งหมดที่อยู่ในคอลเลกชัน (Collection) ที่ระบุมาใช้\nการประยุกษ์ใช้: ใช้ดึงกลุ่มโมเดลหญ้าหลายๆ แบบมาสุ่มกระจายบนพื้นผิว (Instance on Points)",
+        "inputs": {
+            "Collection": {
+                "name": "คอลเลกชัน (Collection)",
+                "description": "คอลเลกชันเป้าหมาย"
+            },
+            "Separate Children": {
+                "name": "แยกลูก (Separate Children)",
+                "description": "แยกชิ้นส่วนลูก (Children) หรือไม่"
+            },
+            "Reset Children": {
+                "name": "รีเซ็ตลูก (Reset Children)",
+                "description": "รีเซ็ตตำแหน่งลูก (Children) หรือไม่"
+            },
+            "Transform Space": {
+                "name": "ปริภูมิ (Transform Space)",
+                "description": "เลือกระบบพิกัด (Original/Relative)"
+            }
+        },
+        "outputs": {
+            "Instances": {
+                "name": "Instance (Instances)",
+                "description": "รูปทรงทั้งหมดในคอลเลกชัน (ถูกจำลองเป็น Instances)"
+            }
+        },
+        "dropdowns": {
+            "transform_space": [
+                "ORIGINAL",
+                "RELATIVE"
+            ]
+        },
+        "sub_types": {
+            "transform_space": {
+                "ORIGINAL": {
+                    "name": "Collection Info (ต้นฉบับ (Original))",
+                    "description": "ตัวเลือกโหมด: ต้นฉบับ (Original)"
+                },
+                "RELATIVE": {
+                    "name": "Collection Info (สัมพัทธ์ (Relative))",
+                    "description": "ตัวเลือกโหมด: สัมพัทธ์ (Relative)"
+                }
+            }
+        }
+    },
+    "GeometryNodeImageInfo": {
+        "name": "Image Info",
+        "description": "หลักการ: ดึงข้อมูลขนาดกว้างยาว และการโปร่งแสง (Alpha) ของรูปภาพ\nการประยุกษ์ใช้: ใช้สร้างแผ่นระนาบที่มีสัดส่วนกว้างยาวพอดีกับรูปภาพโดยอัตโนมัติ",
+        "inputs": {
+            "Image": {
+                "name": "รูปภาพ (Image)",
+                "description": "รูปภาพอ้างอิง"
+            }
+        },
+        "outputs": {
+            "Width": {
+                "name": "ความกว้าง (Width)",
+                "description": "ความกว้างของรูปภาพ (พิกเซล)"
+            },
+            "Height": {
+                "name": "ความสูง (Height)",
+                "description": "ความสูงของรูปภาพ (พิกเซล)"
+            },
+            "Has Alpha": {
+                "name": "มีความโปร่งใส (Has Alpha)",
+                "description": "รูปภาพมีความโปร่งใสหรือไม่"
+            }
+        }
+    },
+    "GeometryNodeIsViewport": {
+        "name": "Is Viewport",
+        "description": "หลักการ: เช็คว่าโหนดกำลังแสดงผลในหน้าจอทำงาน (Viewport) หรือกำลังเรนเดอร์ (Render)\nการประยุกษ์ใช้: ใช้ลดความละเอียดของโมเดลตอนทำงานให้เครื่องไม่กระตุก แต่จัดเต็มตอนเรนเดอร์",
+        "inputs": {},
+        "outputs": {
+            "Is Viewport": {
+                "name": "ในหน้าจอ (Is Viewport)",
+                "description": "ถ้าอยู่บนหน้าจอ Viewport จะมีค่าเป็น True ถ้า Render จะเป็น False"
+            }
+        }
+    },
+    "GeometryNodeObjectInfo": {
+        "name": "Object Info",
+        "description": "หลักการ: ดึงข้อมูลและรูปทรงของอ็อบเจกต์อื่นในฉากมาใช้\nการประยุกษ์ใช้: ใช้อ้างอิงตำแหน่งของ Empty เพื่อนำมาเป็นจุดศูนย์กลางในการดึงดูดวัตถุ",
+        "inputs": {
+            "Object": {
+                "name": "อ็อบเจกต์ (Object)",
+                "description": "อ็อบเจกต์เป้าหมาย"
+            },
+            "As Instance": {
+                "name": "เป็นInstance (As Instance)",
+                "description": "สร้างให้เป็น Instance หรือไม่"
+            },
+            "Transform Space": {
+                "name": "ปริภูมิ (Transform Space)",
+                "description": "เลือกระบบพิกัดพิจารณา (Original/Relative)"
+            }
+        },
+        "outputs": {
+            "Location": {
+                "name": "ตำแหน่ง (Location)",
+                "description": "ตำแหน่งของอ็อบเจกต์"
+            },
+            "Rotation": {
+                "name": "การหมุน (Rotation)",
+                "description": "การหมุนของอ็อบเจกต์"
+            },
+            "Scale": {
+                "name": "ขนาด (Scale)",
+                "description": "ขนาดของอ็อบเจกต์"
+            },
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงเรขาคณิตของอ็อบเจกต์"
+            }
+        },
+        "dropdowns": {
+            "transform_space": [
+                "ORIGINAL",
+                "RELATIVE"
+            ]
+        },
+        "sub_types": {
+            "transform_space": {
+                "ORIGINAL": {
+                    "name": "Object Info (ต้นฉบับ (Original))",
+                    "description": "ตัวเลือกโหมด: ต้นฉบับ (Original)"
+                },
+                "RELATIVE": {
+                    "name": "Object Info (สัมพัทธ์ (Relative))",
+                    "description": "ตัวเลือกโหมด: สัมพัทธ์ (Relative)"
+                }
+            }
+        }
+    },
+    "GeometryNodeSelfObject": {
+        "name": "Self Object",
+        "description": "หลักการ: ดึงข้อมูลของอ็อบเจกต์ตัวเองที่กำลังใส่ Geometry Nodes นี้อยู่\nการประยุกษ์ใช้: ใช้อ่านค่าสีหรือพิกัดของตัวเองเพื่อส่งต่อไปประมวลผล",
+        "inputs": {},
+        "outputs": {
+            "Self Object": {
+                "name": "อ็อบเจกต์ตัวเอง (Self Object)",
+                "description": "อ็อบเจกต์ต้นทาง"
+            }
+        }
+    },
+    "GeometryNodeEnableOutput": {
+        "name": "Enable Output",
+        "description": "หลักการ: ใช้เป็นสวิตช์ปิด/เปิดการส่งต่อข้อมูลที่ทางออก (Output)\nการประยุกษ์ใช้: ใช้ทำเงื่อนไขปิดการแสดงผลบางส่วนเมื่อไม่ต้องการใช้งาน",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeViewer": {
+        "name": "Viewer",
+        "description": "หลักการ: ดึงค่าตัวเลขหรือพิกัดไปแสดงในช่อง Spreadsheet เพื่อการตรวจสอบ (Debug)\nการประยุกษ์ใช้: ใช้ดูค่าความยาวของเส้นโค้ง หรือตรวจสอบว่าเงื่อนไข (True/False) ทำงานถูกหรือไม่",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่ต้องการตรวจดูค่า"
+            },
+            "Value": {
+                "name": "ค่าตัวเลข (Value)",
+                "description": "ข้อมูลตัวแปรที่ต้องการดูค่า"
+            }
+        },
+        "outputs": {},
+        "dropdowns": {
+            "domain": [
+                "AUTO",
+                "POINT",
+                "EDGE",
+                "FACE",
+                "CORNER",
+                "CURVE",
+                "INSTANCE",
+                "LAYER"
+            ]
+        },
+        "sub_types": {
+            "domain": {
+                "AUTO": {
+                    "name": "Viewer (อัตโนมัติ (Auto))",
+                    "description": "ตัวเลือกโหมด: อัตโนมัติ (Auto)"
+                },
+                "POINT": {
+                    "name": "Viewer (จุด)",
+                    "description": "ตัวเลือกโหมด: จุด"
+                },
+                "EDGE": {
+                    "name": "Viewer (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                },
+                "FACE": {
+                    "name": "Viewer (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                },
+                "CORNER": {
+                    "name": "Viewer (มุม)",
+                    "description": "ตัวเลือกโหมด: มุม"
+                },
+                "CURVE": {
+                    "name": "Viewer (เส้นโค้ง)",
+                    "description": "ตัวเลือกโหมด: เส้นโค้ง"
+                },
+                "INSTANCE": {
+                    "name": "Viewer (Instance)",
+                    "description": "ตัวเลือกโหมด: Instance"
+                },
+                "LAYER": {
+                    "name": "Viewer (เลเยอร์)",
+                    "description": "ตัวเลือกโหมด: เลเยอร์"
+                }
+            }
+        }
+    },
+    "GeometryNodeWarning": {
+        "name": "Warning",
+        "description": "หลักการ: แสดงข้อความแจ้งเตือน (Warning) บนตัวโหนดเมื่อเงื่อนไขเป็นจริง\nการประยุกษ์ใช้: ใช้เตือนผู้ใช้งาน Add-on ว่าใส่ค่าพารามิเตอร์ผิดช่วง หรือลืมเชื่อมต่อโมเดลหลัก",
+        "inputs": {
+            "Condition": {
+                "name": "เงื่อนไข (Condition)",
+                "description": "เงื่อนไขที่จะให้เกิดการแจ้งเตือน (True = แจ้งเตือน)"
+            },
+            "Message": {
+                "name": "ข้อความ (Message)",
+                "description": "ข้อความแจ้งเตือนที่ต้องการแสดง"
+            }
+        },
+        "outputs": {},
+        "dropdowns": {
+            "warning_type": [
+                "ERROR",
+                "WARNING",
+                "INFO"
+            ]
+        },
+        "sub_types": {
+            "warning_type": {
+                "ERROR": {
+                    "name": "Warning (ข้อผิดพลาด)",
+                    "description": "ตัวเลือกโหมด: ข้อผิดพลาด"
+                },
+                "WARNING": {
+                    "name": "Warning (คำเตือน)",
+                    "description": "ตัวเลือกโหมด: คำเตือน"
+                },
+                "INFO": {
+                    "name": "Warning (ข้อมูล)",
+                    "description": "ตัวเลือกโหมด: ข้อมูล"
+                }
+            }
+        }
+    },
+    "GeometryNodeAttributeStatistic": {
+        "name": "Attribute Statistic",
+        "description": "หลักการ: คำนวณค่าสถิติ (เฉลี่ย, สูงสุด, ต่ำสุด, ผลรวม) ของ Attribute บนรูปทรง\nการประยุกษ์ใช้: ใช้หาจุดที่สูงที่สุดของภูเขา หรือคำนวณน้ำหนักรวมของวัตถุทั้งหมด",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่ต้องการคำนวณ"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "เลือกบริเวณที่จะคำนวณ"
+            },
+            "Attribute": {
+                "name": "Attribute",
+                "description": "ข้อมูลที่ต้องการคำนวณสถิติ"
+            }
+        },
+        "outputs": {
+            "Mean": {
+                "name": "ค่าเฉลี่ย (Mean)",
+                "description": "ค่าเฉลี่ย"
+            },
+            "Median": {
+                "name": "ค่ากลาง (Median)",
+                "description": "ค่ามัธยฐาน"
+            },
+            "Sum": {
+                "name": "ผลรวม (Sum)",
+                "description": "ผลรวม"
+            },
+            "Min": {
+                "name": "ค่าต่ำสุด (Min)",
+                "description": "ค่าน้อยที่สุด"
+            },
+            "Max": {
+                "name": "ค่าสูงสุด (Max)",
+                "description": "ค่ามากที่สุด"
+            },
+            "Range": {
+                "name": "ช่วงค่า (Range)",
+                "description": "ช่วงความต่าง"
+            },
+            "Standard Deviation": {
+                "name": "ส่วนเบี่ยงเบนมาตรฐาน (Standard Deviation)",
+                "description": "ส่วนเบี่ยงเบนมาตรฐาน"
+            },
+            "Variance": {
+                "name": "ความแปรปรวน (Variance)",
+                "description": "ความแปรปรวน"
+            }
+        },
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "FLOAT_VECTOR",
+                "FLOAT_COLOR",
+                "QUATERNION",
+                "FLOAT4X4",
+                "STRING",
+                "INT8",
+                "INT16_2D",
+                "INT32_2D",
+                "FLOAT2",
+                "BYTE_COLOR"
+            ],
+            "domain": [
+                "POINT",
+                "EDGE",
+                "FACE",
+                "CORNER",
+                "CURVE",
+                "INSTANCE",
+                "LAYER"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "FLOAT_VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVectorหรือพิกัดทิศทาง"
+                },
+                "FLOAT_COLOR": {
+                    "name": "สี (Color)",
+                    "description": "ชนิดข้อมูลสี"
+                },
+                "QUATERNION": {
+                    "name": "ควอเทอร์เนียน (Quaternion)",
+                    "description": "ชนิดข้อมูลการหมุนในรูปแบบ Quaternion"
+                },
+                "FLOAT4X4": {
+                    "name": "เมทริกซ์ 4x4 (Float4x4)",
+                    "description": "ชนิดข้อมูลเมทริกซ์ 4x4"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "INT8": {
+                    "name": "จำนวนเต็ม 8 บิต (8-bit Integer)",
+                    "description": "ชนิดข้อมูลจำนวนเต็ม 8 บิต"
+                },
+                "INT16_2D": {
+                    "name": "16-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 16 บิต"
+                },
+                "INT32_2D": {
+                    "name": "32-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 32 บิต"
+                },
+                "FLOAT2": {
+                    "name": "Float 2D (Float2)",
+                    "description": "VectorFloatแบบ 2 แกน"
+                },
+                "BYTE_COLOR": {
+                    "name": "สีแบบไบต์ (Byte Color)",
+                    "description": "สีในระดับ 8 บิต (0-255)"
+                }
+            },
+            "domain": {
+                "POINT": {
+                    "name": "Attribute Statistic (จุด)",
+                    "description": "ตัวเลือกโหมด: จุด"
+                },
+                "EDGE": {
+                    "name": "Attribute Statistic (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                },
+                "FACE": {
+                    "name": "Attribute Statistic (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                },
+                "CORNER": {
+                    "name": "Attribute Statistic (มุม)",
+                    "description": "ตัวเลือกโหมด: มุม"
+                },
+                "CURVE": {
+                    "name": "Attribute Statistic (เส้นโค้ง)",
+                    "description": "ตัวเลือกโหมด: เส้นโค้ง"
+                },
+                "INSTANCE": {
+                    "name": "Attribute Statistic (Instance)",
+                    "description": "ตัวเลือกโหมด: Instance"
+                },
+                "LAYER": {
+                    "name": "Attribute Statistic (เลเยอร์)",
+                    "description": "ตัวเลือกโหมด: เลเยอร์"
+                }
+            }
+        }
+    },
+    "GeometryNodeAttributeDomainSize": {
+        "name": "Domain Size",
+        "description": "หลักการ: นับจำนวนชิ้นส่วนทั้งหมด (เช่น จำนวนจุด, จำนวนหน้าตัด, จำนวน Instance)\nการประยุกษ์ใช้: ใช้หาระยะห่างเฉลี่ยโดยเอาความยาวรวมมาหารด้วยจำนวนจุดทั้งหมด",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่ต้องการตรวจวัด"
+            }
+        },
+        "outputs": {
+            "Point Count": {
+                "name": "จำนวนจุด (Point Count)",
+                "description": "จำนวนจุด"
+            },
+            "Edge Count": {
+                "name": "จำนวนเส้น (Edge Count)",
+                "description": "จำนวนเส้น"
+            },
+            "Face Count": {
+                "name": "จำนวนหน้าตัด (Face Count)",
+                "description": "จำนวนหน้าตัด"
+            },
+            "Face Corner Count": {
+                "name": "จำนวนมุมหน้าตัด (Face Corner Count)",
+                "description": "จำนวนมุมหน้าตัด"
+            },
+            "Spline Count": {
+                "name": "จำนวนสไปลน์ (Spline Count)",
+                "description": "จำนวนเส้นโค้ง Spline"
+            },
+            "Instance Count": {
+                "name": "จำนวนInstance (Instance Count)",
+                "description": "จำนวน Instance"
+            }
+        },
+        "dropdowns": {
+            "component": [
+                "MESH",
+                "POINTCLOUD",
+                "CURVE",
+                "INSTANCES",
+                "GREASEPENCIL"
+            ]
+        },
+        "sub_types": {
+            "component": {
+                "MESH": {
+                    "name": "Domain Size (โครงข่าย (Mesh))",
+                    "description": "ตัวเลือกโหมด: โครงข่าย (Mesh)"
+                },
+                "POINTCLOUD": {
+                    "name": "Domain Size (กลุ่มจุด (Point Cloud))",
+                    "description": "ตัวเลือกโหมด: กลุ่มจุด (Point Cloud)"
+                },
+                "CURVE": {
+                    "name": "Domain Size (เส้นโค้ง)",
+                    "description": "ตัวเลือกโหมด: เส้นโค้ง"
+                },
+                "INSTANCES": {
+                    "name": "Domain Size (Instance (Instances))",
+                    "description": "ตัวเลือกโหมด: Instance (Instances)"
+                },
+                "GREASEPENCIL": {
+                    "name": "Domain Size (จาระบีดินสอ (Grease Pencil))",
+                    "description": "ตัวเลือกโหมด: จาระบีดินสอ (Grease Pencil)"
+                }
+            }
+        }
+    },
+    "GeometryNodeBlurAttribute": {
+        "name": "Blur Attribute",
+        "description": "หลักการ: เกลี่ยค่าของจุดให้ผสมกลมกลืนกับจุดรอบๆ (ทำ Blur)\nการประยุกษ์ใช้: ใช้เกลี่ยสี Vertex Color ให้เนียนขึ้น หรือทำให้รอยยับบนพื้นผิวเรียบเนียนขึ้น",
+        "inputs": {
+            "Value": {
+                "name": "ค่าตัวเลข (Value)",
+                "description": "ค่าต้นฉบับ"
+            },
+            "Iterations": {
+                "name": "รอบการทำซ้ำ (Iterations)",
+                "description": "จำนวนรอบการเบลอ"
+            },
+            "Weight": {
+                "name": "น้ำหนัก (Weight)",
+                "description": "น้ำหนักความเข้มข้นของการเบลอ"
+            }
+        },
+        "outputs": {
+            "Value": {
+                "name": "ค่าตัวเลข (Value)",
+                "description": "ค่าที่ถูกทำเบลอแล้ว"
+            }
+        },
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "FLOAT_VECTOR",
+                "FLOAT_COLOR",
+                "QUATERNION",
+                "FLOAT4X4",
+                "STRING",
+                "INT8",
+                "INT16_2D",
+                "INT32_2D",
+                "FLOAT2",
+                "BYTE_COLOR"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "FLOAT_VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVectorหรือพิกัดทิศทาง"
+                },
+                "FLOAT_COLOR": {
+                    "name": "สี (Color)",
+                    "description": "ชนิดข้อมูลสี"
+                },
+                "QUATERNION": {
+                    "name": "ควอเทอร์เนียน (Quaternion)",
+                    "description": "ชนิดข้อมูลการหมุนในรูปแบบ Quaternion"
+                },
+                "FLOAT4X4": {
+                    "name": "เมทริกซ์ 4x4 (Float4x4)",
+                    "description": "ชนิดข้อมูลเมทริกซ์ 4x4"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "INT8": {
+                    "name": "จำนวนเต็ม 8 บิต (8-bit Integer)",
+                    "description": "ชนิดข้อมูลจำนวนเต็ม 8 บิต"
+                },
+                "INT16_2D": {
+                    "name": "16-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 16 บิต"
+                },
+                "INT32_2D": {
+                    "name": "32-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 32 บิต"
+                },
+                "FLOAT2": {
+                    "name": "Float 2D (Float2)",
+                    "description": "VectorFloatแบบ 2 แกน"
+                },
+                "BYTE_COLOR": {
+                    "name": "สีแบบไบต์ (Byte Color)",
+                    "description": "สีในระดับ 8 บิต (0-255)"
+                }
+            }
+        }
+    },
+    "GeometryNodeCaptureAttribute": {
+        "name": "Capture Attribute",
+        "description": "หลักการ: บันทึกและฝังค่าตัวแปร (Attribute) ไว้กับรูปทรงในจังหวะนั้นๆ เพื่อไม่ให้ค่าเพี้ยนเมื่อรูปทรงเปลี่ยนไป\nการประยุกษ์ใช้: ใช้จำตำแหน่งดั้งเดิมของจุดก่อนที่จะโดนระเบิดกระจายออกไป เพื่อดึงกลับมาสร้างแอนิเมชันคืนร่าง",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่จะจับค่า"
+            },
+            "Value": {
+                "name": "ค่าตัวเลข (Value)",
+                "description": "ค่าที่ต้องการบันทึก"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงเดิม"
+            },
+            "Attribute": {
+                "name": "Attribute",
+                "description": "ค่าAttributeที่ถูกบันทึกไว้"
+            }
+        },
+        "dropdowns": {
+            "domain": [
+                "POINT",
+                "EDGE",
+                "FACE",
+                "CORNER",
+                "CURVE",
+                "INSTANCE",
+                "LAYER"
+            ]
+        },
+        "sub_types": {
+            "domain": {
+                "POINT": {
+                    "name": "Capture Attribute (จุด)",
+                    "description": "ตัวเลือกโหมด: จุด"
+                },
+                "EDGE": {
+                    "name": "Capture Attribute (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                },
+                "FACE": {
+                    "name": "Capture Attribute (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                },
+                "CORNER": {
+                    "name": "Capture Attribute (มุม)",
+                    "description": "ตัวเลือกโหมด: มุม"
+                },
+                "CURVE": {
+                    "name": "Capture Attribute (เส้นโค้ง)",
+                    "description": "ตัวเลือกโหมด: เส้นโค้ง"
+                },
+                "INSTANCE": {
+                    "name": "Capture Attribute (Instance)",
+                    "description": "ตัวเลือกโหมด: Instance"
+                },
+                "LAYER": {
+                    "name": "Capture Attribute (เลเยอร์)",
+                    "description": "ตัวเลือกโหมด: เลเยอร์"
+                }
+            }
+        }
+    },
+    "GeometryNodeRemoveAttribute": {
+        "name": "Remove Named Attribute",
+        "description": "หลักการ: ลบค่าตัวแปร (Named Attribute) ที่ไม่ใช้ออกจากรูปทรงเพื่อลดขนาดข้อมูล\nการประยุกษ์ใช้: ใช้ลบข้อมูล UV หรือสีที่ไม่ได้ใช้ก่อนส่งออกไฟล์ (Export) เพื่อให้ไฟล์เบาลง",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่ต้องการลบAttribute"
+            },
+            "Name": {
+                "name": "ชื่อ (Name)",
+                "description": "ชื่อAttributeที่ต้องการลบ"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่ถูกลบAttributeออกแล้ว"
+            }
+        }
+    },
+    "GeometryNodeStoreNamedAttribute": {
+        "name": "Store Named Attribute",
+        "description": "หลักการ: บันทึกค่าตัวแปรลงในรูปทรงและตั้งชื่อให้ (Named Attribute) เพื่อนำไปเรียกใช้ในโหนดอื่นหรือใน Shader\nการประยุกษ์ใช้: ใช้ส่งค่าความเสียหายของวัตถุไปให้ Shader Material ทำรอยไหม้",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่จะบันทึกค่า"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "ส่วนที่ต้องการให้มีผล"
+            },
+            "Name": {
+                "name": "ชื่อ (Name)",
+                "description": "ชื่อAttribute"
+            },
+            "Value": {
+                "name": "ค่าตัวเลข (Value)",
+                "description": "ค่าที่ต้องการบันทึก"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่มีการบันทึกAttributeแล้ว"
+            }
+        },
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "FLOAT_VECTOR",
+                "FLOAT_COLOR",
+                "QUATERNION",
+                "FLOAT4X4",
+                "STRING",
+                "INT8",
+                "INT16_2D",
+                "INT32_2D",
+                "FLOAT2",
+                "BYTE_COLOR"
+            ],
+            "domain": [
+                "POINT",
+                "EDGE",
+                "FACE",
+                "CORNER",
+                "CURVE",
+                "INSTANCE",
+                "LAYER"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "FLOAT_VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVectorหรือพิกัดทิศทาง"
+                },
+                "FLOAT_COLOR": {
+                    "name": "สี (Color)",
+                    "description": "ชนิดข้อมูลสี"
+                },
+                "QUATERNION": {
+                    "name": "ควอเทอร์เนียน (Quaternion)",
+                    "description": "ชนิดข้อมูลการหมุนในรูปแบบ Quaternion"
+                },
+                "FLOAT4X4": {
+                    "name": "เมทริกซ์ 4x4 (Float4x4)",
+                    "description": "ชนิดข้อมูลเมทริกซ์ 4x4"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "INT8": {
+                    "name": "จำนวนเต็ม 8 บิต (8-bit Integer)",
+                    "description": "ชนิดข้อมูลจำนวนเต็ม 8 บิต"
+                },
+                "INT16_2D": {
+                    "name": "16-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 16 บิต"
+                },
+                "INT32_2D": {
+                    "name": "32-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 32 บิต"
+                },
+                "FLOAT2": {
+                    "name": "Float 2D (Float2)",
+                    "description": "VectorFloatแบบ 2 แกน"
+                },
+                "BYTE_COLOR": {
+                    "name": "สีแบบไบต์ (Byte Color)",
+                    "description": "สีในระดับ 8 บิต (0-255)"
+                }
+            },
+            "domain": {
+                "POINT": {
+                    "name": "Store Named Attribute (จุด)",
+                    "description": "ตัวเลือกโหมด: จุด"
+                },
+                "EDGE": {
+                    "name": "Store Named Attribute (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                },
+                "FACE": {
+                    "name": "Store Named Attribute (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                },
+                "CORNER": {
+                    "name": "Store Named Attribute (มุม)",
+                    "description": "ตัวเลือกโหมด: มุม"
+                },
+                "CURVE": {
+                    "name": "Store Named Attribute (เส้นโค้ง)",
+                    "description": "ตัวเลือกโหมด: เส้นโค้ง"
+                },
+                "INSTANCE": {
+                    "name": "Store Named Attribute (Instance)",
+                    "description": "ตัวเลือกโหมด: Instance"
+                },
+                "LAYER": {
+                    "name": "Store Named Attribute (เลเยอร์)",
+                    "description": "ตัวเลือกโหมด: เลเยอร์"
+                }
+            }
+        }
+    },
+    "GeometryNodeActiveElement": {
+        "name": "Active Element",
+        "description": "หลักการ: ดึงองค์ประกอบที่กำลังถูกเลือกหรือเป็น (Active) อยู่\nการประยุกษ์ใช้: ใช้ดึงเฉพาะจุดสุดท้ายที่ผู้ใช้เลือกมาทำเป็นจุดกำเนิดพายุ",
+        "inputs": {},
+        "outputs": {
+            "Active": {
+                "name": "แอคทีฟ (Active)",
+                "description": "ส่วนประกอบที่เป็น Active อยู่"
+            }
+        }
+    },
+    "GeometryNodeGetGeometryBundle": {
+        "name": "Get Geometry Bundle",
+        "description": "หลักการ: แตกกลุ่มย่อยของ Geometry ออกมาใช้งาน (ในกรณีที่ถูกมัดรวมมา)\nการประยุกษ์ใช้: ใช้แยกข้อมูลตึก ข้อมูลถนน และข้อมูลต้นไม้ที่ถูกมัดรวมกันมา",
+        "inputs": {
+            "Bundle": {
+                "name": "บันเดิล (Bundle)",
+                "description": "ชุดข้อมูลรูปร่าง Bundle"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "ข้อมูลรูปทรงที่ดึงออกมา"
+            }
+        }
+    },
+    "GeometryNodeProximity": {
+        "name": "Geometry Proximity",
+        "description": "หลักการ: หาพิกัดหรือระยะทางบนพื้นผิววัตถุหนึ่ง ที่อยู่ใกล้กับอีกวัตถุหนึ่งมากที่สุด\nการประยุกษ์ใช้: ใช้สร้างคลื่นน้ำบุ๋มลงไปเมื่อมีลูกบอลสัมผัส หรือสร้างรอยเท้าเมื่อตัวละครเหยียบหิมะ",
+        "inputs": {
+            "Target": {
+                "name": "เป้าหมาย (Target)",
+                "description": "รูปทรงเป้าหมาย"
+            },
+            "Source Position": {
+                "name": "ตำแหน่งต้นทาง (Source Position)",
+                "description": "ตำแหน่งจุดเริ่มต้น"
+            },
+            "Group ID": {
+                "name": "รหัสกลุ่ม (Group ID)",
+                "description": "รหัสกลุ่มที่กำหนดให้วัดระยะ"
+            }
+        },
+        "outputs": {
+            "Position": {
+                "name": "ตำแหน่ง (Position)",
+                "description": "ตำแหน่งบนรูปทรงเป้าหมายที่อยู่ใกล้ที่สุด"
+            },
+            "Distance": {
+                "name": "ระยะทาง (Distance)",
+                "description": "ระยะทางที่ใกล้ที่สุด"
+            }
+        },
+        "dropdowns": {
+            "target_element": [
+                "POINTS",
+                "EDGES",
+                "FACES"
+            ]
+        },
+        "sub_types": {
+            "target_element": {
+                "POINTS": {
+                    "name": "Geometry Proximity (จุด)",
+                    "description": "ตัวเลือกโหมด: จุด"
+                },
+                "EDGES": {
+                    "name": "Geometry Proximity (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                },
+                "FACES": {
+                    "name": "Geometry Proximity (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                }
+            }
+        }
+    },
+    "GeometryNodeIndexOfNearest": {
+        "name": "Index of Nearest",
+        "description": "หลักการ: ค้นหา Index (รหัสประจำตัว) ของชิ้นส่วนที่อยู่ใกล้ที่สุด\nการประยุกษ์ใช้: ใช้ทำเอฟเฟกต์สายฟ้าเชื่อมไปยังเสาล่อฟ้าที่อยู่ใกล้ตัวที่สุด",
+        "inputs": {
+            "Target": {
+                "name": "เป้าหมาย (Target)",
+                "description": "รูปทรงหรือชิ้นส่วนเป้าหมาย"
+            },
+            "Group ID": {
+                "name": "รหัสกลุ่ม (Group ID)",
+                "description": "รหัสกลุ่มเป้าหมาย"
+            }
+        },
+        "outputs": {
+            "Index": {
+                "name": "Index",
+                "description": "หมายเลขลำดับของจุดที่ใกล้ที่สุด"
+            },
+            "Distance": {
+                "name": "ระยะทาง (Distance)",
+                "description": "ระยะห่างระหว่างจุดที่ใกล้ที่สุด"
+            }
+        }
+    },
+    "GeometryNodeRaycast": {
+        "name": "Raycast",
+        "description": "หลักการ: ยิงเลเซอร์เส้นตรงเพื่อตรวจจับการชน (Hit) ว่าไปกระแทกโดนพื้นผิวไหน และห่างเท่าไหร่\nการประยุกษ์ใช้: ใช้จำลองเรดาร์ วางต้นไม้ให้ตกลงมาเกาะบนพื้นดินเป๊ะๆ หรือทำแมงมุมไต่ตามกำแพง",
+        "inputs": {
+            "Target": {
+                "name": "เป้าหมาย (Target)",
+                "description": "รูปทรงที่ใช้รับการตกกระทบ"
+            },
+            "Source Position": {
+                "name": "ตำแหน่งต้นทาง (Source Position)",
+                "description": "ตำแหน่งจุดยิง"
+            },
+            "Ray Direction": {
+                "name": "ทิศทางรังสี (Ray Direction)",
+                "description": "ทิศทางการยิงรังสี"
+            },
+            "Ray Length": {
+                "name": "ความยาวรังสี (Ray Length)",
+                "description": "ระยะความยาวของรังสี"
+            },
+            "Attribute": {
+                "name": "Attribute",
+                "description": "ข้อมูลคุณสมบัติเฉพาะจุด"
+            },
+            "Interpolation": {
+                "name": "การเกลี่ยค่า (Interpolation)",
+                "description": "ลักษณะการเกลี่ยค่าข้อมูลของจุด"
+            },
+            "Target Geometry": {
+                "name": "รูปทรงเป้าหมาย (Target Geometry)",
+                "description": "รูปทรงที่ใช้รับการตกกระทบ"
+            }
+        },
+        "outputs": {
+            "Is Hit": {
+                "name": "ชนหรือไม่ (Is Hit)",
+                "description": "ตรวจสอบว่ายิงโดนหรือไม่ (True/False)"
+            },
+            "Hit Position": {
+                "name": "ตำแหน่งที่ชน (Hit Position)",
+                "description": "ตำแหน่งที่รังสีชน"
+            },
+            "Hit Normal": {
+                "name": "Normalที่ชน (Hit Normal)",
+                "description": "ทิศทางแนวฉากตรงจุดที่ชน"
+            },
+            "Hit Distance": {
+                "name": "ระยะการชน (Hit Distance)",
+                "description": "ระยะทางตั้งแต่ยิงจนถึงจุดชน"
+            }
+        },
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "FLOAT_VECTOR",
+                "FLOAT_COLOR",
+                "QUATERNION",
+                "FLOAT4X4",
+                "STRING",
+                "INT8",
+                "INT16_2D",
+                "INT32_2D",
+                "FLOAT2",
+                "BYTE_COLOR"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "FLOAT_VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVectorหรือพิกัดทิศทาง"
+                },
+                "FLOAT_COLOR": {
+                    "name": "สี (Color)",
+                    "description": "ชนิดข้อมูลสี"
+                },
+                "QUATERNION": {
+                    "name": "ควอเทอร์เนียน (Quaternion)",
+                    "description": "ชนิดข้อมูลการหมุนในรูปแบบ Quaternion"
+                },
+                "FLOAT4X4": {
+                    "name": "เมทริกซ์ 4x4 (Float4x4)",
+                    "description": "ชนิดข้อมูลเมทริกซ์ 4x4"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "INT8": {
+                    "name": "จำนวนเต็ม 8 บิต (8-bit Integer)",
+                    "description": "ชนิดข้อมูลจำนวนเต็ม 8 บิต"
+                },
+                "INT16_2D": {
+                    "name": "16-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 16 บิต"
+                },
+                "INT32_2D": {
+                    "name": "32-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 32 บิต"
+                },
+                "FLOAT2": {
+                    "name": "Float 2D (Float2)",
+                    "description": "VectorFloatแบบ 2 แกน"
+                },
+                "BYTE_COLOR": {
+                    "name": "สีแบบไบต์ (Byte Color)",
+                    "description": "สีในระดับ 8 บิต (0-255)"
+                }
+            }
+        }
+    },
+    "GeometryNodeSampleIndex": {
+        "name": "Sample Index",
+        "description": "หลักการ: ดึงข้อมูลจากชิ้นส่วนที่ระบุ Index ไว้เจาะจง\nการประยุกษ์ใช้: ใช้ดึงตำแหน่งของจุดแรก (Index 0) ตลอดเวลา เพื่อให้วัตถุอื่นวิ่งตามจุดนั้น",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่ใช้ค้นหาข้อมูล"
+            },
+            "Value": {
+                "name": "ค่าตัวเลข (Value)",
+                "description": "ค่าที่ต้องการดึง"
+            },
+            "Index": {
+                "name": "Index",
+                "description": "หมายเลขลำดับเป้าหมาย"
+            }
+        },
+        "outputs": {
+            "Value": {
+                "name": "ค่าตัวเลข (Value)",
+                "description": "ค่าข้อมูลที่ดึงได้"
+            }
+        },
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "FLOAT_VECTOR",
+                "FLOAT_COLOR",
+                "QUATERNION",
+                "FLOAT4X4",
+                "STRING",
+                "INT8",
+                "INT16_2D",
+                "INT32_2D",
+                "FLOAT2",
+                "BYTE_COLOR"
+            ],
+            "domain": [
+                "POINT",
+                "EDGE",
+                "FACE",
+                "CORNER",
+                "CURVE",
+                "INSTANCE",
+                "LAYER"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "FLOAT_VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVectorหรือพิกัดทิศทาง"
+                },
+                "FLOAT_COLOR": {
+                    "name": "สี (Color)",
+                    "description": "ชนิดข้อมูลสี"
+                },
+                "QUATERNION": {
+                    "name": "ควอเทอร์เนียน (Quaternion)",
+                    "description": "ชนิดข้อมูลการหมุนในรูปแบบ Quaternion"
+                },
+                "FLOAT4X4": {
+                    "name": "เมทริกซ์ 4x4 (Float4x4)",
+                    "description": "ชนิดข้อมูลเมทริกซ์ 4x4"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "INT8": {
+                    "name": "จำนวนเต็ม 8 บิต (8-bit Integer)",
+                    "description": "ชนิดข้อมูลจำนวนเต็ม 8 บิต"
+                },
+                "INT16_2D": {
+                    "name": "16-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 16 บิต"
+                },
+                "INT32_2D": {
+                    "name": "32-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 32 บิต"
+                },
+                "FLOAT2": {
+                    "name": "Float 2D (Float2)",
+                    "description": "VectorFloatแบบ 2 แกน"
+                },
+                "BYTE_COLOR": {
+                    "name": "สีแบบไบต์ (Byte Color)",
+                    "description": "สีในระดับ 8 บิต (0-255)"
+                }
+            },
+            "domain": {
+                "POINT": {
+                    "name": "Sample Index (จุด)",
+                    "description": "ตัวเลือกโหมด: จุด"
+                },
+                "EDGE": {
+                    "name": "Sample Index (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                },
+                "FACE": {
+                    "name": "Sample Index (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                },
+                "CORNER": {
+                    "name": "Sample Index (มุม)",
+                    "description": "ตัวเลือกโหมด: มุม"
+                },
+                "CURVE": {
+                    "name": "Sample Index (เส้นโค้ง)",
+                    "description": "ตัวเลือกโหมด: เส้นโค้ง"
+                },
+                "INSTANCE": {
+                    "name": "Sample Index (Instance)",
+                    "description": "ตัวเลือกโหมด: Instance"
+                },
+                "LAYER": {
+                    "name": "Sample Index (เลเยอร์)",
+                    "description": "ตัวเลือกโหมด: เลเยอร์"
+                }
+            }
+        }
+    },
+    "GeometryNodeSampleNearest": {
+        "name": "Sample Nearest",
+        "description": "หลักการ: ดึง Index ของจุดที่อยู่ใกล้พิกัดที่กำหนดมากที่สุด (เหมือน Index of Nearest แต่ออกแบบมาให้ใช้ร่วมกับ Sample Index)\nการประยุกษ์ใช้: ใช้ส่งข้อมูลสีจากจุดของวัตถุ A ไปให้จุดที่ใกล้ที่สุดบนวัตถุ B",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงเป้าหมาย"
+            },
+            "Sample Position": {
+                "name": "ตำแหน่งสุ่มตรวจ (Sample Position)",
+                "description": "ตำแหน่งจุดค้นหา"
+            }
+        },
+        "outputs": {
+            "Index": {
+                "name": "Index",
+                "description": "หมายเลขลำดับของจุดที่ใกล้ที่สุด"
+            }
+        },
+        "dropdowns": {
+            "domain": [
+                "POINT",
+                "EDGE",
+                "FACE",
+                "CORNER"
+            ]
+        },
+        "sub_types": {
+            "domain": {
+                "POINT": {
+                    "name": "Sample Nearest (จุด)",
+                    "description": "ตัวเลือกโหมด: จุด"
+                },
+                "EDGE": {
+                    "name": "Sample Nearest (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                },
+                "FACE": {
+                    "name": "Sample Nearest (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                },
+                "CORNER": {
+                    "name": "Sample Nearest (มุม)",
+                    "description": "ตัวเลือกโหมด: มุม"
+                }
+            }
+        }
+    },
+    "GeometryNodeSetGeometryBundle": {
+        "name": "Set Geometry Bundle",
+        "description": "หลักการ: มัดรวมและตั้งชื่อกลุ่มเรขาคณิต (Geometry) เข้าเป็นห่อเดียวกัน\nการประยุกษ์ใช้: ใช้แพ็คข้อมูลที่มีหลายชิ้นส่งผ่านสายเคเบิลเส้นเดียวเพื่อความสะอาด",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "ข้อมูลรูปทรงที่ต้องการรวม"
+            }
+        },
+        "outputs": {
+            "Bundle": {
+                "name": "บันเดิล (Bundle)",
+                "description": "ชุดข้อมูล Bundle"
+            }
+        }
+    },
+    "GeometryNodeSetGeometryName": {
+        "name": "Set Geometry Name",
+        "description": "หลักการ: ตั้งชื่อให้กับรูปทรง Geometry เพื่อง่ายต่อการค้นหา\nการประยุกษ์ใช้: ใช้แยกแยะและจัดการระบบที่มีการสร้างวัตถุจำนวนมากซ้อนกัน",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงต้นฉบับ"
+            },
+            "Name": {
+                "name": "ชื่อ (Name)",
+                "description": "ชื่อที่ต้องการตั้ง"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่ถูกตั้งชื่อแล้ว"
+            }
+        }
+    },
+    "GeometryNodeSetID": {
+        "name": "Set ID",
+        "description": "หลักการ: กำหนดค่า ID ประจำตัวใหม่ให้กับแต่ละชิ้นส่วนหรือ Instance\nการประยุกษ์ใช้: ใช้เปลี่ยน ID เพื่อให้การสุ่ม (Random) เปลี่ยนรูปแบบไปจากเดิม",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงต้นฉบับ"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "เลือกองค์ประกอบที่จะเปลี่ยน ID"
+            },
+            "ID": {
+                "name": "รหัสระบุ (ID)",
+                "description": "หมายเลข ID ที่ต้องการตั้ง"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่ถูกกำหนด ID ใหม่"
+            }
+        }
+    },
+    "GeometryNodeSetSelection": {
+        "name": "Set Selection",
+        "description": "หลักการ: บันทึกกลุ่มการเลือก (Selection) เพื่อเอาไปใช้งานทีหลัง\nการประยุกษ์ใช้: ใช้มาร์กจุดที่เป็นหน้าต่างของตึกไว้ แล้วค่อยเรียกใช้เพื่อเจาะรูภายหลัง",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงเป้าหมาย"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "ค่าของพื้นที่ที่ต้องการเลือก"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่มีข้อมูลการเลือกฝังอยู่"
+            }
+        }
+    },
+    "GeometryNodeReplaceMaterial": {
+        "name": "Replace Material",
+        "description": "หลักการ: ค้นหาและสลับ Material เก่าให้เป็น Material ใหม่ทั้งหมด\nการประยุกษ์ใช้: ใช้เปลี่ยนสีเสื้อผ้าหรือสีรถยนต์ของฝูง Instance นับพันคันพร้อมกัน",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่ต้องการเปลี่ยนพื้นผิว"
+            },
+            "Old": {
+                "name": "เก่า (Old)",
+                "description": "วัสดุเดิมที่ต้องการจะหา"
+            },
+            "New": {
+                "name": "ใหม่ (New)",
+                "description": "วัสดุใหม่ที่จะนำมาแทนที่"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่ถูกเปลี่ยนวัสดุแล้ว"
+            }
+        }
+    },
+    "GeometryNodeMaterialSelection": {
+        "name": "Material Selection",
+        "description": "หลักการ: สร้างเงื่อนไขการเลือก (Selection) เฉพาะพื้นผิวที่ถูกทาด้วย Material ที่ระบุ\nการประยุกษ์ใช้: ใช้เลือกเฉพาะกระจก (Material: Glass) บนตึก เพื่อสั่งให้มันแตกกระจาย",
+        "inputs": {
+            "Material": {
+                "name": "พื้นผิว (Material)",
+                "description": "วัสดุเป้าหมายที่ใช้ตรวจสอบ"
+            }
+        },
+        "outputs": {
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "ส่วนของหน้าตัดที่ใช้วัสดุนี้จะเป็นค่าจริง (True)"
+            }
+        }
+    },
+    "GeometryNodeSetMaterial": {
+        "name": "Set Material",
+        "description": "หลักการ: กำหนดและทาสี Material ให้กับรูปทรงทั้งหมดหรือเฉพาะส่วนที่เลือก\nการประยุกษ์ใช้: ใช้ทาสีเปลือกไม้และใบไม้แยกกัน หลังจากสร้างต้นไม้ขึ้นมาจาก Geometry Nodes",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงเป้าหมาย"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "พื้นที่ที่ต้องการเปลี่ยนวัสดุ"
+            },
+            "Material": {
+                "name": "พื้นผิว (Material)",
+                "description": "วัสดุพื้นผิวที่ต้องการใส่"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่ถูกเปลี่ยนวัสดุพื้นผิวแล้ว"
+            }
+        }
+    },
+    "GeometryNodeSetMaterialIndex": {
+        "name": "Set Material Index",
+        "description": "หลักการ: กำหนดสล็อต Material ตามหมายเลข Index ลำดับในช่อง Material\nการประยุกษ์ใช้: ใช้สุ่มตัวเลข Index เพื่อให้แผ่นกระเบื้องแต่ละแผ่นดึง Material ลายต่างๆ กันมาแสดง",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงเป้าหมาย"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "เลือกส่วนที่ต้องการแก้ไข"
+            },
+            "Material Index": {
+                "name": "ดัชนีพื้นผิว (Material Index)",
+                "description": "หมายเลขช่องวัสดุที่ต้องการใช้งาน"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่เปลี่ยนหมายเลขวัสดุเรียบร้อยแล้ว"
+            }
+        }
+    },
+    "GeometryNodeBake": {
+        "name": "Bake",
+        "description": "หลักการ: อบ (Bake) ข้อมูลอนิเมชันหรือผลลัพธ์ของโหนดเพื่อบันทึกลงแคช (Cache) ทำให้ประมวลผลเร็วขึ้นในครั้งต่อไป\nการประยุกษ์ใช้: ใช้เบคอนิเมชันกระจกแตก หรือน้ำไหล เพื่อให้การดูผลลัพธ์ย้อนหลังลื่นไหลโดยไม่ต้องคำนวณใหม่",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่ต้องการเก็บแคช"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่ถูกเรียกใช้จากแคช"
+            }
+        }
+    },
+    "GeometryNodeBoundBox": {
+        "name": "Bounding Box",
+        "description": "หลักการ: สร้างกล่องสี่เหลี่ยม (Bounding Box) ล้อมรอบรูปทรงทั้งหมดให้พอดี\nการประยุกษ์ใช้: ใช้ทำกล่องกันกระแทกเวลาโยนของ หรือหาขนาดกว้างยาวสูงสุดของโมเดล",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่ต้องการวัดขนาดขอบเขต"
+            }
+        },
+        "outputs": {
+            "Bounding Box": {
+                "name": "กรอบครอบคลุม (Bounding Box)",
+                "description": "กล่องครอบขอบเขต"
+            },
+            "Min": {
+                "name": "ค่าต่ำสุด (Min)",
+                "description": "พิกัดจุดต่ำสุด"
+            },
+            "Max": {
+                "name": "ค่าสูงสุด (Max)",
+                "description": "พิกัดจุดสูงสุด"
+            }
+        }
+    },
+    "GeometryNodeConvexHull": {
+        "name": "Convex Hull",
+        "description": "หลักการ: สร้างพื้นผิวห่อหุ้มรูปทรงภายนอก เหมือนการขึงพลาสติกแรปคลุมจุดที่ยื่นออกไปนอกสุด\nการประยุกษ์ใช้: ใช้สร้าง Collision (พื้นที่กันชน) อย่างง่ายให้กับก้อนหินที่มีรูปร่างซับซ้อน",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงต้นฉบับ"
+            }
+        },
+        "outputs": {
+            "Convex Hull": {
+                "name": "คอนเวกซ์ฮัลล์ (Convex Hull)",
+                "description": "รูปทรงเรขาคณิตที่ห่อหุ้มจุดภายนอก"
+            }
+        }
+    },
+    "GeometryNodeDeleteGeometry": {
+        "name": "Delete Geometry",
+        "description": "หลักการ: ลบรูปทรง, จุด, หน้าตัด, หรือเส้น ที่ตรงกับเงื่อนไขที่กำหนดทิ้งไป\nการประยุกษ์ใช้: ใช้ลบหลังคาบ้านทิ้งเมื่อต้องการมองทะลุ หรือลบใบไม้ที่อยู่ในร่มทิ้ง",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงต้นฉบับ"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "เงื่อนไขการเลือกส่วนที่จะลบ"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่ลบส่วนที่เลือกออกแล้ว"
+            }
+        },
+        "dropdowns": {
+            "mode": [
+                "ALL",
+                "EDGE_FACE",
+                "ONLY_FACE"
+            ],
+            "domain": [
+                "POINT",
+                "EDGE",
+                "FACE",
+                "CURVE",
+                "INSTANCE",
+                "LAYER"
+            ]
+        },
+        "sub_types": {
+            "mode": {
+                "ALL": {
+                    "name": "ทั้งหมด (All)",
+                    "description": "ลบหรือดำเนินการกับทุกส่วนทั้งหมด"
+                },
+                "EDGE_FACE": {
+                    "name": "เส้นและหน้าตัด (Edge & Face)",
+                    "description": "ลบทั้งเส้นและหน้าตัดที่เชื่อมโยงอยู่"
+                },
+                "ONLY_FACE": {
+                    "name": "เฉพาะหน้าตัด (Only Face)",
+                    "description": "ลบเฉพาะหน้าตัดแต่คงจุดและเส้นเอาไว้"
+                }
+            },
+            "domain": {
+                "POINT": {
+                    "name": "Delete Geometry (จุด)",
+                    "description": "ตัวเลือกโหมด: จุด"
+                },
+                "EDGE": {
+                    "name": "Delete Geometry (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                },
+                "FACE": {
+                    "name": "Delete Geometry (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                },
+                "CURVE": {
+                    "name": "Delete Geometry (เส้นโค้ง)",
+                    "description": "ตัวเลือกโหมด: เส้นโค้ง"
+                },
+                "INSTANCE": {
+                    "name": "Delete Geometry (Instance)",
+                    "description": "ตัวเลือกโหมด: Instance"
+                },
+                "LAYER": {
+                    "name": "Delete Geometry (เลเยอร์)",
+                    "description": "ตัวเลือกโหมด: เลเยอร์"
+                }
+            }
+        }
+    },
+    "GeometryNodeDuplicateElements": {
+        "name": "Duplicate Elements",
+        "description": "หลักการ: คัดลอกและสร้างซ้ำองค์ประกอบ (จุด, เส้น, หน้า) หลายๆ ชุด\nการประยุกษ์ใช้: ใช้ทำไพ่ซ้อนกันหลายใบ โดยสร้างไพ่ใบเดียวแล้ว Duplicate และขยับแกน Z ทีละนิด",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงต้นทาง"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "เงื่อนไขการทำซ้ำ"
+            },
+            "Amount": {
+                "name": "จำนวน (Amount)",
+                "description": "จำนวนชิ้นที่จะทำซ้ำ"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่ถูกทำซ้ำเรียบร้อยแล้ว"
+            },
+            "Duplicate Index": {
+                "name": "ดัชนีคัดลอก (Duplicate Index)",
+                "description": "หมายเลขลำดับของชิ้นที่ถูกทำซ้ำ"
+            }
+        },
+        "dropdowns": {
+            "domain": [
+                "POINT",
+                "EDGE",
+                "FACE",
+                "SPLINE",
+                "LAYER",
+                "INSTANCE"
+            ]
+        },
+        "sub_types": {
+            "domain": {
+                "POINT": {
+                    "name": "Duplicate Elements (จุด)",
+                    "description": "ตัวเลือกโหมด: จุด"
+                },
+                "EDGE": {
+                    "name": "Duplicate Elements (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                },
+                "FACE": {
+                    "name": "Duplicate Elements (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                },
+                "SPLINE": {
+                    "name": "Duplicate Elements (สไปลน์)",
+                    "description": "ตัวเลือกโหมด: สไปลน์"
+                },
+                "LAYER": {
+                    "name": "Duplicate Elements (เลเยอร์)",
+                    "description": "ตัวเลือกโหมด: เลเยอร์"
+                },
+                "INSTANCE": {
+                    "name": "Duplicate Elements (Instance)",
+                    "description": "ตัวเลือกโหมด: Instance"
+                }
+            }
+        }
+    },
+    "GeometryNodeMergeByDistance": {
+        "name": "Merge by Distance",
+        "description": "หลักการ: รวมจุดหรือหน้าตัดที่อยู่ใกล้กันเกินไปตามระยะที่กำหนด (Weld/Remove Doubles)\nการประยุกษ์ใช้: ใช้แก้ปัญหาตาข่ายแตกเมื่อต่อเส้นติดกัน หรือประสานรอยแยกให้เป็นเนื้อเดียวกัน",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงต้นทาง"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "ส่วนที่ต้องการประมวลผล"
+            },
+            "Distance": {
+                "name": "ระยะทาง (Distance)",
+                "description": "ระยะห่างสูงสุดที่จะให้ถูกรวมเข้าด้วยกัน"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่เชื่อมจุดแล้ว"
+            }
+        }
+    },
+    "GeometryNodeSortElements": {
+        "name": "Sort Elements",
+        "description": "หลักการ: จัดเรียงหมายเลข Index ขององค์ประกอบใหม่ตามค่าน้ำหนักที่กำหนด\nการประยุกษ์ใช้: ใช้เรียงลำดับเส้นผมจากสั้นไปยาว เพื่อให้สามารถเลือกตัดเฉพาะเส้นยาวๆ ได้แม่นยำ",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงต้นทาง"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "บริเวณที่จะจัดเรียง"
+            },
+            "Sort Weight": {
+                "name": "น้ำหนักการเรียง (Sort Weight)",
+                "description": "ค่าน้ำหนักที่จะใช้ในการจัดเรียง"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่ถูกจัดเรียงใหม่แล้ว"
+            }
+        },
+        "dropdowns": {
+            "domain": [
+                "POINT",
+                "EDGE",
+                "FACE",
+                "CURVE",
+                "INSTANCE"
+            ]
+        },
+        "sub_types": {
+            "domain": {
+                "POINT": {
+                    "name": "Sort Elements (จุด)",
+                    "description": "ตัวเลือกโหมด: จุด"
+                },
+                "EDGE": {
+                    "name": "Sort Elements (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                },
+                "FACE": {
+                    "name": "Sort Elements (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                },
+                "CURVE": {
+                    "name": "Sort Elements (เส้นโค้ง)",
+                    "description": "ตัวเลือกโหมด: เส้นโค้ง"
+                },
+                "INSTANCE": {
+                    "name": "Sort Elements (Instance)",
+                    "description": "ตัวเลือกโหมด: Instance"
+                }
+            }
+        }
+    },
+    "GeometryNodeSeparateComponents": {
+        "name": "Separate Components",
+        "description": "หลักการ: แยกชิ้นส่วนประเภทต่างๆ ออกจากกัน (Mesh, Point Cloud, Curve, Volume)\nการประยุกษ์ใช้: ใช้คัดกรองเส้นโค้งออกไปจัดการอย่างหนึ่ง แล้วส่ง Mesh ไปเรนเดอร์อีกอย่างหนึ่ง",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงต้นทางที่อาจรวมกันอยู่"
+            }
+        },
+        "outputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "ตาข่าย (Mesh)"
+            },
+            "PointCloud": {
+                "name": "พอยต์คลาวด์ (PointCloud)",
+                "description": "กลุ่มจุด (Point Cloud)"
+            },
+            "Curve": {
+                "name": "เส้นโค้ง (Curve)",
+                "description": "เส้นโค้ง (Curve)"
+            },
+            "Volume": {
+                "name": "ปริมาตร (Volume)",
+                "description": "ปริมาตร (Volume)"
+            },
+            "Instances": {
+                "name": "Instance (Instances)",
+                "description": "รูปทรงจำลอง (Instances)"
+            }
+        }
+    },
+    "GeometryNodeSeparateGeometry": {
+        "name": "Separate Geometry",
+        "description": "หลักการ: แยกรูปทรงออกเป็นสองส่วน (ส่วนที่ถูกเลือก กับ ส่วนที่ไม่ถูกเลือก)\nการประยุกษ์ใช้: ใช้หั่นแตงโมเป็น 2 ซีก หรือแยกหน้าตัดที่เป็นหน้าต่างออกมาทำวัสดุกระจก",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงต้นทาง"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "เงื่อนไขการแยก (True/False)"
+            }
+        },
+        "outputs": {
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "ส่วนที่ตรงกับเงื่อนไข"
+            },
+            "Inverted": {
+                "name": "สลับกลับ (Inverted)",
+                "description": "ส่วนที่ไม่ตรงกับเงื่อนไข"
+            }
+        },
+        "dropdowns": {
+            "domain": [
+                "POINT",
+                "EDGE",
+                "FACE",
+                "CURVE",
+                "INSTANCE",
+                "LAYER"
+            ]
+        },
+        "sub_types": {
+            "domain": {
+                "POINT": {
+                    "name": "Separate Geometry (จุด)",
+                    "description": "ตัวเลือกโหมด: จุด"
+                },
+                "EDGE": {
+                    "name": "Separate Geometry (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                },
+                "FACE": {
+                    "name": "Separate Geometry (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                },
+                "CURVE": {
+                    "name": "Separate Geometry (เส้นโค้ง)",
+                    "description": "ตัวเลือกโหมด: เส้นโค้ง"
+                },
+                "INSTANCE": {
+                    "name": "Separate Geometry (Instance)",
+                    "description": "ตัวเลือกโหมด: Instance"
+                },
+                "LAYER": {
+                    "name": "Separate Geometry (เลเยอร์)",
+                    "description": "ตัวเลือกโหมด: เลเยอร์"
+                }
+            }
+        }
+    },
+    "GeometryNodeSplitToInstances": {
+        "name": "Split to Instances",
+        "description": "หลักการ: ฉีกกลุ่มหน้าตัดที่แยกตัวกันอยู่แล้ว ให้กลายเป็น Instance แยกชิ้นกัน\nการประยุกษ์ใช้: ใช้ระเบิดกำแพงอิฐให้แต่ละก้อนกระจายอิสระด้วยความเร็วต่างกัน",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงต้นทาง"
+            },
+            "Group ID": {
+                "name": "รหัสกลุ่ม (Group ID)",
+                "description": "รหัสกลุ่มใช้จัดแยกก้อน"
+            }
+        },
+        "outputs": {
+            "Instances": {
+                "name": "Instance (Instances)",
+                "description": "ชิ้นส่วนที่ถูกแยกเป็น Instances แล้ว"
+            }
+        },
+        "dropdowns": {
+            "domain": [
+                "POINT",
+                "EDGE",
+                "FACE",
+                "CURVE",
+                "INSTANCE",
+                "LAYER"
+            ]
+        },
+        "sub_types": {
+            "domain": {
+                "POINT": {
+                    "name": "Split to Instances (จุด)",
+                    "description": "ตัวเลือกโหมด: จุด"
+                },
+                "EDGE": {
+                    "name": "Split to Instances (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                },
+                "FACE": {
+                    "name": "Split to Instances (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                },
+                "CURVE": {
+                    "name": "Split to Instances (เส้นโค้ง)",
+                    "description": "ตัวเลือกโหมด: เส้นโค้ง"
+                },
+                "INSTANCE": {
+                    "name": "Split to Instances (Instance)",
+                    "description": "ตัวเลือกโหมด: Instance"
+                },
+                "LAYER": {
+                    "name": "Split to Instances (เลเยอร์)",
+                    "description": "ตัวเลือกโหมด: เลเยอร์"
+                }
+            }
+        }
+    },
+    "GeometryNodeGeometryToInstance": {
+        "name": "Geometry to Instance",
+        "description": "หลักการ: แพ็ครูปทรง 3 มิติทั้งหมดให้กลายเป็นก้อน Instance 1 ชิ้น เพื่อความเบาบางในการประมวลผล\nการประยุกษ์ใช้: ใช้มัดรวมบ้านทั้งหลังให้เป็นก้อนเดียว ก่อนนำไปกระจายเป็นหมู่บ้าน 1,000 หลัง",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงเป้าหมาย"
+            }
+        },
+        "outputs": {
+            "Instances": {
+                "name": "Instance (Instances)",
+                "description": "อ็อบเจกต์ในรูปแบบ Instance"
+            }
+        }
+    },
+    "GeometryNodeJoinGeometry": {
+        "name": "Join Geometry",
+        "description": "หลักการ: จับรูปทรงหรือข้อมูลหลายๆ เส้นมารวมกันเป็นชิ้นเดียว (Union)\nการประยุกษ์ใช้: ใช้ต่อกิ่งไม้เข้ากับลำต้น หรือนำโมเดลบ้านมาต่อกับฐานดิน",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รับรูปทรงได้ไม่จำกัดเส้นทาง"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่รวมชิ้นส่วนทั้งหมดเข้าด้วยกัน"
+            }
+        }
+    },
+    "GeometryNodeGreasePencilLayerSelection": {
+        "name": "Named Layer Selection",
+        "description": "หลักการ: เลือกเลเยอร์ที่ระบุใน Grease Pencil Object\nการประยุกษ์ใช้: ใช้เลือกเฉพาะเลเยอร์ 'Line Art' เพื่อนำเส้นวาดมาทำความหนา 3 มิติ",
+        "inputs": {
+            "Name": {
+                "name": "ชื่อ (Name)",
+                "description": "ชื่อเลเยอร์"
+            }
+        },
+        "outputs": {
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "ผลลัพธ์การเลือก"
+            }
+        }
+    },
+    "GeometryNodeSetGreasePencilColor": {
+        "name": "Set Grease Pencil Color",
+        "description": "หลักการ: ตั้งค่าสีของเส้นหรือการถมสี (Fill) ของ Grease Pencil\nการประยุกษ์ใช้: ใช้เปลี่ยนสีเส้นร่างเป็นสีเทา หรือทำอนิเมชันให้เส้นดินสอกะพริบเปลี่ยนสี",
+        "inputs": {
+            "Grease Pencil": {
+                "name": "ดินสอไข (Grease Pencil)",
+                "description": "เส้นวาดเป้าหมาย"
+            }
+        },
+        "outputs": {
+            "Grease Pencil": {
+                "name": "ดินสอไข (Grease Pencil)",
+                "description": "เส้นวาดที่เปลี่ยนสีแล้ว"
+            }
+        },
+        "dropdowns": {
+            "mode": [
+                "STROKE",
+                "FILL"
+            ]
+        },
+        "sub_types": {
+            "mode": {
+                "STROKE": {
+                    "name": "ลายเส้น (Stroke)",
+                    "description": "เส้นขอบหรือลายเส้นของ Grease Pencil"
+                },
+                "FILL": {
+                    "name": "เติมสี (Fill)",
+                    "description": "พื้นที่ด้านในที่เติมสีของ Grease Pencil"
+                }
+            }
+        }
+    },
+    "GeometryNodeSetGreasePencilDepth": {
+        "name": "Set Grease Pencil Depth",
+        "description": "หลักการ: กำหนดความลึกหรือความซ้อนทับ (Z-depth) ของเส้นวาด\nการประยุกษ์ใช้: ใช้บังคับให้เส้นวาด Grease Pencil บางเส้นไปโผล่อยู่หลังโมเดล 3 มิติ",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "depth_order": [
+                "2D",
+                "3D"
+            ]
+        },
+        "sub_types": {
+            "depth_order": {
+                "2D": {
+                    "name": "Set Grease Pencil Depth (2 มิติ)",
+                    "description": "ตัวเลือกโหมด: 2 มิติ"
+                },
+                "3D": {
+                    "name": "Set Grease Pencil Depth (3 มิติ)",
+                    "description": "ตัวเลือกโหมด: 3 มิติ"
+                }
+            }
+        }
+    },
+    "GeometryNodeSetGreasePencilSoftness": {
+        "name": "Set Grease Pencil Softness",
+        "description": "หลักการ: ตั้งค่าความเบลอหรือความนุ่มนวลของขอบเส้น Grease Pencil\nการประยุกษ์ใช้: ใช้ทำเส้นวาดบรรยากาศสไตล์สีน้ำ หรือทำความฟุ้งให้เส้นแสงสว่าง",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeMergeLayers": {
+        "name": "Merge Layers",
+        "description": "หลักการ: รวมเลเยอร์ของ Grease Pencil หลายๆ ชั้นเข้าด้วยกัน\nการประยุกษ์ใช้: ใช้บีบรวมเส้นขอบและเส้นเงาให้เป็นชิ้นเดียวเพื่อประมวลผลเอฟเฟกต์ต่อ",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "mode": [
+                "MERGE_BY_NAME",
+                "MERGE_BY_ID"
+            ]
+        },
+        "sub_types": {
+            "mode": {
+                "MERGE_BY_NAME": {
+                    "name": "รวมตามชื่อ (Merge by Name)",
+                    "description": "รวมข้อมูลที่มีชื่อตรงกันเข้าด้วยกัน"
+                },
+                "MERGE_BY_ID": {
+                    "name": "รวมตามไอดี (Merge by ID)",
+                    "description": "รวมข้อมูลที่ ID อ้างอิงตรงกันเข้าด้วยกัน"
+                }
+            }
+        }
+    },
+    "GeometryNodeInstanceOnPoints": {
+        "name": "Instance on Points",
+        "description": "หลักการ: นำอ็อบเจกต์ต้นแบบ (Instance) ไปวางบนจุดแต่ละจุด (Points)\nการประยุกษ์ใช้: ใช้สร้างป่าไม้ โดยนำโมเดลต้นไม้ 1 ต้นไปวางบนจุดนับพันที่สุ่มกระจายบนภูเขา",
+        "inputs": {
+            "Points": {
+                "name": "จุด (Points)",
+                "description": "รูปทรงต้นทางที่มีจุด"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "พื้นที่ที่ต้องการวาง"
+            },
+            "Instance": {
+                "name": "Instance",
+                "description": "รูปทรงที่จะใช้วางตามจุด"
+            },
+            "Pick Instance": {
+                "name": "เลือกInstance (Pick Instance)",
+                "description": "สุ่มเลือกรูปทรงหากมีหลายรูปแบบ"
+            },
+            "Scale": {
+                "name": "ขนาด (Scale)",
+                "description": "ปรับขนาดแต่ละชิ้น"
+            },
+            "Rotation": {
+                "name": "การหมุน (Rotation)",
+                "description": "ปรับองศาหมุนแต่ละชิ้น"
+            }
+        },
+        "outputs": {
+            "Instances": {
+                "name": "Instance (Instances)",
+                "description": "รูปทรงจำลองที่ถูกกระจายเสร็จแล้ว"
+            }
+        }
+    },
+    "GeometryNodeInstancesToPoints": {
+        "name": "Instances to Points",
+        "description": "หลักการ: ทำลายก้อน Instance แล้วดึงจุดศูนย์กลาง (Origin) กลับมาเป็นจุด (Points) ลอยๆ\nการประยุกษ์ใช้: ใช้ยุบก้อนหินนับพันให้เหลือแค่จุดศูนย์กลาง เพื่อคำนวณระยะห่างรอบตัว",
+        "inputs": {
+            "Instances": {
+                "name": "Instance (Instances)",
+                "description": "ชิ้นงานจำลอง"
+            }
+        },
+        "outputs": {
+            "Points": {
+                "name": "จุด (Points)",
+                "description": "กลุ่มจุด"
+            }
+        }
+    },
+    "GeometryNodeRealizeInstances": {
+        "name": "Realize Instances",
+        "description": "หลักการ: แตกไฟล์ Instance (ที่เป็นตัวแทนชั่วคราว) ให้กลายเป็นโมเดล Mesh 3 มิติของจริง\nการประยุกษ์ใช้: ใช้แตก Instance หญ้า เพื่อใส่โหนด Noise ทำให้หญ้าแต่ละต้นปลิวลู่ลมไม่เหมือนกัน",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "ชิ้นงาน Instance"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "ตาข่าย Mesh หรือรูปทรงเรขาคณิตที่แท้จริง"
+            }
+        }
+    },
+    "GeometryNodeRotateInstances": {
+        "name": "Rotate Instances",
+        "description": "หลักการ: หมุนตัวอ็อบเจกต์ Instance แต่ละชิ้นแบบอิสระ\nการประยุกษ์ใช้: ใช้หมุนทิศทางกังหันลมในทุ่งให้รับลม หรือสุ่มให้ต้นไม้หันหน้าไปคนละทิศ",
+        "inputs": {
+            "Instances": {
+                "name": "Instance (Instances)",
+                "description": "ชิ้นงานเป้าหมาย"
+            },
+            "Rotation": {
+                "name": "การหมุน (Rotation)",
+                "description": "องศาหมุน"
+            }
+        },
+        "outputs": {
+            "Instances": {
+                "name": "Instance (Instances)",
+                "description": "ชิ้นงานที่ถูกหมุน"
+            }
+        }
+    },
+    "GeometryNodeScaleInstances": {
+        "name": "Scale Instances",
+        "description": "หลักการ: ปรับขนาด ย่อ/ขยาย อ็อบเจกต์ Instance\nการประยุกษ์ใช้: ใช้สุ่มขนาดก้อนหินให้เล็กบ้างใหญ่บ้าง เพื่อความเป็นธรรมชาติ",
+        "inputs": {
+            "Instances": {
+                "name": "Instance (Instances)",
+                "description": "ชิ้นงานเป้าหมาย"
+            },
+            "Scale": {
+                "name": "ขนาด (Scale)",
+                "description": "อัตราส่วนการปรับขนาด"
+            }
+        },
+        "outputs": {
+            "Instances": {
+                "name": "Instance (Instances)",
+                "description": "ชิ้นงานที่เปลี่ยนขนาดแล้ว"
+            }
+        }
+    },
+    "GeometryNodeSetInstanceTransform": {
+        "name": "Set Instance Transform",
+        "description": "หลักการ: ตั้งค่า เลื่อน/หมุน/ขยาย ตัว Instance ใหม่ทั้งหมดในโหนดเดียว\nการประยุกษ์ใช้: ใช้จัดระเบียบตึกที่ถูก Instance มาให้มีขนาดและทิศทางตรงกับแปลนถนน",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeTranslateInstances": {
+        "name": "Translate Instances",
+        "description": "หลักการ: ขยับหรือเลื่อนตัวอ็อบเจกต์ Instance ไปยังตำแหน่งใหม่\nการประยุกษ์ใช้: ใช้ขยับฝูงปลากลับขึ้นไปบนผิวน้ำพร้อมๆ กัน",
+        "inputs": {
+            "Instances": {
+                "name": "Instance (Instances)",
+                "description": "ชิ้นงานเป้าหมาย"
+            },
+            "Translation": {
+                "name": "การเลื่อน (Translation)",
+                "description": "ระยะทางในการเลื่อน"
+            }
+        },
+        "outputs": {
+            "Instances": {
+                "name": "Instance (Instances)",
+                "description": "ชิ้นงานที่ถูกเลื่อนแล้ว"
+            }
+        }
+    },
+    "GeometryNodeInstanceBounds": {
+        "name": "Instance Bounds",
+        "description": "หลักการ: ดึงพิกัดกล่อง Bounding Box (เล็กสุด-ใหญ่สุด) ของ Instance\nการประยุกษ์ใช้: ใช้อ่านขนาดของรถยนต์แต่ละคัน แล้วนำไปสร้างกล่องจอดรถให้พอดีตัวรถ",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeSetShadeSmooth": {
+        "name": "Set Shade Smooth",
+        "description": "หลักการ: ปรับการแสดงผลหน้าตัดให้ลื่นเนียน (Smooth) หรือเห็นเหลี่ยมชัดเจน (Flat)\nการประยุกษ์ใช้: ใช้ตั้งค่าให้พื้นผิวรถยนต์ดูมันวาวไร้เหลี่ยม หรือทำกล่องเพชรให้เห็นเหลี่ยมชัด",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงเป้าหมาย"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "หน้าตัดที่ต้องการลบเหลี่ยม"
+            },
+            "Shade Smooth": {
+                "name": "เฉดแบบเรียบ (Shade Smooth)",
+                "description": "บังคับเปิดหรือปิดการเนียน (True/False)"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่แก้ไขเหลี่ยมเงาแล้ว"
+            }
+        },
+        "dropdowns": {
+            "domain": [
+                "EDGE",
+                "FACE"
+            ]
+        },
+        "sub_types": {
+            "domain": {
+                "EDGE": {
+                    "name": "Set Shade Smooth (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                },
+                "FACE": {
+                    "name": "Set Shade Smooth (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                }
+            }
+        }
+    },
+    "GeometryNodeScaleElements": {
+        "name": "Scale Elements",
+        "description": "หลักการ: ย่อ/ขยาย แต่ละองค์ประกอบ (เช่น แต่ละหน้าตัด) พุ่งเข้าหาจุดกึ่งกลางของตัวเอง\nการประยุกษ์ใช้: ใช้ย่อหน้าต่างให้เล็กลงแล้วหลุดออกจากกรอบตึก หรือทำเกล็ดมังกรแหลมๆ",
+        "inputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงต้นฉบับ"
+            },
+            "Scale": {
+                "name": "ขนาด (Scale)",
+                "description": "อัตราส่วนขยาย"
+            }
+        },
+        "outputs": {
+            "Geometry": {
+                "name": "รูปทรง (Geometry)",
+                "description": "รูปทรงที่ขยายเฉพาะส่วนแล้ว"
+            }
+        },
+        "dropdowns": {
+            "domain": [
+                "FACE",
+                "EDGE"
+            ]
+        },
+        "sub_types": {
+            "domain": {
+                "FACE": {
+                    "name": "Scale Elements (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                },
+                "EDGE": {
+                    "name": "Scale Elements (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                }
+            }
+        }
+    },
+    "GeometryNodeTriangulate": {
+        "name": "Triangulate",
+        "description": "หลักการ: หั่นหน้าตัดสี่เหลี่ยม หรือหลายเหลี่ยม ให้กลายเป็นหน้าตัดสามเหลี่ยมทั้งหมด\nการประยุกษ์ใช้: ใช้เตรียมโมเดลก่อนส่งเข้าเกมเอนจิน หรือทำให้พื้นผิวพับงอได้อิสระขึ้น",
+        "inputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "ตาข่ายเป้าหมาย"
+            }
+        },
+        "outputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "ตาข่ายที่แบ่งเป็นหน้าตัดสามเหลี่ยมแล้ว"
+            }
+        }
+    },
+    "GeometryNodePackUVIslands": {
+        "name": "Pack UV Islands",
+        "description": "หลักการ: จัดเรียงแผนที่ UV ที่กระจัดกระจายให้รวมกันเป็นระเบียบลงในกรอบสี่เหลี่ยม\nการประยุกษ์ใช้: ใช้แพ็ค UV โมเดลบ้านที่สร้างแบบ Procedural อัตโนมัติ เพื่อนำไปทาสีทีหลัง",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeUVTangent": {
+        "name": "UV Tangent",
+        "description": "หลักการ: สร้างเส้นทิศทางสัมผัส (Tangent) ตามแนวเส้นรอบรูปของ UV\nการประยุกษ์ใช้: ใช้ควบคุมทิศทางแสงเงาสะท้อน (Anisotropic) ของผม หรือรอยขัดลายเส้นบนโลหะ",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeUVUnwrap": {
+        "name": "UV Unwrap",
+        "description": "หลักการ: กางแผนที่ UV พื้นผิวแบบอัตโนมัติภายใน Geometry Nodes\nการประยุกษ์ใช้: ใช้กาง UV พื้นถนนที่ถูกวาดและสร้างใหม่แบบ Real-time ให้พื้นผิวไม่ยืด",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeDistributePointsInGrid": {
+        "name": "Distribute Points in Grid",
+        "description": "หลักการ: กระจายจุดในรูปแบบของตารางสี่เหลี่ยม 3 มิติแบบมีระเบียบ\nการประยุกษ์ใช้: ใช้ทำนั่งร้านก่อสร้าง ชั้นวางสินค้า หรือโครงสร้างผลึกอะตอม",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "mode": [
+                "DENSITY_RANDOM",
+                "DENSITY_GRID"
+            ]
+        },
+        "sub_types": {
+            "mode": {
+                "DENSITY_RANDOM": {
+                    "name": "การกระจายแบบสุ่ม (Random Density)",
+                    "description": "สุ่มการกระจายจุดบนพื้นผิว"
+                },
+                "DENSITY_GRID": {
+                    "name": "การกระจายแบบกริด (Grid Density)",
+                    "description": "กระจายจุดเรียงกันเป็นตารางหรือกริด 3 มิติ"
+                }
+            }
+        }
+    },
+    "GeometryNodeDistributePointsInVolume": {
+        "name": "Distribute Points in Volume",
+        "description": "หลักการ: กระจายจุด (Points) ให้เต็มไปในช่องว่างปริมาตรของรูปทรง\nการประยุกษ์ใช้: ใช้สุ่มสร้างฝูงนกที่บินอยู่รวมกันในก้อนเมฆ หรือหยดน้ำในแก้วน้ำ",
+        "inputs": {
+            "Volume": {
+                "name": "ปริมาตร (Volume)",
+                "description": "ควันเป้าหมาย"
+            },
+            "Density": {
+                "name": "ความหนาแน่น (Density)",
+                "description": "ความหนาแน่น"
+            }
+        },
+        "outputs": {
+            "Points": {
+                "name": "จุด (Points)",
+                "description": "จุดที่ถูกกระจาย"
+            }
+        }
+    },
+    "GeometryNodePoints": {
+        "name": "Points",
+        "description": "หลักการ: สร้างกลุ่มจุด (Points) เปล่าๆ ขึ้นมา\nการประยุกษ์ใช้: ใช้เป็นเป้าหมายอ้างอิงตำแหน่ง หรือสร้างจุดเริ่มต้นของพลุก่อนระเบิด",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodePointsToSDFGrid": {
+        "name": "Points to SDF Grid",
+        "description": "หลักการ: เปลี่ยนกลุ่มจุดให้เป็นกล่องระยะทางปริมาตร (SDF Grid)\nการประยุกษ์ใช้: ใช้ทำเอฟเฟกต์หยดน้ำ (Metaballs) ให้จุดหลายๆ จุดหลอมรวมเข้าด้วยกัน",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodePointsToVertices": {
+        "name": "Points to Vertices",
+        "description": "หลักการ: แปลงจุด (Point Cloud) ลอยๆ ให้กลายเป็น Vertex ภายใน Mesh แผ่นเดียวกัน\nการประยุกษ์ใช้: ใช้แปลงละอองจุดให้กลายเป็นโครงข่ายเพื่อใช้คำนวณ Convex Hull ภายหลัง",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodePointsToVolume": {
+        "name": "Points to Volume",
+        "description": "หลักการ: แปลงกลุ่มจุดให้กลายเป็นก้อนเมฆทึบ ควัน หรือหมอก (Volume)\nการประยุกษ์ใช้: ใช้เอาฝูงจุดสุ่มมาสร้างเป็นก้อนเมฆก้อนใหญ่ หรือควันฝุ่นกระจาย",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeSetPointRadius": {
+        "name": "Set Point Radius",
+        "description": "หลักการ: กำหนดขนาดรัศมี (ความอ้วน) ให้แต่ละจุด\nการประยุกษ์ใช้: ใช้ทำละอองเกสรที่มีขนาดเล็กใหญ่สลับกัน หรือปรับขนาดของก้อน Metaball",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeGetNamedGrid": {
+        "name": "Get Named Grid",
+        "description": "หลักการ: ดึงข้อมูลกริดปริมาตรที่ถูกตั้งชื่อไว้แล้วมาใช้\nการประยุกษ์ใช้: ใช้อ่านข้อมูลความหนาแน่นของควัน แล้วเอาไปแสดงผลเป็นสีไฟ (Fire)",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "VECTOR",
+                "RGBA",
+                "ROTATION",
+                "MATRIX",
+                "STRING",
+                "MENU",
+                "SHADER",
+                "OBJECT",
+                "IMAGE",
+                "GEOMETRY",
+                "COLLECTION",
+                "TEXTURE",
+                "MATERIAL",
+                "BUNDLE",
+                "CLOSURE",
+                "FONT",
+                "SCENE",
+                "TEXT",
+                "MASK",
+                "SOUND"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVector"
+                },
+                "RGBA": {
+                    "name": "สี RGBA",
+                    "description": "ชนิดข้อมูลสีแบบมีค่าอัลฟา"
+                },
+                "ROTATION": {
+                    "name": "การหมุน (Rotation)",
+                    "description": "ชนิดข้อมูลการหมุนหรือองศา"
+                },
+                "MATRIX": {
+                    "name": "เมทริกซ์ (Matrix)",
+                    "description": "ชนิดข้อมูลเมทริกซ์การแปลงสภาพ"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "MENU": {
+                    "name": "เมนู (Menu)",
+                    "description": "ข้อมูลตัวเลือกจากเมนู"
+                },
+                "SHADER": {
+                    "name": "เชเดอร์ (Shader)",
+                    "description": "ชนิดข้อมูลสำหรับเชื่อมโยงการแสดงผล Shader"
+                },
+                "OBJECT": {
+                    "name": "Object",
+                    "description": "ชนิดข้อมูลสำหรับอ้างอิงวัตถุ 3 มิติ"
+                },
+                "IMAGE": {
+                    "name": "รูปภาพ (Image)",
+                    "description": "ชนิดข้อมูลรูปภาพ"
+                },
+                "GEOMETRY": {
+                    "name": "Geometry",
+                    "description": "ชนิดข้อมูลรูปทรงตาข่ายหรือเรขาคณิต"
+                },
+                "COLLECTION": {
+                    "name": "คอลเลกชัน (Collection)",
+                    "description": "ชนิดข้อมูลกลุ่มอ็อบเจกต์ (Collection)"
+                },
+                "TEXTURE": {
+                    "name": "Texture",
+                    "description": "ชนิดข้อมูลTextureพื้นผิว"
+                },
+                "MATERIAL": {
+                    "name": "วัสดุ (Material)",
+                    "description": "ชนิดข้อมูลอ้างอิง Material"
+                },
+                "BUNDLE": {
+                    "name": "ชุดข้อมูล (Bundle)",
+                    "description": "แพ็กเกจข้อมูลที่มัดรวมไว้"
+                },
+                "CLOSURE": {
+                    "name": "คลอสเชอร์ (Closure)",
+                    "description": "ผลลัพธ์การคำนวณการตกกระทบแสง (BSDF/Closure)"
+                },
+                "FONT": {
+                    "name": "ฟอนต์ (Font)",
+                    "description": "ชนิดข้อมูลฟอนต์ตัวอักษร"
+                },
+                "SCENE": {
+                    "name": "ซีน (Scene)",
+                    "description": "ชนิดข้อมูลซีนปัจจุบันหรืออ้างอิง"
+                },
+                "TEXT": {
+                    "name": "ข้อความหรือสคริปต์ (Text)",
+                    "description": "เชื่อมโยงข้อมูล Text Datablock"
+                },
+                "MASK": {
+                    "name": "มาสก์ (Mask)",
+                    "description": "ชนิดข้อมูลแบบมาสก์ 2D"
+                },
+                "SOUND": {
+                    "name": "เสียง (Sound)",
+                    "description": "ชนิดข้อมูลคลื่นเสียงออดิโอ"
+                }
+            }
+        }
+    },
+    "GeometryNodeGridInfo": {
+        "name": "Grid Info",
+        "description": "หลักการ: ดึงข้อมูลขนาด, ความละเอียด และขอบเขตของ Volume Grid\nการประยุกษ์ใช้: ใช้เช็คว่าควันลอยขึ้นไปสูงเท่าไหร่แล้ว เพื่อจำกัดความสูงของวัตถุอื่นๆ",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "VECTOR",
+                "RGBA",
+                "ROTATION",
+                "MATRIX",
+                "STRING",
+                "MENU",
+                "SHADER",
+                "OBJECT",
+                "IMAGE",
+                "GEOMETRY",
+                "COLLECTION",
+                "TEXTURE",
+                "MATERIAL",
+                "BUNDLE",
+                "CLOSURE",
+                "FONT",
+                "SCENE",
+                "TEXT",
+                "MASK",
+                "SOUND"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVector"
+                },
+                "RGBA": {
+                    "name": "สี RGBA",
+                    "description": "ชนิดข้อมูลสีแบบมีค่าอัลฟา"
+                },
+                "ROTATION": {
+                    "name": "การหมุน (Rotation)",
+                    "description": "ชนิดข้อมูลการหมุนหรือองศา"
+                },
+                "MATRIX": {
+                    "name": "เมทริกซ์ (Matrix)",
+                    "description": "ชนิดข้อมูลเมทริกซ์การแปลงสภาพ"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "MENU": {
+                    "name": "เมนู (Menu)",
+                    "description": "ข้อมูลตัวเลือกจากเมนู"
+                },
+                "SHADER": {
+                    "name": "เชเดอร์ (Shader)",
+                    "description": "ชนิดข้อมูลสำหรับเชื่อมโยงการแสดงผล Shader"
+                },
+                "OBJECT": {
+                    "name": "Object",
+                    "description": "ชนิดข้อมูลสำหรับอ้างอิงวัตถุ 3 มิติ"
+                },
+                "IMAGE": {
+                    "name": "รูปภาพ (Image)",
+                    "description": "ชนิดข้อมูลรูปภาพ"
+                },
+                "GEOMETRY": {
+                    "name": "Geometry",
+                    "description": "ชนิดข้อมูลรูปทรงตาข่ายหรือเรขาคณิต"
+                },
+                "COLLECTION": {
+                    "name": "คอลเลกชัน (Collection)",
+                    "description": "ชนิดข้อมูลกลุ่มอ็อบเจกต์ (Collection)"
+                },
+                "TEXTURE": {
+                    "name": "Texture",
+                    "description": "ชนิดข้อมูลTextureพื้นผิว"
+                },
+                "MATERIAL": {
+                    "name": "วัสดุ (Material)",
+                    "description": "ชนิดข้อมูลอ้างอิง Material"
+                },
+                "BUNDLE": {
+                    "name": "ชุดข้อมูล (Bundle)",
+                    "description": "แพ็กเกจข้อมูลที่มัดรวมไว้"
+                },
+                "CLOSURE": {
+                    "name": "คลอสเชอร์ (Closure)",
+                    "description": "ผลลัพธ์การคำนวณการตกกระทบแสง (BSDF/Closure)"
+                },
+                "FONT": {
+                    "name": "ฟอนต์ (Font)",
+                    "description": "ชนิดข้อมูลฟอนต์ตัวอักษร"
+                },
+                "SCENE": {
+                    "name": "ซีน (Scene)",
+                    "description": "ชนิดข้อมูลซีนปัจจุบันหรืออ้างอิง"
+                },
+                "TEXT": {
+                    "name": "ข้อความหรือสคริปต์ (Text)",
+                    "description": "เชื่อมโยงข้อมูล Text Datablock"
+                },
+                "MASK": {
+                    "name": "มาสก์ (Mask)",
+                    "description": "ชนิดข้อมูลแบบมาสก์ 2D"
+                },
+                "SOUND": {
+                    "name": "เสียง (Sound)",
+                    "description": "ชนิดข้อมูลคลื่นเสียงออดิโอ"
+                }
+            }
+        }
+    },
+    "GeometryNodeVoxelIndex": {
+        "name": "Voxel Index",
+        "description": "หลักการ: สร้างรหัสประจำตัว (Index) ให้กับแต่ละ Voxel ก้อนสี่เหลี่ยมในกริดปริมาตร\nการประยุกษ์ใช้: ใช้ลบ Voxel เฉพาะจุดออกเพื่อทำโพรงในเมฆ หรือไล่สีจากล่างขึ้นบน",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeSampleGrid": {
+        "name": "Sample Grid",
+        "description": "หลักการ: สุ่มดึงค่าจาก Voxel ของปริมาตรตามพิกัด 3 มิติที่กำหนด\nการประยุกษ์ใช้: ใช้อ่านความหนาแน่นของควัน แล้วให้จุดที่บินเข้าไปในควันเปลี่ยนสี",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "VECTOR",
+                "RGBA",
+                "ROTATION",
+                "MATRIX",
+                "STRING",
+                "MENU",
+                "SHADER",
+                "OBJECT",
+                "IMAGE",
+                "GEOMETRY",
+                "COLLECTION",
+                "TEXTURE",
+                "MATERIAL",
+                "BUNDLE",
+                "CLOSURE",
+                "FONT",
+                "SCENE",
+                "TEXT",
+                "MASK",
+                "SOUND"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVector"
+                },
+                "RGBA": {
+                    "name": "สี RGBA",
+                    "description": "ชนิดข้อมูลสีแบบมีค่าอัลฟา"
+                },
+                "ROTATION": {
+                    "name": "การหมุน (Rotation)",
+                    "description": "ชนิดข้อมูลการหมุนหรือองศา"
+                },
+                "MATRIX": {
+                    "name": "เมทริกซ์ (Matrix)",
+                    "description": "ชนิดข้อมูลเมทริกซ์การแปลงสภาพ"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "MENU": {
+                    "name": "เมนู (Menu)",
+                    "description": "ข้อมูลตัวเลือกจากเมนู"
+                },
+                "SHADER": {
+                    "name": "เชเดอร์ (Shader)",
+                    "description": "ชนิดข้อมูลสำหรับเชื่อมโยงการแสดงผล Shader"
+                },
+                "OBJECT": {
+                    "name": "Object",
+                    "description": "ชนิดข้อมูลสำหรับอ้างอิงวัตถุ 3 มิติ"
+                },
+                "IMAGE": {
+                    "name": "รูปภาพ (Image)",
+                    "description": "ชนิดข้อมูลรูปภาพ"
+                },
+                "GEOMETRY": {
+                    "name": "Geometry",
+                    "description": "ชนิดข้อมูลรูปทรงตาข่ายหรือเรขาคณิต"
+                },
+                "COLLECTION": {
+                    "name": "คอลเลกชัน (Collection)",
+                    "description": "ชนิดข้อมูลกลุ่มอ็อบเจกต์ (Collection)"
+                },
+                "TEXTURE": {
+                    "name": "Texture",
+                    "description": "ชนิดข้อมูลTextureพื้นผิว"
+                },
+                "MATERIAL": {
+                    "name": "วัสดุ (Material)",
+                    "description": "ชนิดข้อมูลอ้างอิง Material"
+                },
+                "BUNDLE": {
+                    "name": "ชุดข้อมูล (Bundle)",
+                    "description": "แพ็กเกจข้อมูลที่มัดรวมไว้"
+                },
+                "CLOSURE": {
+                    "name": "คลอสเชอร์ (Closure)",
+                    "description": "ผลลัพธ์การคำนวณการตกกระทบแสง (BSDF/Closure)"
+                },
+                "FONT": {
+                    "name": "ฟอนต์ (Font)",
+                    "description": "ชนิดข้อมูลฟอนต์ตัวอักษร"
+                },
+                "SCENE": {
+                    "name": "ซีน (Scene)",
+                    "description": "ชนิดข้อมูลซีนปัจจุบันหรืออ้างอิง"
+                },
+                "TEXT": {
+                    "name": "ข้อความหรือสคริปต์ (Text)",
+                    "description": "เชื่อมโยงข้อมูล Text Datablock"
+                },
+                "MASK": {
+                    "name": "มาสก์ (Mask)",
+                    "description": "ชนิดข้อมูลแบบมาสก์ 2D"
+                },
+                "SOUND": {
+                    "name": "เสียง (Sound)",
+                    "description": "ชนิดข้อมูลคลื่นเสียงออดิโอ"
+                }
+            }
+        }
+    },
+    "GeometryNodeSampleGridIndex": {
+        "name": "Sample Grid Index",
+        "description": "หลักการ: ดึงข้อมูลจาก Voxel โดยอ้างอิงจากรหัสประจำตัว (Index) แถวและคอลัมน์\nการประยุกษ์ใช้: ใช้สร้างตารางข้อมูล Voxel อย่างเป็นระบบ เพื่ออ่านค่าสีแบบ Pixel-art 3 มิติ",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "VECTOR",
+                "RGBA",
+                "ROTATION",
+                "MATRIX",
+                "STRING",
+                "MENU",
+                "SHADER",
+                "OBJECT",
+                "IMAGE",
+                "GEOMETRY",
+                "COLLECTION",
+                "TEXTURE",
+                "MATERIAL",
+                "BUNDLE",
+                "CLOSURE",
+                "FONT",
+                "SCENE",
+                "TEXT",
+                "MASK",
+                "SOUND"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVector"
+                },
+                "RGBA": {
+                    "name": "สี RGBA",
+                    "description": "ชนิดข้อมูลสีแบบมีค่าอัลฟา"
+                },
+                "ROTATION": {
+                    "name": "การหมุน (Rotation)",
+                    "description": "ชนิดข้อมูลการหมุนหรือองศา"
+                },
+                "MATRIX": {
+                    "name": "เมทริกซ์ (Matrix)",
+                    "description": "ชนิดข้อมูลเมทริกซ์การแปลงสภาพ"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "MENU": {
+                    "name": "เมนู (Menu)",
+                    "description": "ข้อมูลตัวเลือกจากเมนู"
+                },
+                "SHADER": {
+                    "name": "เชเดอร์ (Shader)",
+                    "description": "ชนิดข้อมูลสำหรับเชื่อมโยงการแสดงผล Shader"
+                },
+                "OBJECT": {
+                    "name": "Object",
+                    "description": "ชนิดข้อมูลสำหรับอ้างอิงวัตถุ 3 มิติ"
+                },
+                "IMAGE": {
+                    "name": "รูปภาพ (Image)",
+                    "description": "ชนิดข้อมูลรูปภาพ"
+                },
+                "GEOMETRY": {
+                    "name": "Geometry",
+                    "description": "ชนิดข้อมูลรูปทรงตาข่ายหรือเรขาคณิต"
+                },
+                "COLLECTION": {
+                    "name": "คอลเลกชัน (Collection)",
+                    "description": "ชนิดข้อมูลกลุ่มอ็อบเจกต์ (Collection)"
+                },
+                "TEXTURE": {
+                    "name": "Texture",
+                    "description": "ชนิดข้อมูลTextureพื้นผิว"
+                },
+                "MATERIAL": {
+                    "name": "วัสดุ (Material)",
+                    "description": "ชนิดข้อมูลอ้างอิง Material"
+                },
+                "BUNDLE": {
+                    "name": "ชุดข้อมูล (Bundle)",
+                    "description": "แพ็กเกจข้อมูลที่มัดรวมไว้"
+                },
+                "CLOSURE": {
+                    "name": "คลอสเชอร์ (Closure)",
+                    "description": "ผลลัพธ์การคำนวณการตกกระทบแสง (BSDF/Closure)"
+                },
+                "FONT": {
+                    "name": "ฟอนต์ (Font)",
+                    "description": "ชนิดข้อมูลฟอนต์ตัวอักษร"
+                },
+                "SCENE": {
+                    "name": "ซีน (Scene)",
+                    "description": "ชนิดข้อมูลซีนปัจจุบันหรืออ้างอิง"
+                },
+                "TEXT": {
+                    "name": "ข้อความหรือสคริปต์ (Text)",
+                    "description": "เชื่อมโยงข้อมูล Text Datablock"
+                },
+                "MASK": {
+                    "name": "มาสก์ (Mask)",
+                    "description": "ชนิดข้อมูลแบบมาสก์ 2D"
+                },
+                "SOUND": {
+                    "name": "เสียง (Sound)",
+                    "description": "ชนิดข้อมูลคลื่นเสียงออดิโอ"
+                }
+            }
+        }
+    },
+    "GeometryNodeAdvectGrid": {
+        "name": "Advect Grid",
+        "description": "หลักการ: เลื่อนข้อมูลหรือจุดใน Grid ไปตามทิศทางของ Vector คล้ายการพัดพามวล\nการประยุกษ์ใช้: ใช้ทำของเหลวไหลไปตามทิศทาง หรือทำเอฟเฟกต์หมอกพัดตามลม",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeGridCurl": {
+        "name": "Grid Curl",
+        "description": "หลักการ: สร้างVectorลมหมุนหรือกระแสน้ำวน (Curl) จากข้อมูลปริมาตร\nการประยุกษ์ใช้: ใช้ปั่นควันให้หมุนวนเหมือนทอร์นาโด หรือสร้างกระแสน้ำวนดึงดูดวัตถุ",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeGridDivergence": {
+        "name": "Grid Divergence",
+        "description": "หลักการ: คำนวณอัตราการกระจายออกหรือยุบตัวเข้า (Divergence) ของข้อมูล Grid\nการประยุกษ์ใช้: ใช้หาจุดที่ระเบิดกระจายตัวออกไปแรงที่สุด เพื่อสร้างสะเก็ดไฟ",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeGridGradient": {
+        "name": "Grid Gradient",
+        "description": "หลักการ: หาความชันหรือทิศทางที่ข้อมูล Volume มีการเปลี่ยนแปลงค่ามากที่สุด\nการประยุกษ์ใช้: ใช้หาทิศทางตั้งฉากกับก้อนควัน (Normal) เพื่อใช้แสงตกกระทบได้อย่างถูกต้อง",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeGridLaplacian": {
+        "name": "Grid Laplacian",
+        "description": "หลักการ: หาอัตราการเปลี่ยนแปลงความชันซ้อนกัน (Laplacian) ใช้เน้นขอบหรือเกลี่ยค่า Volume\nการประยุกษ์ใช้: ใช้สร้างรายละเอียดให้ก้อนควันดูเป็นก้อนชัดขึ้น หรือฟุ้งกระจายเนียนขึ้น",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeSetGridBackground": {
+        "name": "Set Grid Background",
+        "description": "หลักการ: กำหนดค่าเริ่มต้นพื้นหลังของช่อง Grid ที่ไม่มีข้อมูล\nการประยุกษ์ใช้: ใช้ตั้งค่าความว่างเปล่าของอวกาศเป็น 0 เพื่อไม่ให้รบกวนการคำนวณ",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "VECTOR",
+                "RGBA",
+                "ROTATION",
+                "MATRIX",
+                "STRING",
+                "MENU",
+                "SHADER",
+                "OBJECT",
+                "IMAGE",
+                "GEOMETRY",
+                "COLLECTION",
+                "TEXTURE",
+                "MATERIAL",
+                "BUNDLE",
+                "CLOSURE",
+                "FONT",
+                "SCENE",
+                "TEXT",
+                "MASK",
+                "SOUND"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVector"
+                },
+                "RGBA": {
+                    "name": "สี RGBA",
+                    "description": "ชนิดข้อมูลสีแบบมีค่าอัลฟา"
+                },
+                "ROTATION": {
+                    "name": "การหมุน (Rotation)",
+                    "description": "ชนิดข้อมูลการหมุนหรือองศา"
+                },
+                "MATRIX": {
+                    "name": "เมทริกซ์ (Matrix)",
+                    "description": "ชนิดข้อมูลเมทริกซ์การแปลงสภาพ"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "MENU": {
+                    "name": "เมนู (Menu)",
+                    "description": "ข้อมูลตัวเลือกจากเมนู"
+                },
+                "SHADER": {
+                    "name": "เชเดอร์ (Shader)",
+                    "description": "ชนิดข้อมูลสำหรับเชื่อมโยงการแสดงผล Shader"
+                },
+                "OBJECT": {
+                    "name": "Object",
+                    "description": "ชนิดข้อมูลสำหรับอ้างอิงวัตถุ 3 มิติ"
+                },
+                "IMAGE": {
+                    "name": "รูปภาพ (Image)",
+                    "description": "ชนิดข้อมูลรูปภาพ"
+                },
+                "GEOMETRY": {
+                    "name": "Geometry",
+                    "description": "ชนิดข้อมูลรูปทรงตาข่ายหรือเรขาคณิต"
+                },
+                "COLLECTION": {
+                    "name": "คอลเลกชัน (Collection)",
+                    "description": "ชนิดข้อมูลกลุ่มอ็อบเจกต์ (Collection)"
+                },
+                "TEXTURE": {
+                    "name": "Texture",
+                    "description": "ชนิดข้อมูลTextureพื้นผิว"
+                },
+                "MATERIAL": {
+                    "name": "วัสดุ (Material)",
+                    "description": "ชนิดข้อมูลอ้างอิง Material"
+                },
+                "BUNDLE": {
+                    "name": "ชุดข้อมูล (Bundle)",
+                    "description": "แพ็กเกจข้อมูลที่มัดรวมไว้"
+                },
+                "CLOSURE": {
+                    "name": "คลอสเชอร์ (Closure)",
+                    "description": "ผลลัพธ์การคำนวณการตกกระทบแสง (BSDF/Closure)"
+                },
+                "FONT": {
+                    "name": "ฟอนต์ (Font)",
+                    "description": "ชนิดข้อมูลฟอนต์ตัวอักษร"
+                },
+                "SCENE": {
+                    "name": "ซีน (Scene)",
+                    "description": "ชนิดข้อมูลซีนปัจจุบันหรืออ้างอิง"
+                },
+                "TEXT": {
+                    "name": "ข้อความหรือสคริปต์ (Text)",
+                    "description": "เชื่อมโยงข้อมูล Text Datablock"
+                },
+                "MASK": {
+                    "name": "มาสก์ (Mask)",
+                    "description": "ชนิดข้อมูลแบบมาสก์ 2D"
+                },
+                "SOUND": {
+                    "name": "เสียง (Sound)",
+                    "description": "ชนิดข้อมูลคลื่นเสียงออดิโอ"
+                }
+            }
+        }
+    },
+    "GeometryNodeSetGridTransform": {
+        "name": "Set Grid Transform",
+        "description": "หลักการ: ขยับ หมุน หรือปรับสเกลของ Volume Grid ทั้งชุด\nการประยุกษ์ใช้: ใช้เลื่อนก้อนเมฆทั้งก้อนไปพร้อมกันโดยไม่กระทบความละเอียดของ Voxel",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "VECTOR",
+                "RGBA",
+                "ROTATION",
+                "MATRIX",
+                "STRING",
+                "MENU",
+                "SHADER",
+                "OBJECT",
+                "IMAGE",
+                "GEOMETRY",
+                "COLLECTION",
+                "TEXTURE",
+                "MATERIAL",
+                "BUNDLE",
+                "CLOSURE",
+                "FONT",
+                "SCENE",
+                "TEXT",
+                "MASK",
+                "SOUND"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVector"
+                },
+                "RGBA": {
+                    "name": "สี RGBA",
+                    "description": "ชนิดข้อมูลสีแบบมีค่าอัลฟา"
+                },
+                "ROTATION": {
+                    "name": "การหมุน (Rotation)",
+                    "description": "ชนิดข้อมูลการหมุนหรือองศา"
+                },
+                "MATRIX": {
+                    "name": "เมทริกซ์ (Matrix)",
+                    "description": "ชนิดข้อมูลเมทริกซ์การแปลงสภาพ"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "MENU": {
+                    "name": "เมนู (Menu)",
+                    "description": "ข้อมูลตัวเลือกจากเมนู"
+                },
+                "SHADER": {
+                    "name": "เชเดอร์ (Shader)",
+                    "description": "ชนิดข้อมูลสำหรับเชื่อมโยงการแสดงผล Shader"
+                },
+                "OBJECT": {
+                    "name": "Object",
+                    "description": "ชนิดข้อมูลสำหรับอ้างอิงวัตถุ 3 มิติ"
+                },
+                "IMAGE": {
+                    "name": "รูปภาพ (Image)",
+                    "description": "ชนิดข้อมูลรูปภาพ"
+                },
+                "GEOMETRY": {
+                    "name": "Geometry",
+                    "description": "ชนิดข้อมูลรูปทรงตาข่ายหรือเรขาคณิต"
+                },
+                "COLLECTION": {
+                    "name": "คอลเลกชัน (Collection)",
+                    "description": "ชนิดข้อมูลกลุ่มอ็อบเจกต์ (Collection)"
+                },
+                "TEXTURE": {
+                    "name": "Texture",
+                    "description": "ชนิดข้อมูลTextureพื้นผิว"
+                },
+                "MATERIAL": {
+                    "name": "วัสดุ (Material)",
+                    "description": "ชนิดข้อมูลอ้างอิง Material"
+                },
+                "BUNDLE": {
+                    "name": "ชุดข้อมูล (Bundle)",
+                    "description": "แพ็กเกจข้อมูลที่มัดรวมไว้"
+                },
+                "CLOSURE": {
+                    "name": "คลอสเชอร์ (Closure)",
+                    "description": "ผลลัพธ์การคำนวณการตกกระทบแสง (BSDF/Closure)"
+                },
+                "FONT": {
+                    "name": "ฟอนต์ (Font)",
+                    "description": "ชนิดข้อมูลฟอนต์ตัวอักษร"
+                },
+                "SCENE": {
+                    "name": "ซีน (Scene)",
+                    "description": "ชนิดข้อมูลซีนปัจจุบันหรืออ้างอิง"
+                },
+                "TEXT": {
+                    "name": "ข้อความหรือสคริปต์ (Text)",
+                    "description": "เชื่อมโยงข้อมูล Text Datablock"
+                },
+                "MASK": {
+                    "name": "มาสก์ (Mask)",
+                    "description": "ชนิดข้อมูลแบบมาสก์ 2D"
+                },
+                "SOUND": {
+                    "name": "เสียง (Sound)",
+                    "description": "ชนิดข้อมูลคลื่นเสียงออดิโอ"
+                }
+            }
+        }
+    },
+    "GeometryNodeStoreNamedGrid": {
+        "name": "Store Named Grid",
+        "description": "หลักการ: บันทึกข้อมูลและตั้งชื่อให้ Volume Grid คล้ายการเซฟแอตทริบิวต์\nการประยุกษ์ใช้: ใช้บันทึกค่าอุณหภูมิของควัน เพื่อให้ Shader นำไปแสดงผลเป็นสีไฟ",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "BOOLEAN",
+                "FLOAT",
+                "DOUBLE",
+                "INT",
+                "INT64",
+                "MASK",
+                "VECTOR_FLOAT",
+                "VECTOR_DOUBLE",
+                "VECTOR_INT",
+                "POINTS",
+                "UNKNOWN"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "DOUBLE": {
+                    "name": "Floatคู่ (Double)",
+                    "description": "ชนิดข้อมูลFloatความละเอียดสูง 64 บิต"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "INT64": {
+                    "name": "จำนวนเต็ม 64 บิต (64-bit Integer)",
+                    "description": "จำนวนเต็มที่มีช่วงข้อมูลใหญ่ถึง 64 บิต"
+                },
+                "MASK": {
+                    "name": "มาสก์ (Mask)",
+                    "description": "ชนิดข้อมูลแบบมาสก์ 2D"
+                },
+                "VECTOR_FLOAT": {
+                    "name": "VectorFloat (Vector Float)",
+                    "description": "Vectorที่เก็บค่าFloat 32 บิต"
+                },
+                "VECTOR_DOUBLE": {
+                    "name": "VectorFloatคู่ (Vector Double)",
+                    "description": "Vectorที่เก็บค่าFloatความละเอียดสูง"
+                },
+                "VECTOR_INT": {
+                    "name": "Vectorจำนวนเต็ม (Vector Integer)",
+                    "description": "Vectorที่เก็บค่าแบบจำนวนเต็ม"
+                },
+                "POINTS": {
+                    "name": "จุด (Points)",
+                    "description": "ทำงานในระดับจุดหรือคลาวด์พอยต์ (Point Cloud)"
+                },
+                "UNKNOWN": {
+                    "name": "ไม่ทราบค่า (Unknown)",
+                    "description": "ชนิดข้อมูลที่ไม่ระบุแบบเจาะจง"
+                }
+            }
+        }
+    },
+    "GeometryNodeGridToPoints": {
+        "name": "Grid to Points",
+        "description": "หลักการ: แปลงแต่ละ Voxel ที่มีค่าความหนาแน่น ให้กลายเป็นจุด (Points) เรียงต่อกัน\nการประยุกษ์ใช้: ใช้เปลี่ยนก้อนเมฆให้กลายเป็นเม็ดฝนเรียงแถวตามตาราง Grid",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "VECTOR",
+                "RGBA",
+                "ROTATION",
+                "MATRIX",
+                "STRING",
+                "MENU",
+                "SHADER",
+                "OBJECT",
+                "IMAGE",
+                "GEOMETRY",
+                "COLLECTION",
+                "TEXTURE",
+                "MATERIAL",
+                "BUNDLE",
+                "CLOSURE",
+                "FONT",
+                "SCENE",
+                "TEXT",
+                "MASK",
+                "SOUND"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVector"
+                },
+                "RGBA": {
+                    "name": "สี RGBA",
+                    "description": "ชนิดข้อมูลสีแบบมีค่าอัลฟา"
+                },
+                "ROTATION": {
+                    "name": "การหมุน (Rotation)",
+                    "description": "ชนิดข้อมูลการหมุนหรือองศา"
+                },
+                "MATRIX": {
+                    "name": "เมทริกซ์ (Matrix)",
+                    "description": "ชนิดข้อมูลเมทริกซ์การแปลงสภาพ"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "MENU": {
+                    "name": "เมนู (Menu)",
+                    "description": "ข้อมูลตัวเลือกจากเมนู"
+                },
+                "SHADER": {
+                    "name": "เชเดอร์ (Shader)",
+                    "description": "ชนิดข้อมูลสำหรับเชื่อมโยงการแสดงผล Shader"
+                },
+                "OBJECT": {
+                    "name": "Object",
+                    "description": "ชนิดข้อมูลสำหรับอ้างอิงวัตถุ 3 มิติ"
+                },
+                "IMAGE": {
+                    "name": "รูปภาพ (Image)",
+                    "description": "ชนิดข้อมูลรูปภาพ"
+                },
+                "GEOMETRY": {
+                    "name": "Geometry",
+                    "description": "ชนิดข้อมูลรูปทรงตาข่ายหรือเรขาคณิต"
+                },
+                "COLLECTION": {
+                    "name": "คอลเลกชัน (Collection)",
+                    "description": "ชนิดข้อมูลกลุ่มอ็อบเจกต์ (Collection)"
+                },
+                "TEXTURE": {
+                    "name": "Texture",
+                    "description": "ชนิดข้อมูลTextureพื้นผิว"
+                },
+                "MATERIAL": {
+                    "name": "วัสดุ (Material)",
+                    "description": "ชนิดข้อมูลอ้างอิง Material"
+                },
+                "BUNDLE": {
+                    "name": "ชุดข้อมูล (Bundle)",
+                    "description": "แพ็กเกจข้อมูลที่มัดรวมไว้"
+                },
+                "CLOSURE": {
+                    "name": "คลอสเชอร์ (Closure)",
+                    "description": "ผลลัพธ์การคำนวณการตกกระทบแสง (BSDF/Closure)"
+                },
+                "FONT": {
+                    "name": "ฟอนต์ (Font)",
+                    "description": "ชนิดข้อมูลฟอนต์ตัวอักษร"
+                },
+                "SCENE": {
+                    "name": "ซีน (Scene)",
+                    "description": "ชนิดข้อมูลซีนปัจจุบันหรืออ้างอิง"
+                },
+                "TEXT": {
+                    "name": "ข้อความหรือสคริปต์ (Text)",
+                    "description": "เชื่อมโยงข้อมูล Text Datablock"
+                },
+                "MASK": {
+                    "name": "มาสก์ (Mask)",
+                    "description": "ชนิดข้อมูลแบบมาสก์ 2D"
+                },
+                "SOUND": {
+                    "name": "เสียง (Sound)",
+                    "description": "ชนิดข้อมูลคลื่นเสียงออดิโอ"
+                }
+            }
+        }
+    },
+    "GeometryNodeSDFGridFillet": {
+        "name": "SDF Grid Fillet",
+        "description": "หลักการ: ลบมุมแหลมของกล่องปริมาตร SDF ให้นุ่มนวลขึ้น\nการประยุกษ์ใช้: ใช้ลบเหลี่ยมอักษร 3 มิติที่เป็นก้อนเนื้อเดียวกันให้ดูมนเป็นลูกโป่ง",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeSDFGridLaplacian": {
+        "name": "SDF Grid Laplacian",
+        "description": "หลักการ: หาค่า Laplacian ของกล่องปริมาตร SDF เพื่อเกลี่ยหรือเพิ่มรายละเอียด\nการประยุกษ์ใช้: ใช้คำนวณเพื่อลบรอยต่อระหว่างวัตถุสองชิ้นที่เอามาบวกกันด้วย SDF ให้เนียนกริบ",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeSDFGridMean": {
+        "name": "SDF Grid Mean",
+        "description": "หลักการ: ปรับความนุ่มนวลของพื้นผิว SDF ให้สมูทขึ้นโดยอิงค่าเฉลี่ย\nการประยุกษ์ใช้: ใช้ละลายผิวโมเดลให้ดูเหมือนช็อกโกแลต หรือน้ำแข็งที่กำลังละลาย",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeSDFGridMeanCurvature": {
+        "name": "SDF Grid Mean Curvature",
+        "description": "หลักการ: ตรวจจับส่วนโค้งเว้าของพื้นผิว SDF\nการประยุกษ์ใช้: ใช้ดึงค่าความเว้าไปใส่เอฟเฟกต์สนิมขึ้นเกาะตามร่อง หรือหิมะตกค้าง",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeSDFGridMedian": {
+        "name": "SDF Grid Median",
+        "description": "หลักการ: ลบสัญญาณรบกวน (Noise) หรือขอบหยักๆ ออกจาก SDF\nการประยุกษ์ใช้: ใช้ขัดผิวโมเดลสแกน 3 มิติที่มีผิวขรุขระให้กลับมาเนียนเรียบ",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeSDFGridOffset": {
+        "name": "SDF Grid Offset",
+        "description": "หลักการ: ขยายหรือหดขนาดของกล่องระยะทาง SDF เหมือนเป่าลูกโป่งให้พอง\nการประยุกษ์ใช้: ใช้พอกความหนาของโมเดลให้เป็นตัวอ้วนกลม หรือทำรัศมีออร่ารอบๆ ตัว",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeFieldToGrid": {
+        "name": "Field To Grid",
+        "description": "หลักการ: แปลงค่าประมวลผล (Field) ไปเป็นตารางข้อมูล Grid แบบตายตัว\nการประยุกษ์ใช้: ใช้แปลงค่าสมการ Noise ให้เป็นก้อนเมฆที่มีปริมาตรจริงไว้เรนเดอร์",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "VECTOR",
+                "RGBA",
+                "ROTATION",
+                "MATRIX",
+                "STRING",
+                "MENU",
+                "SHADER",
+                "OBJECT",
+                "IMAGE",
+                "GEOMETRY",
+                "COLLECTION",
+                "TEXTURE",
+                "MATERIAL",
+                "BUNDLE",
+                "CLOSURE",
+                "FONT",
+                "SCENE",
+                "TEXT",
+                "MASK",
+                "SOUND"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVector"
+                },
+                "RGBA": {
+                    "name": "สี RGBA",
+                    "description": "ชนิดข้อมูลสีแบบมีค่าอัลฟา"
+                },
+                "ROTATION": {
+                    "name": "การหมุน (Rotation)",
+                    "description": "ชนิดข้อมูลการหมุนหรือองศา"
+                },
+                "MATRIX": {
+                    "name": "เมทริกซ์ (Matrix)",
+                    "description": "ชนิดข้อมูลเมทริกซ์การแปลงสภาพ"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "MENU": {
+                    "name": "เมนู (Menu)",
+                    "description": "ข้อมูลตัวเลือกจากเมนู"
+                },
+                "SHADER": {
+                    "name": "เชเดอร์ (Shader)",
+                    "description": "ชนิดข้อมูลสำหรับเชื่อมโยงการแสดงผล Shader"
+                },
+                "OBJECT": {
+                    "name": "Object",
+                    "description": "ชนิดข้อมูลสำหรับอ้างอิงวัตถุ 3 มิติ"
+                },
+                "IMAGE": {
+                    "name": "รูปภาพ (Image)",
+                    "description": "ชนิดข้อมูลรูปภาพ"
+                },
+                "GEOMETRY": {
+                    "name": "Geometry",
+                    "description": "ชนิดข้อมูลรูปทรงตาข่ายหรือเรขาคณิต"
+                },
+                "COLLECTION": {
+                    "name": "คอลเลกชัน (Collection)",
+                    "description": "ชนิดข้อมูลกลุ่มอ็อบเจกต์ (Collection)"
+                },
+                "TEXTURE": {
+                    "name": "Texture",
+                    "description": "ชนิดข้อมูลTextureพื้นผิว"
+                },
+                "MATERIAL": {
+                    "name": "วัสดุ (Material)",
+                    "description": "ชนิดข้อมูลอ้างอิง Material"
+                },
+                "BUNDLE": {
+                    "name": "ชุดข้อมูล (Bundle)",
+                    "description": "แพ็กเกจข้อมูลที่มัดรวมไว้"
+                },
+                "CLOSURE": {
+                    "name": "คลอสเชอร์ (Closure)",
+                    "description": "ผลลัพธ์การคำนวณการตกกระทบแสง (BSDF/Closure)"
+                },
+                "FONT": {
+                    "name": "ฟอนต์ (Font)",
+                    "description": "ชนิดข้อมูลฟอนต์ตัวอักษร"
+                },
+                "SCENE": {
+                    "name": "ซีน (Scene)",
+                    "description": "ชนิดข้อมูลซีนปัจจุบันหรืออ้างอิง"
+                },
+                "TEXT": {
+                    "name": "ข้อความหรือสคริปต์ (Text)",
+                    "description": "เชื่อมโยงข้อมูล Text Datablock"
+                },
+                "MASK": {
+                    "name": "มาสก์ (Mask)",
+                    "description": "ชนิดข้อมูลแบบมาสก์ 2D"
+                },
+                "SOUND": {
+                    "name": "เสียง (Sound)",
+                    "description": "ชนิดข้อมูลคลื่นเสียงออดิโอ"
+                }
+            }
+        }
+    },
+    "GeometryNodeClipGrid": {
+        "name": "Clip Grid",
+        "description": "หลักการ: หั่นหรือตัดขอบเขตของ Volume Grid ทิ้งไปเพื่อประหยัดหน่วยความจำ\nการประยุกษ์ใช้: ใช้ตัดควันที่ลอยหลุดกรอบหน้าต่างออกไปไม่ให้ประมวลผลให้หนักเครื่อง",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeGridDilateErode": {
+        "name": "Grid Dilate & Erode",
+        "description": "หลักการ: ขยายพื้นที่ (Dilate) หรือกัดกร่อนให้เล็กลง (Erode) ของข้อมูล Grid\nการประยุกษ์ใช้: ใช้กัดกร่อนขอบของก้อนเมฆให้แหว่ง หรือทำให้เปลวไฟฟุ้งกระจายใหญ่ขึ้น",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeGridMean": {
+        "name": "Grid Mean",
+        "description": "หลักการ: เบลอข้อมูลใน Grid ให้ผสมกันแบบค่าเฉลี่ย\nการประยุกษ์ใช้: ใช้ทำความร้อนของเปลวไฟให้แผ่กระจายอย่างนุ่มนวล ไม่ดูเป็นจุดพิกเซล",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "VECTOR",
+                "RGBA",
+                "ROTATION",
+                "MATRIX",
+                "STRING",
+                "MENU",
+                "SHADER",
+                "OBJECT",
+                "IMAGE",
+                "GEOMETRY",
+                "COLLECTION",
+                "TEXTURE",
+                "MATERIAL",
+                "BUNDLE",
+                "CLOSURE",
+                "FONT",
+                "SCENE",
+                "TEXT",
+                "MASK",
+                "SOUND"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVector"
+                },
+                "RGBA": {
+                    "name": "สี RGBA",
+                    "description": "ชนิดข้อมูลสีแบบมีค่าอัลฟา"
+                },
+                "ROTATION": {
+                    "name": "การหมุน (Rotation)",
+                    "description": "ชนิดข้อมูลการหมุนหรือองศา"
+                },
+                "MATRIX": {
+                    "name": "เมทริกซ์ (Matrix)",
+                    "description": "ชนิดข้อมูลเมทริกซ์การแปลงสภาพ"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "MENU": {
+                    "name": "เมนู (Menu)",
+                    "description": "ข้อมูลตัวเลือกจากเมนู"
+                },
+                "SHADER": {
+                    "name": "เชเดอร์ (Shader)",
+                    "description": "ชนิดข้อมูลสำหรับเชื่อมโยงการแสดงผล Shader"
+                },
+                "OBJECT": {
+                    "name": "Object",
+                    "description": "ชนิดข้อมูลสำหรับอ้างอิงวัตถุ 3 มิติ"
+                },
+                "IMAGE": {
+                    "name": "รูปภาพ (Image)",
+                    "description": "ชนิดข้อมูลรูปภาพ"
+                },
+                "GEOMETRY": {
+                    "name": "Geometry",
+                    "description": "ชนิดข้อมูลรูปทรงตาข่ายหรือเรขาคณิต"
+                },
+                "COLLECTION": {
+                    "name": "คอลเลกชัน (Collection)",
+                    "description": "ชนิดข้อมูลกลุ่มอ็อบเจกต์ (Collection)"
+                },
+                "TEXTURE": {
+                    "name": "Texture",
+                    "description": "ชนิดข้อมูลTextureพื้นผิว"
+                },
+                "MATERIAL": {
+                    "name": "วัสดุ (Material)",
+                    "description": "ชนิดข้อมูลอ้างอิง Material"
+                },
+                "BUNDLE": {
+                    "name": "ชุดข้อมูล (Bundle)",
+                    "description": "แพ็กเกจข้อมูลที่มัดรวมไว้"
+                },
+                "CLOSURE": {
+                    "name": "คลอสเชอร์ (Closure)",
+                    "description": "ผลลัพธ์การคำนวณการตกกระทบแสง (BSDF/Closure)"
+                },
+                "FONT": {
+                    "name": "ฟอนต์ (Font)",
+                    "description": "ชนิดข้อมูลฟอนต์ตัวอักษร"
+                },
+                "SCENE": {
+                    "name": "ซีน (Scene)",
+                    "description": "ชนิดข้อมูลซีนปัจจุบันหรืออ้างอิง"
+                },
+                "TEXT": {
+                    "name": "ข้อความหรือสคริปต์ (Text)",
+                    "description": "เชื่อมโยงข้อมูล Text Datablock"
+                },
+                "MASK": {
+                    "name": "มาสก์ (Mask)",
+                    "description": "ชนิดข้อมูลแบบมาสก์ 2D"
+                },
+                "SOUND": {
+                    "name": "เสียง (Sound)",
+                    "description": "ชนิดข้อมูลคลื่นเสียงออดิโอ"
+                }
+            }
+        }
+    },
+    "GeometryNodeGridMedian": {
+        "name": "Grid Median",
+        "description": "หลักการ: เกลี่ยสัญญาณรบกวนในข้อมูล Volume Grid โดยใช้ค่ามัธยฐาน\nการประยุกษ์ใช้: ใช้ลบเม็ดพิกเซลประหลาดๆ ที่กระโดดแหลมออกมาจากเมฆ",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "VECTOR",
+                "RGBA",
+                "ROTATION",
+                "MATRIX",
+                "STRING",
+                "MENU",
+                "SHADER",
+                "OBJECT",
+                "IMAGE",
+                "GEOMETRY",
+                "COLLECTION",
+                "TEXTURE",
+                "MATERIAL",
+                "BUNDLE",
+                "CLOSURE",
+                "FONT",
+                "SCENE",
+                "TEXT",
+                "MASK",
+                "SOUND"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVector"
+                },
+                "RGBA": {
+                    "name": "สี RGBA",
+                    "description": "ชนิดข้อมูลสีแบบมีค่าอัลฟา"
+                },
+                "ROTATION": {
+                    "name": "การหมุน (Rotation)",
+                    "description": "ชนิดข้อมูลการหมุนหรือองศา"
+                },
+                "MATRIX": {
+                    "name": "เมทริกซ์ (Matrix)",
+                    "description": "ชนิดข้อมูลเมทริกซ์การแปลงสภาพ"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "MENU": {
+                    "name": "เมนู (Menu)",
+                    "description": "ข้อมูลตัวเลือกจากเมนู"
+                },
+                "SHADER": {
+                    "name": "เชเดอร์ (Shader)",
+                    "description": "ชนิดข้อมูลสำหรับเชื่อมโยงการแสดงผล Shader"
+                },
+                "OBJECT": {
+                    "name": "Object",
+                    "description": "ชนิดข้อมูลสำหรับอ้างอิงวัตถุ 3 มิติ"
+                },
+                "IMAGE": {
+                    "name": "รูปภาพ (Image)",
+                    "description": "ชนิดข้อมูลรูปภาพ"
+                },
+                "GEOMETRY": {
+                    "name": "Geometry",
+                    "description": "ชนิดข้อมูลรูปทรงตาข่ายหรือเรขาคณิต"
+                },
+                "COLLECTION": {
+                    "name": "คอลเลกชัน (Collection)",
+                    "description": "ชนิดข้อมูลกลุ่มอ็อบเจกต์ (Collection)"
+                },
+                "TEXTURE": {
+                    "name": "Texture",
+                    "description": "ชนิดข้อมูลTextureพื้นผิว"
+                },
+                "MATERIAL": {
+                    "name": "วัสดุ (Material)",
+                    "description": "ชนิดข้อมูลอ้างอิง Material"
+                },
+                "BUNDLE": {
+                    "name": "ชุดข้อมูล (Bundle)",
+                    "description": "แพ็กเกจข้อมูลที่มัดรวมไว้"
+                },
+                "CLOSURE": {
+                    "name": "คลอสเชอร์ (Closure)",
+                    "description": "ผลลัพธ์การคำนวณการตกกระทบแสง (BSDF/Closure)"
+                },
+                "FONT": {
+                    "name": "ฟอนต์ (Font)",
+                    "description": "ชนิดข้อมูลฟอนต์ตัวอักษร"
+                },
+                "SCENE": {
+                    "name": "ซีน (Scene)",
+                    "description": "ชนิดข้อมูลซีนปัจจุบันหรืออ้างอิง"
+                },
+                "TEXT": {
+                    "name": "ข้อความหรือสคริปต์ (Text)",
+                    "description": "เชื่อมโยงข้อมูล Text Datablock"
+                },
+                "MASK": {
+                    "name": "มาสก์ (Mask)",
+                    "description": "ชนิดข้อมูลแบบมาสก์ 2D"
+                },
+                "SOUND": {
+                    "name": "เสียง (Sound)",
+                    "description": "ชนิดข้อมูลคลื่นเสียงออดิโอ"
+                }
+            }
+        }
+    },
+    "GeometryNodePruneGrid": {
+        "name": "Prune Grid",
+        "description": "หลักการ: ลบช่อง Voxel ที่ว่างเปล่าหรือมีค่าต่ำมากๆ ทิ้ง เพื่อประหยัด RAM\nการประยุกษ์ใช้: ใช้ล้างข้อมูลควันที่จางไปแล้วทิ้ง เพื่อให้ Simulation รันได้เร็วขึ้น",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeVoxelizeGrid": {
+        "name": "Voxelize Grid",
+        "description": "หลักการ: จัดระเบียบปริมาตรให้เป็นก้อน Voxel ตามตารางที่แน่นอน\nการประยุกษ์ใช้: ใช้แปลงโมเดลรถยนต์ให้กลายเป็นบล็อกคล้ายเกม Minecraft",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeCubeGridTopology": {
+        "name": "Cube Grid Topology",
+        "description": "หลักการ: สร้างโครงตารางเส้นลวดเชื่อมต่อกันในรูปแบบกล่องลูกบาศก์หลายมิติ\nการประยุกษ์ใช้: ใช้สร้างกรงเหล็กขังวัตถุ หรือตารางนั่งร้านก่อสร้างที่ซับซ้อน",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeVolumeCube": {
+        "name": "Volume Cube",
+        "description": "หลักการ: สร้างก้อนปริมาตร (Volume) เริ่มต้นเป็นรูปกล่องสี่เหลี่ยมลูกบาศก์\nการประยุกษ์ใช้: ใช้เป็นกล่องกักเก็บควัน หรือสลักรูปร่างด้วย SDF จากกล่องนี้",
+        "inputs": {
+            "Density": {
+                "name": "ความหนาแน่น (Density)",
+                "description": "ความหนาแน่นของปริมาตร"
+            }
+        },
+        "outputs": {
+            "Volume": {
+                "name": "ปริมาตร (Volume)",
+                "description": "ควันที่สร้างขึ้น"
+            }
+        }
+    },
+    "GeometryNodeSimulationZone": {
+        "name": "Simulation Zone",
+        "description": "หลักการ: สร้างวงจรลูปเพื่อเก็บค่าและคำนวณสะสมแบบเฟรมต่อเฟรม (Simulation)\nการประยุกษ์ใช้: ใช้ทำหิมะร่วงหล่น จำลองฝูงนกบิน หรือรอยเท้าที่ถูกเหยียบซ้ำๆ",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeForEachElementZone": {
+        "name": "For Each Element Zone",
+        "description": "หลักการ: วนลูปการทำงานกระทำทีละชิ้นส่วน (Point/Face/Instance) แยกกัน\nการประยุกษ์ใช้: ใช้สั่งให้บ้านแต่ละหลังที่ Instance มา สุ่มจำนวนชั้นความสูงไม่เท่ากัน",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeRepeatZone": {
+        "name": "Repeat Zone",
+        "description": "หลักการ: วนลูปกระบวนการโหนดเดิมซ้ำๆ หลายๆ รอบในเฟรมเดียว\nการประยุกษ์ใช้: ใช้สร้างขั้นบันไดเวียนที่ต่อกันสูงขึ้นไปเรื่อยๆ ตามจำนวนรอบลูป (เช่น 100 รอบ)",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeStringFormat": {
+        "name": "Format String",
+        "description": "หลักการ: นำค่าตัวเลขและคำสั่งจัดรูปแบบ (เช่น จุดทศนิยม) มาแปลงเป็นข้อความ (String)\nการประยุกษ์ใช้: ใช้แสดงผลเปอร์เซ็นต์โหลดดิ้ง (10.5%) หรือนำค่าความเร็วไปแสดงเป็นป้ายตัวเลข",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeStringJoin": {
+        "name": "Join Strings",
+        "description": "หลักการ: นำข้อความ (String) หลายๆ อันมาต่อกันเป็นประโยคเดียวโดยใช้ตัวเชื่อม\nการประยุกษ์ใช้: ใช้รวมคำว่า 'Level' กับตัวเลข '99' เป็นข้อความ 'Level: 99' ในเกม 3 มิติ",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeStringMatch": {
+        "name": "Match String",
+        "description": "หลักการ: ตรวจสอบว่าข้อความตรงกับเงื่อนไขคำที่ตั้งไว้ หรือขึ้นต้นด้วยคำนี้หรือไม่\nการประยุกษ์ใช้: ใช้เช็คชื่อของ Attribute หรือ Bone ว่าขึ้นต้นด้วย 'DEF_' หรือไม่ เพื่อคัดออก",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeRadialTiling": {
+        "name": "Radial Tiling",
+        "description": "หลักการ: ก๊อปปี้และจัดเรียงองค์ประกอบให้หมุนวนซ้ำๆ เป็นวงกลมรอบจุดศูนย์กลาง\nการประยุกษ์ใช้: ใช้ทำซี่ล้อจักรยาน, ใบพัดลม, หรือเรียงเก้าอี้เป็นวงกลมในโรงละคร",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeCombineBundle": {
+        "name": "Combine Bundle",
+        "description": "หลักการ: จับกลุ่มและมัดรวมสายข้อมูลต่างๆ ให้เป็นเส้นรวบยอด (Bundle) เส้นเดียว\nการประยุกษ์ใช้: ใช้มัดรวมสาย Color, Position, Scale ไว้ในสายเคเบิลเส้นเดียวเพื่อความสะอาด",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeSeparateBundle": {
+        "name": "Separate Bundle",
+        "description": "หลักการ: แตกสายสัญญาณที่ถูกมัดรวมไว้ (Bundle) ให้ออกมาเป็นสายเดี่ยวๆ เพื่อใช้งาน\nการประยุกษ์ใช้: ใช้ดึงข้อมูล Color จากสายที่มัดมาเพื่อเอาไปเปลี่ยนสีให้กับหน้าตัด",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeGetBundleItem": {
+        "name": "Get Bundle Item",
+        "description": "หลักการ: ดึงเฉพาะข้อมูลรายการใดรายการหนึ่งจากกลุ่มข้อมูลที่ถูกมัดไว้ (Bundle)\nการประยุกษ์ใช้: ใช้ล้วงหยิบเอาเฉพาะข้อมูลความเร็วลมจากข้อมูลลมที่ถูกมัดมา",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeStoreBundleItem": {
+        "name": "Store Bundle Item",
+        "description": "หลักการ: นำข้อมูลย่อยเสียบกลับเข้าไปเก็บไว้ในห่อข้อมูลหลัก (Bundle) เดิม\nการประยุกษ์ใช้: ใช้อัปเดตข้อมูลสีเข้าไปในกระเป๋า Bundle ที่พกข้อมูลอื่นๆ ติดตัวอยู่แล้ว",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeJoinBundle": {
+        "name": "Join Bundle",
+        "description": "หลักการ: ผสมสายห่อข้อมูล (Bundle) สองเส้นหรือมากกว่าเข้าด้วยกัน\nการประยุกษ์ใช้: ใช้รวบรวมข้อมูลแสงจากไฟ 2 ดวงเข้าด้วยกันเป็นสายเคเบิล 1 เส้น",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeEvaluateClosure": {
+        "name": "Evaluate Closure",
+        "description": "หลักการ: นำฟังก์ชันหรือโหนดที่ถูกพักการคำนวณไว้ มาสั่งให้ประมวลผลทันที ณ จุดนี้\nการประยุกษ์ใช้: ใช้สร้างเครื่องมือ (Custom Tool) ที่รับคำสั่งเงื่อนไขการเลือกจากผู้ใช้ไปทำงานทีหลัง",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeAccumulateField": {
+        "name": "Accumulate Field",
+        "description": "หลักการ: คำนวณสะสมค่าตัวเลขจากต้นจนถึงจุดปัจจุบัน (เช่น 1, 1+2, 1+2+3)\nการประยุกษ์ใช้: ใช้เรียงหนังสือที่เล่มหนาไม่เท่ากันให้ชิดซ้าย โดยบวกความหนาสะสมไปเรื่อยๆ",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "FLOAT_VECTOR",
+                "TRANSFORM"
+            ],
+            "domain": [
+                "POINT",
+                "EDGE",
+                "FACE",
+                "CORNER",
+                "CURVE",
+                "INSTANCE",
+                "LAYER"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "FLOAT_VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVectorหรือพิกัดทิศทาง"
+                },
+                "TRANSFORM": {
+                    "name": "การแปลง (Transform)",
+                    "description": "ชนิดข้อมูลค่าการเปลี่ยนแปลง Transform"
+                }
+            },
+            "domain": {
+                "POINT": {
+                    "name": "Accumulate Field (จุด)",
+                    "description": "ตัวเลือกโหมด: จุด"
+                },
+                "EDGE": {
+                    "name": "Accumulate Field (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                },
+                "FACE": {
+                    "name": "Accumulate Field (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                },
+                "CORNER": {
+                    "name": "Accumulate Field (มุม)",
+                    "description": "ตัวเลือกโหมด: มุม"
+                },
+                "CURVE": {
+                    "name": "Accumulate Field (เส้นโค้ง)",
+                    "description": "ตัวเลือกโหมด: เส้นโค้ง"
+                },
+                "INSTANCE": {
+                    "name": "Accumulate Field (Instance)",
+                    "description": "ตัวเลือกโหมด: Instance"
+                },
+                "LAYER": {
+                    "name": "Accumulate Field (เลเยอร์)",
+                    "description": "ตัวเลือกโหมด: เลเยอร์"
+                }
+            }
+        }
+    },
+    "GeometryNodeFieldAtIndex": {
+        "name": "Evaluate at Index",
+        "description": "หลักการ: ล้วงหยิบค่าข้อมูลเจาะจงจากชิ้นส่วน Index ที่ระบุเท่านั้น\nการประยุกษ์ใช้: ใช้ดึงความสูงของเสาต้นแรกสุด (Index 0) ไปให้เสาอื่นๆ อ้างอิงขนาดตาม",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "domain": [
+                "POINT",
+                "EDGE",
+                "FACE",
+                "CORNER",
+                "CURVE",
+                "INSTANCE",
+                "LAYER"
+            ],
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "FLOAT_VECTOR",
+                "FLOAT_COLOR",
+                "QUATERNION",
+                "FLOAT4X4",
+                "STRING",
+                "INT8",
+                "INT16_2D",
+                "INT32_2D",
+                "FLOAT2",
+                "BYTE_COLOR"
+            ]
+        },
+        "sub_types": {
+            "domain": {
+                "POINT": {
+                    "name": "Evaluate at Index (จุด)",
+                    "description": "ตัวเลือกโหมด: จุด"
+                },
+                "EDGE": {
+                    "name": "Evaluate at Index (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                },
+                "FACE": {
+                    "name": "Evaluate at Index (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                },
+                "CORNER": {
+                    "name": "Evaluate at Index (มุม)",
+                    "description": "ตัวเลือกโหมด: มุม"
+                },
+                "CURVE": {
+                    "name": "Evaluate at Index (เส้นโค้ง)",
+                    "description": "ตัวเลือกโหมด: เส้นโค้ง"
+                },
+                "INSTANCE": {
+                    "name": "Evaluate at Index (Instance)",
+                    "description": "ตัวเลือกโหมด: Instance"
+                },
+                "LAYER": {
+                    "name": "Evaluate at Index (เลเยอร์)",
+                    "description": "ตัวเลือกโหมด: เลเยอร์"
+                }
+            },
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "FLOAT_VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVectorหรือพิกัดทิศทาง"
+                },
+                "FLOAT_COLOR": {
+                    "name": "สี (Color)",
+                    "description": "ชนิดข้อมูลสี"
+                },
+                "QUATERNION": {
+                    "name": "ควอเทอร์เนียน (Quaternion)",
+                    "description": "ชนิดข้อมูลการหมุนในรูปแบบ Quaternion"
+                },
+                "FLOAT4X4": {
+                    "name": "เมทริกซ์ 4x4 (Float4x4)",
+                    "description": "ชนิดข้อมูลเมทริกซ์ 4x4"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "INT8": {
+                    "name": "จำนวนเต็ม 8 บิต (8-bit Integer)",
+                    "description": "ชนิดข้อมูลจำนวนเต็ม 8 บิต"
+                },
+                "INT16_2D": {
+                    "name": "16-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 16 บิต"
+                },
+                "INT32_2D": {
+                    "name": "32-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 32 บิต"
+                },
+                "FLOAT2": {
+                    "name": "Float 2D (Float2)",
+                    "description": "VectorFloatแบบ 2 แกน"
+                },
+                "BYTE_COLOR": {
+                    "name": "สีแบบไบต์ (Byte Color)",
+                    "description": "สีในระดับ 8 บิต (0-255)"
+                }
+            }
+        }
+    },
+    "GeometryNodeFieldOnDomain": {
+        "name": "Evaluate on Domain",
+        "description": "หลักการ: สั่งให้ประมวลผลข้อมูลล่วงหน้าบนโดเมน (จุด, เส้น, หน้า) ที่กำหนดก่อนเอาไปใช้\nการประยุกษ์ใช้: ใช้บังคับให้คำนวณสีบนหน้าตัดทั้งหมดก่อน แล้วค่อยสุ่มสีลงแต่ละหน้าตัด",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "domain": [
+                "POINT",
+                "EDGE",
+                "FACE",
+                "CORNER",
+                "CURVE",
+                "INSTANCE",
+                "LAYER"
+            ],
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "FLOAT_VECTOR",
+                "FLOAT_COLOR",
+                "QUATERNION",
+                "FLOAT4X4",
+                "STRING",
+                "INT8",
+                "INT16_2D",
+                "INT32_2D",
+                "FLOAT2",
+                "BYTE_COLOR"
+            ]
+        },
+        "sub_types": {
+            "domain": {
+                "POINT": {
+                    "name": "Evaluate on Domain (จุด)",
+                    "description": "ตัวเลือกโหมด: จุด"
+                },
+                "EDGE": {
+                    "name": "Evaluate on Domain (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                },
+                "FACE": {
+                    "name": "Evaluate on Domain (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                },
+                "CORNER": {
+                    "name": "Evaluate on Domain (มุม)",
+                    "description": "ตัวเลือกโหมด: มุม"
+                },
+                "CURVE": {
+                    "name": "Evaluate on Domain (เส้นโค้ง)",
+                    "description": "ตัวเลือกโหมด: เส้นโค้ง"
+                },
+                "INSTANCE": {
+                    "name": "Evaluate on Domain (Instance)",
+                    "description": "ตัวเลือกโหมด: Instance"
+                },
+                "LAYER": {
+                    "name": "Evaluate on Domain (เลเยอร์)",
+                    "description": "ตัวเลือกโหมด: เลเยอร์"
+                }
+            },
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "FLOAT_VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVectorหรือพิกัดทิศทาง"
+                },
+                "FLOAT_COLOR": {
+                    "name": "สี (Color)",
+                    "description": "ชนิดข้อมูลสี"
+                },
+                "QUATERNION": {
+                    "name": "ควอเทอร์เนียน (Quaternion)",
+                    "description": "ชนิดข้อมูลการหมุนในรูปแบบ Quaternion"
+                },
+                "FLOAT4X4": {
+                    "name": "เมทริกซ์ 4x4 (Float4x4)",
+                    "description": "ชนิดข้อมูลเมทริกซ์ 4x4"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "INT8": {
+                    "name": "จำนวนเต็ม 8 บิต (8-bit Integer)",
+                    "description": "ชนิดข้อมูลจำนวนเต็ม 8 บิต"
+                },
+                "INT16_2D": {
+                    "name": "16-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 16 บิต"
+                },
+                "INT32_2D": {
+                    "name": "32-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 32 บิต"
+                },
+                "FLOAT2": {
+                    "name": "Float 2D (Float2)",
+                    "description": "VectorFloatแบบ 2 แกน"
+                },
+                "BYTE_COLOR": {
+                    "name": "สีแบบไบต์ (Byte Color)",
+                    "description": "สีในระดับ 8 บิต (0-255)"
+                }
+            }
+        }
+    },
+    "GeometryNodeFieldAverage": {
+        "name": "Field Average",
+        "description": "หลักการ: คำนวณหาค่าเฉลี่ยแบบเรียลไทม์จากระบบที่กระจายตัว\nการประยุกษ์ใช้: ใช้หาความสูงเฉลี่ยของต้นไม้ทั้งป่า เพื่อนำไปปรับความหนาแน่นรวม",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "FLOAT_VECTOR"
+            ],
+            "domain": [
+                "POINT",
+                "EDGE",
+                "FACE",
+                "CORNER",
+                "CURVE",
+                "INSTANCE",
+                "LAYER"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "FLOAT_VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVectorหรือพิกัดทิศทาง"
+                }
+            },
+            "domain": {
+                "POINT": {
+                    "name": "Field Average (จุด)",
+                    "description": "ตัวเลือกโหมด: จุด"
+                },
+                "EDGE": {
+                    "name": "Field Average (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                },
+                "FACE": {
+                    "name": "Field Average (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                },
+                "CORNER": {
+                    "name": "Field Average (มุม)",
+                    "description": "ตัวเลือกโหมด: มุม"
+                },
+                "CURVE": {
+                    "name": "Field Average (เส้นโค้ง)",
+                    "description": "ตัวเลือกโหมด: เส้นโค้ง"
+                },
+                "INSTANCE": {
+                    "name": "Field Average (Instance)",
+                    "description": "ตัวเลือกโหมด: Instance"
+                },
+                "LAYER": {
+                    "name": "Field Average (เลเยอร์)",
+                    "description": "ตัวเลือกโหมด: เลเยอร์"
+                }
+            }
+        }
+    },
+    "GeometryNodeFieldMinMax": {
+        "name": "Field Min & Max",
+        "description": "หลักการ: ค้นหาค่าตัวเลขที่น้อยที่สุดและมากที่สุดที่กำลังถูกใช้ในระบบ\nการประยุกษ์ใช้: ใช้หาจุดที่ร้อนที่สุดบนตัวเครื่องยนต์เพื่อเปลี่ยนสีเหล็กเป็นสีแดงอุณหภูมิสูง",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeFieldVariance": {
+        "name": "Field Variance",
+        "description": "หลักการ: หาค่าความแปรปรวนหรือความแกว่งของข้อมูลที่กระจายอยู่\nการประยุกษ์ใช้: ใช้หาระดับความแตกต่างของขนาดภูเขาเพื่อกระจายความขรุขระให้สมจริง",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "FLOAT_VECTOR"
+            ],
+            "domain": [
+                "POINT",
+                "EDGE",
+                "FACE",
+                "CORNER",
+                "CURVE",
+                "INSTANCE",
+                "LAYER"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "FLOAT_VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVectorหรือพิกัดทิศทาง"
+                }
+            },
+            "domain": {
+                "POINT": {
+                    "name": "Field Variance (จุด)",
+                    "description": "ตัวเลือกโหมด: จุด"
+                },
+                "EDGE": {
+                    "name": "Field Variance (เส้น)",
+                    "description": "ตัวเลือกโหมด: เส้น"
+                },
+                "FACE": {
+                    "name": "Field Variance (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                },
+                "CORNER": {
+                    "name": "Field Variance (มุม)",
+                    "description": "ตัวเลือกโหมด: มุม"
+                },
+                "CURVE": {
+                    "name": "Field Variance (เส้นโค้ง)",
+                    "description": "ตัวเลือกโหมด: เส้นโค้ง"
+                },
+                "INSTANCE": {
+                    "name": "Field Variance (Instance)",
+                    "description": "ตัวเลือกโหมด: Instance"
+                },
+                "LAYER": {
+                    "name": "Field Variance (เลเยอร์)",
+                    "description": "ตัวเลือกโหมด: เลเยอร์"
+                }
+            }
+        }
+    },
+    "GeometryNodeFieldToList": {
+        "name": "Field to List",
+        "description": "หลักการ: รวบรวมข้อมูล Field ที่ทำงานแยกกันอิสระ ให้มารวมเป็นรายการ (List) แถวเรียง\nการประยุกษ์ใช้: ใช้ดึงรายชื่อสีทั้งหมดบนโมเดล 100 ชิ้นมารวมเป็นก้อนเดียวกันเพื่อส่งออก",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeGetListItem": {
+        "name": "Get List Item",
+        "description": "หลักการ: ดึงข้อมูลตัวที่ N ในคิวรายการ (List) ออกมา\nการประยุกษ์ใช้: ใช้ดึงสีลำดับที่ 3 จากชุดสี Palette ที่ส่งเข้ามาเพื่อทาสีบ้านหลังถัดไป",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeListLength": {
+        "name": "List Length",
+        "description": "หลักการ: นับจำนวนคิวหรือข้อมูลที่อยู่ในชุดรายการ (List) ว่ามีทั้งหมดกี่ชิ้น\nการประยุกษ์ใช้: ใช้นับว่ามีตึกกี่แบบในกระเป๋าคอลเลกชัน เพื่อคำนวณหาลูปการสุ่ม",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "VECTOR",
+                "RGBA",
+                "ROTATION",
+                "MATRIX",
+                "STRING",
+                "MENU",
+                "SHADER",
+                "OBJECT",
+                "IMAGE",
+                "GEOMETRY",
+                "COLLECTION",
+                "TEXTURE",
+                "MATERIAL",
+                "BUNDLE",
+                "CLOSURE",
+                "FONT",
+                "SCENE",
+                "TEXT",
+                "MASK",
+                "SOUND"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVector"
+                },
+                "RGBA": {
+                    "name": "สี RGBA",
+                    "description": "ชนิดข้อมูลสีแบบมีค่าอัลฟา"
+                },
+                "ROTATION": {
+                    "name": "การหมุน (Rotation)",
+                    "description": "ชนิดข้อมูลการหมุนหรือองศา"
+                },
+                "MATRIX": {
+                    "name": "เมทริกซ์ (Matrix)",
+                    "description": "ชนิดข้อมูลเมทริกซ์การแปลงสภาพ"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "MENU": {
+                    "name": "เมนู (Menu)",
+                    "description": "ข้อมูลตัวเลือกจากเมนู"
+                },
+                "SHADER": {
+                    "name": "เชเดอร์ (Shader)",
+                    "description": "ชนิดข้อมูลสำหรับเชื่อมโยงการแสดงผล Shader"
+                },
+                "OBJECT": {
+                    "name": "Object",
+                    "description": "ชนิดข้อมูลสำหรับอ้างอิงวัตถุ 3 มิติ"
+                },
+                "IMAGE": {
+                    "name": "รูปภาพ (Image)",
+                    "description": "ชนิดข้อมูลรูปภาพ"
+                },
+                "GEOMETRY": {
+                    "name": "Geometry",
+                    "description": "ชนิดข้อมูลรูปทรงตาข่ายหรือเรขาคณิต"
+                },
+                "COLLECTION": {
+                    "name": "คอลเลกชัน (Collection)",
+                    "description": "ชนิดข้อมูลกลุ่มอ็อบเจกต์ (Collection)"
+                },
+                "TEXTURE": {
+                    "name": "Texture",
+                    "description": "ชนิดข้อมูลTextureพื้นผิว"
+                },
+                "MATERIAL": {
+                    "name": "วัสดุ (Material)",
+                    "description": "ชนิดข้อมูลอ้างอิง Material"
+                },
+                "BUNDLE": {
+                    "name": "ชุดข้อมูล (Bundle)",
+                    "description": "แพ็กเกจข้อมูลที่มัดรวมไว้"
+                },
+                "CLOSURE": {
+                    "name": "คลอสเชอร์ (Closure)",
+                    "description": "ผลลัพธ์การคำนวณการตกกระทบแสง (BSDF/Closure)"
+                },
+                "FONT": {
+                    "name": "ฟอนต์ (Font)",
+                    "description": "ชนิดข้อมูลฟอนต์ตัวอักษร"
+                },
+                "SCENE": {
+                    "name": "ซีน (Scene)",
+                    "description": "ชนิดข้อมูลซีนปัจจุบันหรืออ้างอิง"
+                },
+                "TEXT": {
+                    "name": "ข้อความหรือสคริปต์ (Text)",
+                    "description": "เชื่อมโยงข้อมูล Text Datablock"
+                },
+                "MASK": {
+                    "name": "มาสก์ (Mask)",
+                    "description": "ชนิดข้อมูลแบบมาสก์ 2D"
+                },
+                "SOUND": {
+                    "name": "เสียง (Sound)",
+                    "description": "ชนิดข้อมูลคลื่นเสียงออดิโอ"
+                }
+            }
+        }
+    },
+    "GeometryNodeIndexSwitch": {
+        "name": "Index Switch",
+        "description": "หลักการ: ทำสวิตช์เลือกช่องทางออก โดยใช้ตัวเลขรหัส (Index) เป็นตัวชี้\nการประยุกษ์ใช้: ใช้เลือกว่าจะปล่อยน้ำ (0) ปล่อยควัน (1) หรือปล่อยไฟ (2) ตามปุ่มที่ตั้ง",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "VECTOR",
+                "RGBA",
+                "ROTATION",
+                "MATRIX",
+                "STRING",
+                "MENU",
+                "SHADER",
+                "OBJECT",
+                "IMAGE",
+                "GEOMETRY",
+                "COLLECTION",
+                "TEXTURE",
+                "MATERIAL",
+                "BUNDLE",
+                "CLOSURE",
+                "FONT",
+                "SCENE",
+                "TEXT",
+                "MASK",
+                "SOUND"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVector"
+                },
+                "RGBA": {
+                    "name": "สี RGBA",
+                    "description": "ชนิดข้อมูลสีแบบมีค่าอัลฟา"
+                },
+                "ROTATION": {
+                    "name": "การหมุน (Rotation)",
+                    "description": "ชนิดข้อมูลการหมุนหรือองศา"
+                },
+                "MATRIX": {
+                    "name": "เมทริกซ์ (Matrix)",
+                    "description": "ชนิดข้อมูลเมทริกซ์การแปลงสภาพ"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "MENU": {
+                    "name": "เมนู (Menu)",
+                    "description": "ข้อมูลตัวเลือกจากเมนู"
+                },
+                "SHADER": {
+                    "name": "เชเดอร์ (Shader)",
+                    "description": "ชนิดข้อมูลสำหรับเชื่อมโยงการแสดงผล Shader"
+                },
+                "OBJECT": {
+                    "name": "Object",
+                    "description": "ชนิดข้อมูลสำหรับอ้างอิงวัตถุ 3 มิติ"
+                },
+                "IMAGE": {
+                    "name": "รูปภาพ (Image)",
+                    "description": "ชนิดข้อมูลรูปภาพ"
+                },
+                "GEOMETRY": {
+                    "name": "Geometry",
+                    "description": "ชนิดข้อมูลรูปทรงตาข่ายหรือเรขาคณิต"
+                },
+                "COLLECTION": {
+                    "name": "คอลเลกชัน (Collection)",
+                    "description": "ชนิดข้อมูลกลุ่มอ็อบเจกต์ (Collection)"
+                },
+                "TEXTURE": {
+                    "name": "Texture",
+                    "description": "ชนิดข้อมูลTextureพื้นผิว"
+                },
+                "MATERIAL": {
+                    "name": "วัสดุ (Material)",
+                    "description": "ชนิดข้อมูลอ้างอิง Material"
+                },
+                "BUNDLE": {
+                    "name": "ชุดข้อมูล (Bundle)",
+                    "description": "แพ็กเกจข้อมูลที่มัดรวมไว้"
+                },
+                "CLOSURE": {
+                    "name": "คลอสเชอร์ (Closure)",
+                    "description": "ผลลัพธ์การคำนวณการตกกระทบแสง (BSDF/Closure)"
+                },
+                "FONT": {
+                    "name": "ฟอนต์ (Font)",
+                    "description": "ชนิดข้อมูลฟอนต์ตัวอักษร"
+                },
+                "SCENE": {
+                    "name": "ซีน (Scene)",
+                    "description": "ชนิดข้อมูลซีนปัจจุบันหรืออ้างอิง"
+                },
+                "TEXT": {
+                    "name": "ข้อความหรือสคริปต์ (Text)",
+                    "description": "เชื่อมโยงข้อมูล Text Datablock"
+                },
+                "MASK": {
+                    "name": "มาสก์ (Mask)",
+                    "description": "ชนิดข้อมูลแบบมาสก์ 2D"
+                },
+                "SOUND": {
+                    "name": "เสียง (Sound)",
+                    "description": "ชนิดข้อมูลคลื่นเสียงออดิโอ"
+                }
+            }
+        }
+    },
+    "GeometryNodeMenuSwitch": {
+        "name": "Menu Switch",
+        "description": "หลักการ: สร้างปุ่มสวิตช์เป็นเมนูรายชื่อ Dropdown ให้ผู้ใช้คลิกเลือกได้จาก UI\nการประยุกษ์ใช้: ใช้สร้างเมนู 'วงกลม/สี่เหลี่ยม/ดาว' บนหน้าจอ Property ภายนอกให้ผู้ใช้กด",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "VECTOR",
+                "RGBA",
+                "ROTATION",
+                "MATRIX",
+                "STRING",
+                "MENU",
+                "SHADER",
+                "OBJECT",
+                "IMAGE",
+                "GEOMETRY",
+                "COLLECTION",
+                "TEXTURE",
+                "MATERIAL",
+                "BUNDLE",
+                "CLOSURE",
+                "FONT",
+                "SCENE",
+                "TEXT",
+                "MASK",
+                "SOUND"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVector"
+                },
+                "RGBA": {
+                    "name": "สี RGBA",
+                    "description": "ชนิดข้อมูลสีแบบมีค่าอัลฟา"
+                },
+                "ROTATION": {
+                    "name": "การหมุน (Rotation)",
+                    "description": "ชนิดข้อมูลการหมุนหรือองศา"
+                },
+                "MATRIX": {
+                    "name": "เมทริกซ์ (Matrix)",
+                    "description": "ชนิดข้อมูลเมทริกซ์การแปลงสภาพ"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "MENU": {
+                    "name": "เมนู (Menu)",
+                    "description": "ข้อมูลตัวเลือกจากเมนู"
+                },
+                "SHADER": {
+                    "name": "เชเดอร์ (Shader)",
+                    "description": "ชนิดข้อมูลสำหรับเชื่อมโยงการแสดงผล Shader"
+                },
+                "OBJECT": {
+                    "name": "Object",
+                    "description": "ชนิดข้อมูลสำหรับอ้างอิงวัตถุ 3 มิติ"
+                },
+                "IMAGE": {
+                    "name": "รูปภาพ (Image)",
+                    "description": "ชนิดข้อมูลรูปภาพ"
+                },
+                "GEOMETRY": {
+                    "name": "Geometry",
+                    "description": "ชนิดข้อมูลรูปทรงตาข่ายหรือเรขาคณิต"
+                },
+                "COLLECTION": {
+                    "name": "คอลเลกชัน (Collection)",
+                    "description": "ชนิดข้อมูลกลุ่มอ็อบเจกต์ (Collection)"
+                },
+                "TEXTURE": {
+                    "name": "Texture",
+                    "description": "ชนิดข้อมูลTextureพื้นผิว"
+                },
+                "MATERIAL": {
+                    "name": "วัสดุ (Material)",
+                    "description": "ชนิดข้อมูลอ้างอิง Material"
+                },
+                "BUNDLE": {
+                    "name": "ชุดข้อมูล (Bundle)",
+                    "description": "แพ็กเกจข้อมูลที่มัดรวมไว้"
+                },
+                "CLOSURE": {
+                    "name": "คลอสเชอร์ (Closure)",
+                    "description": "ผลลัพธ์การคำนวณการตกกระทบแสง (BSDF/Closure)"
+                },
+                "FONT": {
+                    "name": "ฟอนต์ (Font)",
+                    "description": "ชนิดข้อมูลฟอนต์ตัวอักษร"
+                },
+                "SCENE": {
+                    "name": "ซีน (Scene)",
+                    "description": "ชนิดข้อมูลซีนปัจจุบันหรืออ้างอิง"
+                },
+                "TEXT": {
+                    "name": "ข้อความหรือสคริปต์ (Text)",
+                    "description": "เชื่อมโยงข้อมูล Text Datablock"
+                },
+                "MASK": {
+                    "name": "มาสก์ (Mask)",
+                    "description": "ชนิดข้อมูลแบบมาสก์ 2D"
+                },
+                "SOUND": {
+                    "name": "เสียง (Sound)",
+                    "description": "ชนิดข้อมูลคลื่นเสียงออดิโอ"
+                }
+            }
+        }
+    },
+    "GeometryNodeSwitch": {
+        "name": "Switch",
+        "description": "หลักการ: สวิตช์ปิด-เปิดแบบ 2 ทางเลือก (True/False) สลับไปมา\nการประยุกษ์ใช้: ใช้สร้างปุ่มเช็คบ็อกซ์ให้ผู้ใช้เลือกว่าจะ 'เปิดหลังคา' หรือ 'ปิดหลังคา'",
+        "inputs": {
+            "Switch": {
+                "name": "สลับ (Switch)",
+                "description": "สวิตช์เงื่อนไขถ้าเป็นจริง (True) จะใช้ค่าแรก ถ้าเท็จ (False) จะใช้ค่าที่สอง"
+            }
+        },
+        "outputs": {
+            "Output": {
+                "name": "ส่งออก (Output)",
+                "description": "ข้อมูลที่ถูกเลือกส่งผ่านออกไป"
+            }
+        },
+        "dropdowns": {
+            "input_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "VECTOR",
+                "RGBA",
+                "ROTATION",
+                "MATRIX",
+                "STRING",
+                "MENU",
+                "SHADER",
+                "OBJECT",
+                "IMAGE",
+                "GEOMETRY",
+                "COLLECTION",
+                "TEXTURE",
+                "MATERIAL",
+                "BUNDLE",
+                "CLOSURE",
+                "FONT",
+                "SCENE",
+                "TEXT",
+                "MASK",
+                "SOUND"
+            ]
+        },
+        "sub_types": {
+            "input_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVector"
+                },
+                "RGBA": {
+                    "name": "สี RGBA",
+                    "description": "ชนิดข้อมูลสีแบบมีค่าอัลฟา"
+                },
+                "ROTATION": {
+                    "name": "การหมุน (Rotation)",
+                    "description": "ชนิดข้อมูลการหมุนหรือองศา"
+                },
+                "MATRIX": {
+                    "name": "เมทริกซ์ (Matrix)",
+                    "description": "ชนิดข้อมูลเมทริกซ์การแปลงสภาพ"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "MENU": {
+                    "name": "เมนู (Menu)",
+                    "description": "ข้อมูลตัวเลือกจากเมนู"
+                },
+                "SHADER": {
+                    "name": "เชเดอร์ (Shader)",
+                    "description": "ชนิดข้อมูลสำหรับเชื่อมโยงการแสดงผล Shader"
+                },
+                "OBJECT": {
+                    "name": "Object",
+                    "description": "ชนิดข้อมูลสำหรับอ้างอิงวัตถุ 3 มิติ"
+                },
+                "IMAGE": {
+                    "name": "รูปภาพ (Image)",
+                    "description": "ชนิดข้อมูลรูปภาพ"
+                },
+                "GEOMETRY": {
+                    "name": "Geometry",
+                    "description": "ชนิดข้อมูลรูปทรงตาข่ายหรือเรขาคณิต"
+                },
+                "COLLECTION": {
+                    "name": "คอลเลกชัน (Collection)",
+                    "description": "ชนิดข้อมูลกลุ่มอ็อบเจกต์ (Collection)"
+                },
+                "TEXTURE": {
+                    "name": "Texture",
+                    "description": "ชนิดข้อมูลTextureพื้นผิว"
+                },
+                "MATERIAL": {
+                    "name": "วัสดุ (Material)",
+                    "description": "ชนิดข้อมูลอ้างอิง Material"
+                },
+                "BUNDLE": {
+                    "name": "ชุดข้อมูล (Bundle)",
+                    "description": "แพ็กเกจข้อมูลที่มัดรวมไว้"
+                },
+                "CLOSURE": {
+                    "name": "คลอสเชอร์ (Closure)",
+                    "description": "ผลลัพธ์การคำนวณการตกกระทบแสง (BSDF/Closure)"
+                },
+                "FONT": {
+                    "name": "ฟอนต์ (Font)",
+                    "description": "ชนิดข้อมูลฟอนต์ตัวอักษร"
+                },
+                "SCENE": {
+                    "name": "ซีน (Scene)",
+                    "description": "ชนิดข้อมูลซีนปัจจุบันหรืออ้างอิง"
+                },
+                "TEXT": {
+                    "name": "ข้อความหรือสคริปต์ (Text)",
+                    "description": "เชื่อมโยงข้อมูล Text Datablock"
+                },
+                "MASK": {
+                    "name": "มาสก์ (Mask)",
+                    "description": "ชนิดข้อมูลแบบมาสก์ 2D"
+                },
+                "SOUND": {
+                    "name": "เสียง (Sound)",
+                    "description": "ชนิดข้อมูลคลื่นเสียงออดิโอ"
+                }
+            }
+        }
+    }
+}
+

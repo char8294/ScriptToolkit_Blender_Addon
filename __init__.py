@@ -1,8 +1,8 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 4, 10),
-    "blender": (5, 1, 0),
+    "version": (0, 5, 0),
+    "blender": (5, 2, 0),
     "location": "3D View > Sidebar > Script Toolkit",
     "description": "FBX batch tools in an isolated Blender worker plus selected-object cleanup tools.",
     "category": "Import-Export",
@@ -29,7 +29,10 @@ from .features import (
     empty_to_bone,
     hair_check,
     kj_export,
+    learn_node_blender,
     root_motion,
+    quick_render,
+    turntable_camera,
 )
 
 if "bpy" in locals():
@@ -43,6 +46,9 @@ if "bpy" in locals():
     importlib.reload(arp_retarget_preset)
     importlib.reload(kj_export)
     importlib.reload(root_motion)
+    importlib.reload(turntable_camera)
+    importlib.reload(quick_render)
+    importlib.reload(learn_node_blender)
 
 import bpy
 
@@ -93,6 +99,9 @@ def _tool_description(tool):
         "ARP_REMAP_PRESET": "สร้างรายการ mapping แบบหลายรายการและ export เป็น Auto-Rig Pro .bmap preset.",
         "KJ_EXPORT": "Batch export meshes with a pinned armature using the Better FBX exporter.",
         "ROOT_MOTION": "Create Root Motion helper shapes and pair selected bones with RM_ objects.",
+        "TURNTABLE_CAMERA": "Turntable Camera controls integrated into the Script Toolkit panel.",
+        "QUICK_RENDER": "Quick Render controls integrated into the Script Toolkit panel.",
+        "LEARN_NODE": "Learn Node runs in the Node Editor; this entry only explains where to find it.",
     }[tool]
 
 
@@ -146,6 +155,9 @@ class ST_Properties(PropertyGroup):
                 "Create Root Motion",
                 "Create helper shapes and pair selected bones with RM_ objects",
             ),
+            ("TURNTABLE_CAMERA", "Turntable Camera", "Create turntable camera or model rotation animations"),
+            ("QUICK_RENDER", "Quick Render", "Render visible or selected objects with saved settings"),
+            ("LEARN_NODE", "Learn Node Blender", "Learn Node runs continuously in the Node Editor"),
         ],
         default="REEXPORT",
     )
@@ -810,6 +822,16 @@ class ST_OT_do_update(Operator):
                 "features/align_bones.py",
                 "features/arp_retarget_preset.py",
                 "features/kj_export.py",
+                "features/root_motion.py",
+                "features/turntable_camera.py",
+                "features/quick_render.py",
+                "features/learn_node_blender.py",
+                "features/learn_node_data/curve_nodes.json",
+                "features/learn_node_data/geometry_nodes.json",
+                "features/learn_node_data/input_nodes.json",
+                "features/learn_node_data/math_nodes.json",
+                "features/learn_node_data/mesh_nodes.json",
+                "features/learn_node_data/misc_nodes.json",
             )
             package_root = update_utils.extract_and_validate_archive(
                 archive_path, extraction_dir, expected_version=metadata.version, required_runtime_files=required_runtime_files
@@ -890,6 +912,14 @@ class ST_PT_panel(Panel):
             kj_export.draw_ui(layout, context)
         elif props.tool == "ROOT_MOTION":
             root_motion.draw_ui(layout, context)
+        elif props.tool == "TURNTABLE_CAMERA":
+            turntable_camera.draw_ui(layout, context)
+        elif props.tool == "QUICK_RENDER":
+            quick_render.draw_ui(layout, context)
+        elif props.tool == "LEARN_NODE":
+            box = layout.box()
+            box.label(text="Add-on นี้อยู่ในหน้า Node", icon="NODETREE")
+            box.label(text="Add-on ทำงานตลอดเวลา", icon="INFO")
 
         if props.tool in STATUS_TOOLS:
             status = layout.box()
@@ -978,6 +1008,9 @@ def register():
     arp_retarget_preset.register()
     kj_export.register()
     root_motion.register()
+    turntable_camera.register()
+    quick_render.register()
+    learn_node_blender.register()
     for cls in CLASSES:
         bpy.utils.register_class(cls)
     bpy.types.Scene.script_toolkit = bpy.props.PointerProperty(type=ST_Properties)
@@ -987,6 +1020,9 @@ def unregister():
     del bpy.types.Scene.script_toolkit
     for cls in reversed(CLASSES):
         bpy.utils.unregister_class(cls)
+    learn_node_blender.unregister()
+    quick_render.unregister()
+    turntable_camera.unregister()
     biped_names.unregister()
     hair_check.unregister()
     empty_to_bone.unregister()

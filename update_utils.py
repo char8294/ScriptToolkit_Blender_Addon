@@ -31,6 +31,15 @@ REQUIRED_RUNTIME_FILES = (
     "features/arp_retarget_preset.py",
     "features/kj_export.py",
     "features/root_motion.py",
+    "features/turntable_camera.py",
+    "features/quick_render.py",
+    "features/learn_node_blender.py",
+    "features/learn_node_data/curve_nodes.json",
+    "features/learn_node_data/geometry_nodes.json",
+    "features/learn_node_data/input_nodes.json",
+    "features/learn_node_data/math_nodes.json",
+    "features/learn_node_data/mesh_nodes.json",
+    "features/learn_node_data/misc_nodes.json",
 )
 
 
@@ -297,8 +306,9 @@ def build_release_archive(
             runtime_files.extend(
                 sorted(
                     path
-                    for path in package_dir.rglob("*.py")
+                    for path in package_dir.rglob("*")
                     if path.is_file()
+                    and path.suffix.casefold() in {".py", ".json"}
                 )
             )
     data_dir = source_dir / "data"

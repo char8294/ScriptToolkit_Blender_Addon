@@ -1,0 +1,737 @@
+{
+    "GeometryNodeExtrudeMesh": {
+        "name": "Extrude Mesh",
+        "description": "หลักการ: ยืดหน้าตัด (Faces) หรือเส้น (Edges) ของรูปทรงตาข่ายออกไปตามทิศทาง\nการประยุกษ์ใช้: ใช้ทำความหนาให้กับผนังห้อง, สร้างหนามแหลมงอกจากพื้นผิว, หรือทำตึกสูงจากฐาน",
+        "inputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "รูปทรงตาข่ายต้นฉบับ"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "เงื่อนไขการเลือกส่วนที่จะยืด (True/False)"
+            },
+            "Offset": {
+                "name": "ระยะชดเชย (Offset)",
+                "description": "Vectorระยะทางที่จะยืดออกไป"
+            },
+            "Offset Scale": {
+                "name": "Scaleระยะชดเชย (Offset Scale)",
+                "description": "ตัวคูณระยะทางยืด"
+            },
+            "Individual": {
+                "name": "อิสระ (Individual)",
+                "description": "ยืดแยกกันแต่ละส่วนหรือไม่"
+            }
+        },
+        "outputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "ผลลัพธ์รูปทรงที่ยืดแล้ว"
+            },
+            "Top": {
+                "name": "บน (Top)",
+                "description": "ส่วนหน้าตัดที่เกิดใหม่ด้านบนสุด"
+            },
+            "Side": {
+                "name": "ด้าน (Side)",
+                "description": "ส่วนหน้าตัดที่เกิดใหม่ด้านข้าง"
+            }
+        },
+        "dropdowns": {
+            "mode": [
+                "VERTICES",
+                "EDGES",
+                "FACES"
+            ]
+        },
+        "sub_types": {
+            "mode": {
+                "VERTICES": {
+                    "name": "จุด (Vertices)",
+                    "description": "ทำงานในระดับจุดยอดเรขาคณิต (Vertices)"
+                },
+                "EDGES": {
+                    "name": "เส้น (Edges)",
+                    "description": "ทำงานในระดับเส้นขอบ (Edges)"
+                },
+                "FACES": {
+                    "name": "หน้าตัด (Faces)",
+                    "description": "ทำงานในระดับพื้นผิวหรือหน้าตัด (Faces)"
+                }
+            }
+        }
+    },
+    "GeometryNodeEdgesToFaceGroups": {
+        "name": "Edges to Face Groups",
+        "description": "หลักการ: วิเคราะห์เส้นแบ่งเขตเพื่อแยกและสร้างกลุ่มของหน้าตัด (Face Groups)\nการประยุกษ์ใช้: ใช้สำหรับแยกหน้าตัดตามรอยแตกหรือมุมแหลม แล้วใส่สีหรือ Material ที่ต่างกัน",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeFaceGroupBoundaries": {
+        "name": "Face Group Boundaries",
+        "description": "หลักการ: ตรวจจับเส้นขอบที่กั้นระหว่างกลุ่มหน้าตัด 2 กลุ่ม\nการประยุกษ์ใช้: ใช้ดึงเฉพาะรอยต่อระหว่างชิ้นส่วนมาทำเป็นเส้นขอบนูน หรือใส่เอฟเฟกต์รอยเชื่อมท่อ",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeMeshFaceSet": {
+        "name": "Face Set",
+        "description": "หลักการ: ดึงข้อมูลชุดหน้าตัด (Face Set) ที่ถูกวาดเตรียมไว้ในโหมด Sculpt\nการประยุกษ์ใช้: ใช้อ้างอิงส่วนที่ผู้ใช้ระบายสี Face Set ไว้เพื่อทำให้หนาขึ้นหรือยุบลงเฉพาะจุด",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeMeshEdgePaths": {
+        "name": "Shortest Edge Paths",
+        "description": "หลักการ: คำนวณหาเส้นทางที่สั้นที่สุด (Shortest Path) เดินลัดเลาะตามเส้นตาข่ายจากจุดหนึ่งไปอีกจุด\nการประยุกษ์ใช้: ใช้สร้างเอฟเฟกต์สายฟ้าแลบตามพื้นผิว หรือสร้างเส้นทางเดินของเถาวัลย์บนกำแพง",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeSampleNearestSurface": {
+        "name": "Sample Nearest Surface",
+        "description": "หลักการ: ดึงแอตทริบิวต์หรือข้อมูลจากพื้นผิวของอีกวัตถุหนึ่ง ตรงจุดที่ใกล้กับวัตถุปัจจุบันที่สุด\nการประยุกษ์ใช้: ใช้ดูดสีจากวัตถุข้างเคียง หรือดึงข้อมูลความร้อน/อุณหภูมิจากจุดที่เข้าใกล้กัน",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "FLOAT_VECTOR",
+                "FLOAT_COLOR",
+                "QUATERNION",
+                "FLOAT4X4",
+                "STRING",
+                "INT8",
+                "INT16_2D",
+                "INT32_2D",
+                "FLOAT2",
+                "BYTE_COLOR"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "FLOAT_VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVectorหรือพิกัดทิศทาง"
+                },
+                "FLOAT_COLOR": {
+                    "name": "สี (Color)",
+                    "description": "ชนิดข้อมูลสี"
+                },
+                "QUATERNION": {
+                    "name": "ควอเทอร์เนียน (Quaternion)",
+                    "description": "ชนิดข้อมูลการหมุนในรูปแบบ Quaternion"
+                },
+                "FLOAT4X4": {
+                    "name": "เมทริกซ์ 4x4 (Float4x4)",
+                    "description": "ชนิดข้อมูลเมทริกซ์ 4x4"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "INT8": {
+                    "name": "จำนวนเต็ม 8 บิต (8-bit Integer)",
+                    "description": "ชนิดข้อมูลจำนวนเต็ม 8 บิต"
+                },
+                "INT16_2D": {
+                    "name": "16-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 16 บิต"
+                },
+                "INT32_2D": {
+                    "name": "32-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 32 บิต"
+                },
+                "FLOAT2": {
+                    "name": "Float 2D (Float2)",
+                    "description": "VectorFloatแบบ 2 แกน"
+                },
+                "BYTE_COLOR": {
+                    "name": "สีแบบไบต์ (Byte Color)",
+                    "description": "สีในระดับ 8 บิต (0-255)"
+                }
+            }
+        }
+    },
+    "GeometryNodeSampleUVSurface": {
+        "name": "Sample UV Surface",
+        "description": "หลักการ: ดึงข้อมูลแอตทริบิวต์โดยอ้างอิงจากพิกัดกาง UV (UV Map)\nการประยุกษ์ใช้: ใช้แปะลวดลายภาพ 2 มิติลงบนพื้นผิว หรือใช้อ่านค่าสีจากภาพเพื่อกำหนดความสูงของภูมิประเทศ",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "data_type": [
+                "FLOAT",
+                "INT",
+                "BOOLEAN",
+                "FLOAT_VECTOR",
+                "FLOAT_COLOR",
+                "QUATERNION",
+                "FLOAT4X4",
+                "STRING",
+                "INT8",
+                "INT16_2D",
+                "INT32_2D",
+                "FLOAT2",
+                "BYTE_COLOR"
+            ]
+        },
+        "sub_types": {
+            "data_type": {
+                "FLOAT": {
+                    "name": "Float",
+                    "description": "ชนิดข้อมูลตัวเลขFloatเดี่ยว"
+                },
+                "INT": {
+                    "name": "Integer",
+                    "description": "ชนิดข้อมูลตัวเลขจำนวนเต็ม"
+                },
+                "BOOLEAN": {
+                    "name": "ค่าความจริง (Boolean)",
+                    "description": "ชนิดข้อมูลตรรกะ จริง/เท็จ"
+                },
+                "FLOAT_VECTOR": {
+                    "name": "Vector",
+                    "description": "ชนิดข้อมูลVectorหรือพิกัดทิศทาง"
+                },
+                "FLOAT_COLOR": {
+                    "name": "สี (Color)",
+                    "description": "ชนิดข้อมูลสี"
+                },
+                "QUATERNION": {
+                    "name": "ควอเทอร์เนียน (Quaternion)",
+                    "description": "ชนิดข้อมูลการหมุนในรูปแบบ Quaternion"
+                },
+                "FLOAT4X4": {
+                    "name": "เมทริกซ์ 4x4 (Float4x4)",
+                    "description": "ชนิดข้อมูลเมทริกซ์ 4x4"
+                },
+                "STRING": {
+                    "name": "ข้อความ (String)",
+                    "description": "ชนิดข้อมูลตัวอักษรหรือข้อความ"
+                },
+                "INT8": {
+                    "name": "จำนวนเต็ม 8 บิต (8-bit Integer)",
+                    "description": "ชนิดข้อมูลจำนวนเต็ม 8 บิต"
+                },
+                "INT16_2D": {
+                    "name": "16-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 16 บิต"
+                },
+                "INT32_2D": {
+                    "name": "32-bit 2D Integer",
+                    "description": "ชนิดข้อมูล 2D Integer ขนาด 32 บิต"
+                },
+                "FLOAT2": {
+                    "name": "Float 2D (Float2)",
+                    "description": "VectorFloatแบบ 2 แกน"
+                },
+                "BYTE_COLOR": {
+                    "name": "สีแบบไบต์ (Byte Color)",
+                    "description": "สีในระดับ 8 บิต (0-255)"
+                }
+            }
+        }
+    },
+    "GeometryNodeSetFaceSet": {
+        "name": "Set Face Set",
+        "description": "หลักการ: สร้างและกำหนดชุด Face Set ใหม่ด้วยโหนด เพื่อส่งกลับไปใช้ในโหมด Sculpt\nการประยุกษ์ใช้: ใช้คำนวณแยกส่วนหน้าตัดอัตโนมัติแล้วส่งต่อให้ผู้ใช้ไปปั้น Sculpt หรือลบรอยต่อเฉพาะที่",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeSetMeshNormal": {
+        "name": "Set Mesh Normal",
+        "description": "หลักการ: บังคับแก้ไขทิศทางแสงเงาของพื้นผิว (Custom Normal) ให้คมหรือมนตามต้องการ\nการประยุกษ์ใช้: ใช้แก้ปัญหาแสงเงาขัดแย้งในงานโมเดล Low-poly หรือจงใจทำขอบให้คมเหมือนรถยนต์",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "mode": [
+                "SHARPNESS",
+                "FREE",
+                "TANGENT_SPACE"
+            ],
+            "domain": [
+                "POINT",
+                "FACE",
+                "CORNER"
+            ]
+        },
+        "sub_types": {
+            "mode": {
+                "SHARPNESS": {
+                    "name": "ความคมชัด (Sharpness)",
+                    "description": "ปรับตามระดับความคมหรือความแข็งของพื้นผิว"
+                },
+                "FREE": {
+                    "name": "อิสระ (Free)",
+                    "description": "โหมดกำหนดค่าการทำงานแบบอิสระ"
+                },
+                "TANGENT_SPACE": {
+                    "name": "พื้นที่แทนเจนต์ (Tangent Space)",
+                    "description": "ทำงานในระบบพิกัดอ้างอิงแบบ Tangent Space"
+                }
+            },
+            "domain": {
+                "POINT": {
+                    "name": "Set Mesh Normal (จุด)",
+                    "description": "ตัวเลือกโหมด: จุด"
+                },
+                "FACE": {
+                    "name": "Set Mesh Normal (หน้าตัด)",
+                    "description": "ตัวเลือกโหมด: หน้าตัด"
+                },
+                "CORNER": {
+                    "name": "Set Mesh Normal (มุม)",
+                    "description": "ตัวเลือกโหมด: มุม"
+                }
+            }
+        }
+    },
+    "GeometryNodeDualMesh": {
+        "name": "Dual Mesh",
+        "description": "หลักการ: สลับคุณสมบัติกันระหว่างจุดยอด (Vertex) และหน้าตัด (Face)\nการประยุกษ์ใช้: ใช้แปลงตารางสี่เหลี่ยมธรรมดาให้กลายเป็นแพทเทิร์นรังผึ้ง (หกเหลี่ยม) ที่สวยงาม",
+        "inputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "ตาข่ายต้นฉบับ"
+            }
+        },
+        "outputs": {
+            "Dual Mesh": {
+                "name": "โครงข่ายคู่ขนาน (Dual Mesh)",
+                "description": "ตาข่ายที่ถูกกลับด้านแล้ว"
+            }
+        }
+    },
+    "GeometryNodeEdgePathsToSelection": {
+        "name": "Edge Paths to Selection",
+        "description": "หลักการ: แปลงเส้นทางการเดินที่สั้นที่สุด (จากโหนด Edge Paths) ให้เป็นเงื่อนไขการเลือก\nการประยุกษ์ใช้: ใช้คัดแยกเส้นทางเดินของเถาวัลย์ออกมาทำเป็นเส้น Curve หรือแยกสีเฉพาะรอยแตก",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeFlipFaces": {
+        "name": "Flip Faces",
+        "description": "หลักการ: กลับด้านทิศทางแสงเงาและ Normal ของหน้าตัด (พลิกหน้า-หลัง)\nการประยุกษ์ใช้: ใช้แก้ปัญหาหน้าตัดดำหรือวัตถุโปร่งแสงทะลุผิดฝั่ง เมื่อนำโมเดลเข้ามาจากโปรแกรมอื่น",
+        "inputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "ตาข่ายต้นฉบับ"
+            },
+            "Selection": {
+                "name": "การเลือก (Selection)",
+                "description": "หน้าตัดที่ต้องการพลิก"
+            }
+        },
+        "outputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "ตาข่ายที่หน้าตัดถูกพลิกแล้ว"
+            }
+        }
+    },
+    "GeometryNodeMeshToDensityGrid": {
+        "name": "Mesh to Density Grid",
+        "description": "หลักการ: แปลงตาข่ายแบบตันๆ ให้กลายเป็นข้อมูลกลุ่มหมอกหรือความหนาแน่นเชิงปริมาตร\nการประยุกษ์ใช้: ใช้เตรียมวัตถุเพื่อนำไปหักล้างทำเป็นหลุมอากาศ หรือจำลองก้อนเมฆรูปทรงเดียวกับวัตถุ",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeMeshToPoints": {
+        "name": "Mesh to Points",
+        "description": "หลักการ: เปลี่ยนทุกจุดยอด, เส้น, หรือศูนย์กลางหน้าตัด ให้กลายเป็นกลุ่มจุด (Point Cloud) ลอยๆ\nการประยุกษ์ใช้: ใช้เพื่อเตรียมจุดสำหรับวางก้อนหิน ต้นไม้ หยดน้ำ หรือทำเอฟเฟกต์โมเดลสลายตัวเป็นฝุ่น",
+        "inputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "ตาข่ายเป้าหมาย"
+            }
+        },
+        "outputs": {
+            "Points": {
+                "name": "จุด (Points)",
+                "description": "กลุ่มจุดที่แปลงเสร็จแล้ว"
+            }
+        },
+        "dropdowns": {
+            "mode": [
+                "VERTICES",
+                "EDGES",
+                "FACES",
+                "CORNERS"
+            ]
+        },
+        "sub_types": {
+            "mode": {
+                "VERTICES": {
+                    "name": "จุด (Vertices)",
+                    "description": "ทำงานในระดับจุดยอดเรขาคณิต (Vertices)"
+                },
+                "EDGES": {
+                    "name": "เส้น (Edges)",
+                    "description": "ทำงานในระดับเส้นขอบ (Edges)"
+                },
+                "FACES": {
+                    "name": "หน้าตัด (Faces)",
+                    "description": "ทำงานในระดับพื้นผิวหรือหน้าตัด (Faces)"
+                },
+                "CORNERS": {
+                    "name": "มุม (Corners)",
+                    "description": "ทำงานในระดับมุมหรือจุดต่อของหน้าตัด (Face Corners)"
+                }
+            }
+        }
+    },
+    "GeometryNodeMeshToSDFGrid": {
+        "name": "Mesh to SDF Grid",
+        "description": "หลักการ: แปลงตาข่ายให้กลายเป็นเขตข้อมูลปริมาตรรูปแบบระยะทาง (SDF - Signed Distance Field)\nการประยุกษ์ใช้: ใช้สำหรับการคำนวณซ้อนทับแบบนุ่มนวล (Smooth Boolean) หรือทำหยดน้ำรวมตัวกัน (Metaball)",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeMeshToVolume": {
+        "name": "Mesh to Volume",
+        "description": "หลักการ: แปลงวัตถุให้กลายเป็นควัน หมอก หรือปริมาตรทึบตัน 3 มิติ\nการประยุกษ์ใช้: ใช้ทำออร่าหุ้มตัวละคร ทำก้อนควันระเบิด หรือทำเมฆแบบกำหนดรูปทรงได้",
+        "inputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "ตาข่ายเป้าหมาย"
+            }
+        },
+        "outputs": {
+            "Volume": {
+                "name": "ปริมาตร (Volume)",
+                "description": "ปริมาตรที่สร้างขึ้น"
+            }
+        }
+    },
+    "GeometryNodeSplitEdges": {
+        "name": "Split Edges",
+        "description": "หลักการ: ฉีกเส้นขอบที่ใช้ร่วมกันออก ทำให้หน้าตัดหลุดออกจากกันเป็นแผ่นๆ\nการประยุกษ์ใช้: ใช้ทำเอฟเฟกต์กระเบื้องหลังคาร่วงหล่น, ระเบิดกระจก, หรือคลี่กล่องกระดาษออก",
+        "inputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "ตาข่ายเป้าหมาย"
+            }
+        },
+        "outputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "ตาข่ายที่ถูกฉีกหรือแยกเส้นขอบแล้ว"
+            }
+        }
+    },
+    "GeometryNodeSubdivideMesh": {
+        "name": "Subdivide Mesh",
+        "description": "หลักการ: เพิ่มความละเอียดตาข่ายโดยการซอยหน้าตัดเดิมเป็นชิ้นเล็กๆ โดยยังคงเหลี่ยมแบนเหมือนเดิม\nการประยุกษ์ใช้: ใช้เพิ่มจำนวนจุดยอด (Vertex) เพื่อให้สามารถบิดงอหรือทำ Displacement ด้วย Noise ได้เนียนขึ้น",
+        "inputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "ตาข่ายเป้าหมาย"
+            },
+            "Level": {
+                "name": "ระดับ (Level)",
+                "description": "ระดับการซอยย่อย"
+            }
+        },
+        "outputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "ตาข่ายที่ละเอียดขึ้น"
+            }
+        }
+    },
+    "GeometryNodeSubdivisionSurface": {
+        "name": "Subdivision Surface",
+        "description": "หลักการ: เพิ่มความละเอียดพร้อมกับปรับผิวให้โค้งมนและเรียบเนียน (แบบ Catmull-Clark)\nการประยุกษ์ใช้: ใช้ลบเหลี่ยมของโมเดล Low-poly ให้กลายเป็นโมเดลเนียนสวยสมจริงแบบ High-poly",
+        "inputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "ตาข่ายเป้าหมาย"
+            },
+            "Level": {
+                "name": "ระดับ (Level)",
+                "description": "ระดับความละเอียด"
+            }
+        },
+        "outputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "ตาข่ายที่มีความโค้งมนและละเอียดขึ้น"
+            }
+        }
+    },
+    "GeometryNodeMeshCone": {
+        "name": "Cone",
+        "description": "หลักการ: สร้างรูปทรงตาข่ายตั้งต้นเป็นกรวย 3 มิติ\nการประยุกษ์ใช้: ใช้ทำหลังคาบ้านยอดแหลม, หมวกพ่อมด, หรือหนามแหลมบนเกราะ",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "fill_type": [
+                "NONE",
+                "NGON",
+                "TRIANGLE_FAN"
+            ]
+        },
+        "sub_types": {
+            "fill_type": {
+                "NONE": {
+                    "name": "Cone (ไม่มี (None))",
+                    "description": "ตัวเลือกโหมด: ไม่มี (None)"
+                },
+                "NGON": {
+                    "name": "Cone (หลายเหลี่ยม (N-gon))",
+                    "description": "ตัวเลือกโหมด: หลายเหลี่ยม (N-gon)"
+                },
+                "TRIANGLE_FAN": {
+                    "name": "Cone (พัดสามเหลี่ยม (Triangle Fan))",
+                    "description": "ตัวเลือกโหมด: พัดสามเหลี่ยม (Triangle Fan)"
+                }
+            }
+        }
+    },
+    "GeometryNodeMeshCube": {
+        "name": "Cube",
+        "description": "หลักการ: สร้างรูปทรงตาข่ายตั้งต้นเป็นลูกบาศก์เรขาคณิต 3 มิติ\nการประยุกษ์ใช้: ใช้เป็นกล่องพื้นฐานสำหรับทำอาคาร ห้อง หรือลังไม้ สามารถปรับความกว้างยาวแยกกันได้",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeMeshCylinder": {
+        "name": "Cylinder",
+        "description": "หลักการ: สร้างรูปทรงตาข่ายตั้งต้นเป็นทรงกระบอก 3 มิติ\nการประยุกษ์ใช้: ใช้ทำเสาอาคาร, ท่อน้ำ, ถังน้ำมัน หรือเหรียญ",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "fill_type": [
+                "NONE",
+                "NGON",
+                "TRIANGLE_FAN"
+            ]
+        },
+        "sub_types": {
+            "fill_type": {
+                "NONE": {
+                    "name": "Cylinder (ไม่มี (None))",
+                    "description": "ตัวเลือกโหมด: ไม่มี (None)"
+                },
+                "NGON": {
+                    "name": "Cylinder (หลายเหลี่ยม (N-gon))",
+                    "description": "ตัวเลือกโหมด: หลายเหลี่ยม (N-gon)"
+                },
+                "TRIANGLE_FAN": {
+                    "name": "Cylinder (พัดสามเหลี่ยม (Triangle Fan))",
+                    "description": "ตัวเลือกโหมด: พัดสามเหลี่ยม (Triangle Fan)"
+                }
+            }
+        }
+    },
+    "GeometryNodeMeshGrid": {
+        "name": "Grid",
+        "description": "หลักการ: สร้างพื้นระนาบแผ่นแบนแบบตะแกรง (Grid) 2 มิติที่สามารถปรับซอยจำนวนช่องได้\nการประยุกษ์ใช้: ใช้เป็นพื้นดินสำหรับทำภูมิประเทศ สร้างผืนผ้า หรือตาข่ายกั้นรั้ว",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeMeshIcoSphere": {
+        "name": "Ico Sphere",
+        "description": "หลักการ: สร้างรูปทรงกลมที่ประกอบจากหน้าตัดสามเหลี่ยมเท่าๆ กันทุกด้าน\nการประยุกษ์ใช้: ใช้ทำลูกบอลดิสโก้, รังผึ้ง, หรือวัตถุระเบิดกระจายอย่างสม่ำเสมอทุกทิศทาง",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeMeshCircle": {
+        "name": "Mesh Circle",
+        "description": "หลักการ: สร้างโครงลวดวงกลม หรือหน้าตัดแผ่นกลมแบน 2 มิติ\nการประยุกษ์ใช้: ใช้เป็นกรอบล้อรถ, เส้นทางโคจรของดาวเคราะห์ หรือฝาครอบท่อ",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "fill_type": [
+                "NONE",
+                "NGON",
+                "TRIANGLE_FAN"
+            ]
+        },
+        "sub_types": {
+            "fill_type": {
+                "NONE": {
+                    "name": "Mesh Circle (ไม่มี (None))",
+                    "description": "ตัวเลือกโหมด: ไม่มี (None)"
+                },
+                "NGON": {
+                    "name": "Mesh Circle (หลายเหลี่ยม (N-gon))",
+                    "description": "ตัวเลือกโหมด: หลายเหลี่ยม (N-gon)"
+                },
+                "TRIANGLE_FAN": {
+                    "name": "Mesh Circle (พัดสามเหลี่ยม (Triangle Fan))",
+                    "description": "ตัวเลือกโหมด: พัดสามเหลี่ยม (Triangle Fan)"
+                }
+            }
+        }
+    },
+    "GeometryNodeMeshLine": {
+        "name": "Mesh Line",
+        "description": "หลักการ: สร้างจุดเรียงต่อกันเป็นเส้นตรงยาวตามทิศทางที่กำหนด (แบบโครงข่าย)\nการประยุกษ์ใช้: ใช้เป็นแกนกลางสำหรับบันไดวน, เสาไฟฟ้าเรียงต่อกัน, หรือเรียงกล่องซ้อนขึ้นแนวตั้ง",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "mode": [
+                "OFFSET",
+                "END_POINTS"
+            ],
+            "count_mode": [
+                "TOTAL",
+                "RESOLUTION"
+            ]
+        },
+        "sub_types": {
+            "mode": {
+                "OFFSET": {
+                    "name": "ระยะห่าง (Offset)",
+                    "description": "อ้างอิงหรือใช้ค่าการเลื่อนตำแหน่ง (Offset)"
+                },
+                "END_POINTS": {
+                    "name": "จุดปลาย (End Points)",
+                    "description": "กำหนดจากตำแหน่งจุดเริ่มต้นจนถึงจุดสิ้นสุด"
+                }
+            },
+            "count_mode": {
+                "TOTAL": {
+                    "name": "Mesh Line (ทั้งหมด (Total))",
+                    "description": "ตัวเลือกโหมด: ทั้งหมด (Total)"
+                },
+                "RESOLUTION": {
+                    "name": "Mesh Line (ความละเอียด (Resolution))",
+                    "description": "ตัวเลือกโหมด: ความละเอียด (Resolution)"
+                }
+            }
+        }
+    },
+    "GeometryNodeMeshUVSphere": {
+        "name": "UV Sphere",
+        "description": "หลักการ: สร้างทรงกลมมาตรฐานที่มีเส้นรุ้งและเส้นแวงคล้ายลูกโลก (หน้าตัดสี่เหลี่ยมเป็นหลัก)\nการประยุกษ์ใช้: ใช้ทำลูกตา, ดวงดาว, หรือลูกบิลเลียด เพราะกาง UV ทรงกลมได้ง่าย",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeCornersOfEdge": {
+        "name": "Corners of Edge",
+        "description": "หลักการ: ดึงข้อมูลมุมหน้าตัด (Face Corner) บริเวณที่ติดอยู่กับขอบเส้น (Edge) ที่กำหนด\nการประยุกษ์ใช้: ใช้เปรียบเทียบแอตทริบิวต์ UV หรือความเนียนระหว่าง 2 หน้าตัดที่ติดกัน",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeCornersOfFace": {
+        "name": "Corners of Face",
+        "description": "หลักการ: ดึงมุมทั้งหมดที่เป็นองค์ประกอบของหน้าตัดหนึ่งๆ\nการประยุกษ์ใช้: ใช้ตรวจสอบหรือแก้ไขข้อมูล Custom Normal ที่มุมทั้ง 4 ของสี่เหลี่ยมหน้าตัด",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeCornersOfVertex": {
+        "name": "Corners of Vertex",
+        "description": "หลักการ: ดึงมุมทั้งหมดของหน้าตัดต่างๆ ที่พุ่งมารวมกันที่จุด (Vertex) นั้นๆ\nการประยุกษ์ใช้: ใช้อ่านข้อมูลสี Vertex Color หรือ UV ที่รวมตัวกันตรงมุมเพื่อหาค่าเฉลี่ย",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeEdgesOfCorner": {
+        "name": "Edges of Corner",
+        "description": "หลักการ: ดึงเส้นขอบสองเส้นที่ประกอบกันเป็นมุมหน้าตัดนั้น\nการประยุกษ์ใช้: ใช้ตรวจสอบมุมที่แคบมากๆ บนหน้าตัด เพื่อลบหน้าตัดที่พังหรือพับซ้อนกันทิ้ง",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeEdgesOfVertex": {
+        "name": "Edges of Vertex",
+        "description": "หลักการ: ดึงเส้นขอบทั้งหมดที่เชื่อมโยงและพุ่งออกจากจุด (Vertex) นั้น\nการประยุกษ์ใช้: ใช้หาจุดที่ตายตัว (เช่น จุดกึ่งกลางปลาดาวที่มีเส้นพุ่งออก 5 เส้น) เพื่อใส่เอฟเฟกต์พิเศษ",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeFaceOfCorner": {
+        "name": "Face of Corner",
+        "description": "หลักการ: เช็คว่ามุมหน้านี้ (Face Corner) สังกัดอยู่บนหน้าตัด (Face) แผ่นไหน\nการประยุกษ์ใช้: ใช้แปลงแอตทริบิวต์ที่เก็บตามมุมกลับมาใช้งานร่วมกับแอตทริบิวต์ระดับหน้าตัด",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeOffsetCornerInFace": {
+        "name": "Offset Corner in Face",
+        "description": "หลักการ: เลื่อนหมายเลขอ้างอิงลำดับมุมไปตามเข็มหรือทวนเข็มนาฬิกาบนหน้าตัดเดียวกัน\nการประยุกษ์ใช้: ใช้หมุนทิศทางของลวดลาย UV บนแต่ละหน้าตัดอย่างเป็นระบบ",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeVertexOfCorner": {
+        "name": "Vertex of Corner",
+        "description": "หลักการ: เช็คว่ามุมของหน้านี้ เชื่อมโยงกับจุดยอด (Vertex) จริงๆ จุดไหน\nการประยุกษ์ใช้: ใช้ดึงข้อมูลพิกัด (Position) ของมุมนั้นมาใช้งานเปรียบเทียบ",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeDistributePointsOnFaces": {
+        "name": "Distribute Points on Faces",
+        "description": "หลักการ: หว่านสุ่มจุดต่างๆ ลงบนพื้นผิวของตาข่ายอย่างอิสระ (ปรับความหนาแน่นได้)\nการประยุกษ์ใช้: ใช้ปูพรมหญ้า, วางต้นไม้บนภูเขา, สร้างละอองน้ำบนใบไม้, หรือวางคนในฮอลล์",
+        "inputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "ตาข่ายเป้าหมาย"
+            },
+            "Density": {
+                "name": "ความหนาแน่น (Density)",
+                "description": "ความหนาแน่นของจุด"
+            },
+            "Distance Min": {
+                "name": "ระยะทางต่ำสุด (Distance Min)",
+                "description": "ระยะห่างต่ำสุด (กรณีใช้ Poisson Disk)"
+            }
+        },
+        "outputs": {
+            "Points": {
+                "name": "จุด (Points)",
+                "description": "จุดที่ถูกกระจาย"
+            }
+        },
+        "dropdowns": {
+            "distribute_method": [
+                "RANDOM",
+                "POISSON"
+            ]
+        },
+        "sub_types": {
+            "distribute_method": {
+                "RANDOM": {
+                    "name": "Distribute Points on Faces (สุ่ม (Random))",
+                    "description": "ตัวเลือกโหมด: สุ่ม (Random)"
+                },
+                "POISSON": {
+                    "name": "Distribute Points on Faces (ปัวซง (Poisson))",
+                    "description": "ตัวเลือกโหมด: ปัวซง (Poisson)"
+                }
+            }
+        }
+    },
+    "GeometryNodeGridToMesh": {
+        "name": "Grid to Mesh",
+        "description": "หลักการ: แปลงกริดปริมาตรทึบตัน (Volume Grid) ให้กลับมาเป็นผิวตาข่าย 3 มิติ (Mesh)\nการประยุกษ์ใช้: ใช้หุ้มเปลือกโมเดลหลังจากนำไปทำ SDF Boolean ให้กลับมาเป็นโมเดลสำหรับเรนเดอร์",
+        "inputs": {},
+        "outputs": {}
+    },
+    "GeometryNodeVolumeToMesh": {
+        "name": "VolumeToMesh",
+        "description": "หลักการ: แปลงกลุ่มก้อนควันหรือปริมาตร (Volume) กลับให้เป็นโครงข่ายพื้นผิว (Mesh)\nการประยุกษ์ใช้: ใช้แปลงการระเบิดแบบควันให้กลายเป็นทรงแข็ง หรือทำหยดน้ำที่รวมตัวกันจากก้อนเมฆ",
+        "inputs": {
+            "Volume": {
+                "name": "ปริมาตร (Volume)",
+                "description": "ปริมาตรต้นทาง"
+            },
+            "Threshold": {
+                "name": "เกณฑ์ (Threshold)",
+                "description": "ระดับความทึบแสงขั้นต่ำที่จะสร้างผิว"
+            }
+        },
+        "outputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "ตาข่ายล้อมรอบรูปทรงปริมาตร"
+            }
+        }
+    }
+}
+

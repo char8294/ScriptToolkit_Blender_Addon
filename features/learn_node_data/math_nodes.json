@@ -1,0 +1,811 @@
+{
+    "FunctionNodeInputBoolean": {
+        "name": "Boolean",
+        "description": "หลักการ: สร้างและส่งออกค่าตรรกะ จริง (True) หรือ เท็จ (False)\nการประยุกษ์ใช้: ใช้เป็นสวิตช์เปิด-ปิดเอฟเฟกต์ หรือใช้ตั้งเงื่อนไข (เช่น ถ้าเป็นจริงให้แสดงไฟ ถ้าเท็จให้ดับไฟ)",
+        "inputs": {},
+        "outputs": {
+            "Boolean": {
+                "name": "Boolean",
+                "description": "ค่าความจริง (True/False)"
+            }
+        }
+    },
+    "FunctionNodeInputVector": {
+        "name": "Vector",
+        "description": "หลักการ: กำหนดค่าคงที่ 3 มิติ (แกน X, Y, Z)\nการประยุกษ์ใช้: ใช้ล็อกค่าตำแหน่งเริ่มต้น, ทิศทางการเคลื่อนที่ หรือปรับสัดส่วน Scale เฉพาะบางแกน",
+        "inputs": {},
+        "outputs": {
+            "Vector": {
+                "name": "Vector",
+                "description": "Vector 3 มิติ"
+            }
+        }
+    },
+    "GeometryNodeMeshBoolean": {
+        "name": "Mesh Boolean",
+        "description": "หลักการ: ใช้รวม, ตัด หรือหาพื้นที่ซ้อนทับระหว่างรูปทรง 3 มิติ 2 ชิ้น (เหมือน boolean modifier)\nการประยุกษ์ใช้: ใช้เจาะหน้าต่างบนกำแพง, ทำรอยแหว่ง, หรือเชื่อมชิ้นส่วนหลายชิ้นให้เป็นเนื้อเดียวกัน",
+        "inputs": {
+            "Mesh 1": {
+                "name": "โครงข่าย 1 (Mesh 1)",
+                "description": "รูปทรงหลัก"
+            },
+            "Mesh 2": {
+                "name": "โครงข่าย 2 (Mesh 2)",
+                "description": "รูปทรงรองที่จะนำมาซ้อนทับหรือตัด"
+            }
+        },
+        "outputs": {
+            "Mesh": {
+                "name": "โครงข่าย (Mesh)",
+                "description": "รูปทรงผลลัพธ์ที่เกิดจากการหักล้าง"
+            }
+        },
+        "dropdowns": {
+            "operation": [
+                "INTERSECT",
+                "UNION",
+                "DIFFERENCE"
+            ],
+            "solver": [
+                "EXACT",
+                "FLOAT",
+                "MANIFOLD"
+            ]
+        },
+        "sub_types": {
+            "operation": {
+                "INTERSECT": {
+                    "name": "ส่วนที่ซ้อนทับกัน (Intersect)",
+                    "description": "เก็บเฉพาะส่วนที่ตัดกันของสองวัตถุ"
+                },
+                "UNION": {
+                    "name": "รวมเข้าด้วยกัน (Union)",
+                    "description": "รวมชิ้นส่วนของวัตถุเข้าด้วยกันเป็นเนื้อเดียว"
+                },
+                "DIFFERENCE": {
+                    "name": "ความต่าง (Difference)",
+                    "description": "ลบส่วนที่ซ้อนทับกันออกจากวัตถุหลัก"
+                }
+            },
+            "solver": {
+                "EXACT": {
+                    "name": "Mesh Boolean (แม่นยำ (Exact))",
+                    "description": "ตัวเลือกโหมด: แม่นยำ (Exact)"
+                },
+                "FLOAT": {
+                    "name": "Mesh Boolean (Float)",
+                    "description": "ตัวเลือกโหมด: Float"
+                },
+                "MANIFOLD": {
+                    "name": "Mesh Boolean (MANIFOLD)",
+                    "description": "ตัวเลือกโหมด: MANIFOLD"
+                }
+            }
+        }
+    },
+    "GeometryNodeSDFGridBoolean": {
+        "name": "SDF Grid Boolean",
+        "description": "หลักการ: ใช้หักล้าง, รวม หรือหาพื้นที่ซ้อนทับสำหรับรูปทรงประเภทปริมาตร (SDF / Volume)\nการประยุกษ์ใช้: ใช้เจาะหรือรวมก้อนเมฆ ควัน หรือรูปทรง SDF ก่อนที่จะแปลงกลับมาเป็น Mesh",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "operation": [
+                "INTERSECT",
+                "UNION",
+                "DIFFERENCE"
+            ]
+        },
+        "sub_types": {
+            "operation": {
+                "INTERSECT": {
+                    "name": "ส่วนที่ซ้อนทับกัน (Intersect)",
+                    "description": "เก็บเฉพาะส่วนที่ตัดกันของสองวัตถุ"
+                },
+                "UNION": {
+                    "name": "รวมเข้าด้วยกัน (Union)",
+                    "description": "รวมชิ้นส่วนของวัตถุเข้าด้วยกันเป็นเนื้อเดียว"
+                },
+                "DIFFERENCE": {
+                    "name": "ความต่าง (Difference)",
+                    "description": "ลบส่วนที่ซ้อนทับกันออกจากวัตถุหลัก"
+                }
+            }
+        }
+    },
+    "FunctionNodeBooleanMath": {
+        "name": "Boolean Math",
+        "description": "หลักการ: คำนวณตรรกศาสตร์ (And, Or, Not) เพื่อเปรียบเทียบเงื่อนไขหลายตัว\nการประยุกษ์ใช้: ใช้กำหนดเงื่อนไขซ้อนกัน เช่น 'ต้องสูงกว่า 5 (True)' และ 'ต้องเป็นสีแดง (True)' ถึงจะทำงาน",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "operation": [
+                "AND",
+                "OR",
+                "NOT",
+                "NAND",
+                "NOR",
+                "XNOR",
+                "XOR",
+                "IMPLY",
+                "NIMPLY"
+            ]
+        },
+        "sub_types": {
+            "operation": {
+                "AND": {
+                    "name": "ตรรกะและ (And)",
+                    "description": "คืนค่าจริงเมื่อทั้งคู่เป็นจริง"
+                },
+                "OR": {
+                    "name": "ตรรกะหรือ (Or)",
+                    "description": "คืนค่าจริงเมื่อมีอย่างน้อยหนึ่งค่าเป็นจริง"
+                },
+                "NOT": {
+                    "name": "นิเสธ (Not)",
+                    "description": "สลับค่าความจริงจากจริงเป็นเท็จ และเท็จเป็นจริง"
+                },
+                "NAND": {
+                    "name": "ตรรกะแนนด์ (Nand)",
+                    "description": "เป็นเท็จเมื่อทั้งคู่เป็นจริงเท่านั้น"
+                },
+                "NOR": {
+                    "name": "ตรรกะนอร์ (Nor)",
+                    "description": "เป็นจริงเมื่อทั้งคู่เป็นเท็จเท่านั้น"
+                },
+                "XNOR": {
+                    "name": "ตรรกะเอ็กซ์นอร์ (Xnor)",
+                    "description": "เป็นจริงเมื่อค่าความจริงเหมือนกัน"
+                },
+                "XOR": {
+                    "name": "ตรรกะเอ็กซ์ออร์ (Xor)",
+                    "description": "เป็นจริงเมื่อค่าความจริงต่างกัน"
+                },
+                "IMPLY": {
+                    "name": "ตรรกะเงื่อนไข (Imply)",
+                    "description": "จริงเสมอ ยกเว้นหน้าจริงหลังเท็จ"
+                },
+                "NIMPLY": {
+                    "name": "ตรรกะเงื่อนไขนิเสธ (Nimply)",
+                    "description": "นิเสธของการตรวจสอบตรรกะเงื่อนไข (Imply)"
+                }
+            }
+        }
+    },
+    "FunctionNodeIntegerMath": {
+        "name": "Integer Math",
+        "description": "หลักการ: ดำเนินการคณิตศาสตร์ (บวก ลบ คูณ หาร) เฉพาะตัวเลขจำนวนเต็ม (Integer)\nการประยุกษ์ใช้: ใช้คำนวณจำนวนชิ้นงาน (สำเนา) หรือลำดับที่ไม่มีทศนิยม เพื่อป้องกันข้อผิดพลาด",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "operation": [
+                "ADD",
+                "SUBTRACT",
+                "MULTIPLY",
+                "DIVIDE",
+                "MULTIPLY_ADD",
+                "ABSOLUTE",
+                "NEGATE",
+                "POWER",
+                "MINIMUM",
+                "MAXIMUM",
+                "SIGN",
+                "DIVIDE_ROUND",
+                "DIVIDE_FLOOR",
+                "DIVIDE_CEIL",
+                "FLOORED_MODULO",
+                "MODULO",
+                "GCD",
+                "LCM"
+            ]
+        },
+        "sub_types": {
+            "operation": {
+                "ADD": {
+                    "name": "การบวก (Add)",
+                    "description": "นำค่ามาบวกกัน"
+                },
+                "SUBTRACT": {
+                    "name": "การลบ (Subtract)",
+                    "description": "นำค่ามาลบกัน"
+                },
+                "MULTIPLY": {
+                    "name": "การคูณ (Multiply)",
+                    "description": "นำค่ามาคูณกัน"
+                },
+                "DIVIDE": {
+                    "name": "การหาร (Divide)",
+                    "description": "นำค่ามาหารกัน"
+                },
+                "MULTIPLY_ADD": {
+                    "name": "คูณและบวก (Multiply Add)",
+                    "description": "นำค่ามาคูณแล้วบวกด้วยอีกค่าหนึ่ง"
+                },
+                "ABSOLUTE": {
+                    "name": "ค่าสัมบูรณ์ (Absolute)",
+                    "description": "คืนค่าบวกของตัวเลขเสมอ"
+                },
+                "NEGATE": {
+                    "name": "ค่าตรงข้าม (Negate)",
+                    "description": "เปลี่ยนค่าบวกเป็นลบ หรือลบเป็นบวก"
+                },
+                "POWER": {
+                    "name": "ยกกำลัง (Power)",
+                    "description": "นำค่ามายกกำลังกัน"
+                },
+                "MINIMUM": {
+                    "name": "ค่าน้อยที่สุด (Minimum)",
+                    "description": "คืนค่าที่น้อยที่สุดจากสองค่า"
+                },
+                "MAXIMUM": {
+                    "name": "ค่ามากที่สุด (Maximum)",
+                    "description": "คืนค่าที่มากที่สุดจากสองค่า"
+                },
+                "SIGN": {
+                    "name": "เครื่องหมาย (Sign)",
+                    "description": "คืนค่า -1, 0, หรือ 1 ตามเครื่องหมายของค่า"
+                },
+                "DIVIDE_ROUND": {
+                    "name": "หารปัดเศษ (Divide Round)",
+                    "description": "หารแล้วปัดเศษFloatเป็นจำนวนเต็มที่ใกล้ที่สุด"
+                },
+                "DIVIDE_FLOOR": {
+                    "name": "หารปัดลง (Divide Floor)",
+                    "description": "หารแล้วปัดลงเป็นจำนวนเต็มที่ใกล้ที่สุด"
+                },
+                "DIVIDE_CEIL": {
+                    "name": "หารปัดขึ้น (Divide Ceil)",
+                    "description": "หารแล้วปัดขึ้นเป็นจำนวนเต็มที่ใกล้ที่สุด"
+                },
+                "FLOORED_MODULO": {
+                    "name": "หารเอาเศษแบบปัดลง (Floored Modulo)",
+                    "description": "คืนค่าเศษการหารแบบปัดลงเสมอ"
+                },
+                "MODULO": {
+                    "name": "หารเอาเศษ (Modulo)",
+                    "description": "คืนค่าเศษที่เหลือจากการหาร"
+                },
+                "GCD": {
+                    "name": "ตัวหารร่วมมาก (Greatest Common Divisor)",
+                    "description": "หาตัวหารร่วมมากที่สุดของทั้งสองค่า"
+                },
+                "LCM": {
+                    "name": "ตัวคูณร่วมน้อย (Least Common Multiple)",
+                    "description": "หาตัวคูณร่วมน้อยที่สุดของทั้งสองค่า"
+                }
+            }
+        }
+    },
+    "ShaderNodeFloatCurve": {
+        "name": "Float Curve",
+        "description": "หลักการ: ปรับแปลงค่าตัวเลขแบบไล่ระดับตามรูปทรงของกราฟเส้นโค้งที่วาดเอง\nการประยุกษ์ใช้: ใช้สร้างความชันของการเปลี่ยนแปลง เช่น ทำแอนิเมชันให้ค่อยๆ เร็วขึ้นแล้วหยุดแบบนุ่มนวล",
+        "inputs": {},
+        "outputs": {}
+    },
+    "FunctionNodeFloatToInt": {
+        "name": "Float to Integer",
+        "description": "หลักการ: แปลงตัวเลขที่มีทศนิยม (Float) ให้เป็นจำนวนเต็ม (Integer) ด้วยการปัดเศษ\nการประยุกษ์ใช้: ใช้แปลงค่ารัศมีหรือระยะทางให้กลายเป็นจำนวนเต็ม เพื่อใช้กำหนดจำนวนสำเนาวัตถุ",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "rounding_mode": [
+                "ROUND",
+                "FLOOR",
+                "CEILING",
+                "TRUNCATE"
+            ]
+        },
+        "sub_types": {
+            "rounding_mode": {
+                "ROUND": {
+                    "name": "Float to Integer (ปัดเศษ (Round))",
+                    "description": "ตัวเลือกโหมด: ปัดเศษ (Round)"
+                },
+                "FLOOR": {
+                    "name": "Float to Integer (ปัดลง (Floor))",
+                    "description": "ตัวเลือกโหมด: ปัดลง (Floor)"
+                },
+                "CEILING": {
+                    "name": "Float to Integer (ปัดขึ้น (Ceiling))",
+                    "description": "ตัวเลือกโหมด: ปัดขึ้น (Ceiling)"
+                },
+                "TRUNCATE": {
+                    "name": "Float to Integer (ตัดเศษทิ้ง (Truncate))",
+                    "description": "ตัวเลือกโหมด: ตัดเศษทิ้ง (Truncate)"
+                }
+            }
+        }
+    },
+    "ShaderNodeMath": {
+        "name": "Math",
+        "description": "หลักการ: เป็นเครื่องคิดเลขสำหรับตัวเลขปกติ มีฟังก์ชันตั้งแต่บวกลบพื้นฐาน ไปจนถึง Sine, Cosine\nการประยุกษ์ใช้: ใช้คำนวณระยะทาง, คูณสัดส่วน หรือใช้ Sine ทำแอนิเมชันให้เคลื่อนที่สลับไปมาอย่างต่อเนื่อง",
+        "inputs": {},
+        "outputs": {},
+        "sub_types": {
+            "operation": {
+                "ADD": {
+                    "name": "Math (Add)",
+                    "description": "บวกค่าสองค่าเข้าด้วยกัน",
+                    "inputs": {
+                        "Value": "ค่าที่ 1",
+                        "Value_001": "ค่าที่ 2 (ตัวบวก)"
+                    }
+                },
+                "SUBTRACT": {
+                    "name": "Math (Subtract)",
+                    "description": "ลบค่าสองค่า",
+                    "inputs": {
+                        "Value": "ค่าที่ 1 (ตัวตั้ง)",
+                        "Value_001": "ค่าที่ 2 (ตัวลบ)"
+                    }
+                },
+                "MULTIPLY": {
+                    "name": "Math (Multiply)",
+                    "description": "คูณค่าสองค่าเข้าด้วยกัน"
+                },
+                "DIVIDE": {
+                    "name": "Math (Divide)",
+                    "description": "หารค่าแรกด้วยค่าที่สอง"
+                },
+                "MULTIPLY_ADD": {
+                    "name": "คูณและบวก (Multiply Add)",
+                    "description": "นำค่ามาคูณแล้วบวกด้วยอีกค่าหนึ่ง"
+                },
+                "POWER": {
+                    "name": "ยกกำลัง (Power)",
+                    "description": "นำค่ามายกกำลังกัน"
+                },
+                "LOGARITHM": {
+                    "name": "ลอการิทึม (Logarithm)",
+                    "description": "คำนวณค่าลอการิทึม"
+                },
+                "SQRT": {
+                    "name": "รากที่สอง (Square Root)",
+                    "description": "คำนวณค่ารากที่สอง"
+                },
+                "INVERSE_SQRT": {
+                    "name": "ส่วนกลับรากที่สอง (Inverse Square Root)",
+                    "description": "1 หารด้วยรากที่สอง"
+                },
+                "ABSOLUTE": {
+                    "name": "ค่าสัมบูรณ์ (Absolute)",
+                    "description": "คืนค่าบวกของตัวเลขเสมอ"
+                },
+                "EXPONENT": {
+                    "name": "เอ็กซ์โพเนนเชียล (Exponent)",
+                    "description": "ค่าคงที่ e ยกกำลัง"
+                },
+                "MINIMUM": {
+                    "name": "ค่าน้อยที่สุด (Minimum)",
+                    "description": "คืนค่าที่น้อยที่สุดจากสองค่า"
+                },
+                "MAXIMUM": {
+                    "name": "ค่ามากที่สุด (Maximum)",
+                    "description": "คืนค่าที่มากที่สุดจากสองค่า"
+                },
+                "LESS_THAN": {
+                    "name": "น้อยกว่า (Less Than)",
+                    "description": "ตรวจสอบว่าค่าน้อยกว่าหรือไม่"
+                },
+                "GREATER_THAN": {
+                    "name": "มากกว่า (Greater Than)",
+                    "description": "ตรวจสอบว่าค่ามากกว่าหรือไม่"
+                },
+                "SIGN": {
+                    "name": "เครื่องหมาย (Sign)",
+                    "description": "คืนค่า -1, 0, หรือ 1 ตามเครื่องหมายของค่า"
+                },
+                "COMPARE": {
+                    "name": "เปรียบเทียบ (Compare)",
+                    "description": "ตรวจสอบความใกล้เคียงกันของสองค่า"
+                },
+                "SMOOTH_MIN": {
+                    "name": "ค่าน้อยที่สุดแบบนุ่มนวล (Smooth Minimum)",
+                    "description": "รวมค่าให้เป็นค่าน้อยสุดแบบมีความโค้งกลมกลืน"
+                },
+                "SMOOTH_MAX": {
+                    "name": "ค่ามากที่สุดแบบนุ่มนวล (Smooth Maximum)",
+                    "description": "รวมค่าให้เป็นค่ามากสุดแบบมีความโค้งกลมกลืน"
+                },
+                "ROUND": {
+                    "name": "ปัดเศษ (Round)",
+                    "description": "ปัดเศษFloatเป็นจำนวนเต็มที่ใกล้เคียงที่สุด"
+                },
+                "FLOOR": {
+                    "name": "ปัดเศษลง (Floor)",
+                    "description": "ปัดเศษลงเป็นจำนวนเต็มที่ใกล้ที่สุด"
+                },
+                "CEIL": {
+                    "name": "ปัดเศษขึ้น (Ceiling)",
+                    "description": "ปัดเศษขึ้นเป็นจำนวนเต็มที่ใกล้ที่สุด"
+                },
+                "TRUNC": {
+                    "name": "ตัดเศษFloatทิ้ง (Truncate)",
+                    "description": "ตัดเศษFloatออกเหลือแต่จำนวนเต็ม"
+                },
+                "FRACT": {
+                    "name": "ส่วนFloat (Fraction)",
+                    "description": "คืนค่าเฉพาะส่วนที่เป็นFloat"
+                },
+                "MODULO": {
+                    "name": "หารเอาเศษ (Modulo)",
+                    "description": "คืนค่าเศษที่เหลือจากการหาร"
+                },
+                "FLOORED_MODULO": {
+                    "name": "หารเอาเศษแบบปัดลง (Floored Modulo)",
+                    "description": "คืนค่าเศษการหารแบบปัดลงเสมอ"
+                },
+                "WRAP": {
+                    "name": "การวนลูปค่า (Wrap)",
+                    "description": "วนลูปค่ากลับไปเริ่มต้นเมื่อเกินขีดจำกัด"
+                },
+                "SNAP": {
+                    "name": "การทำค่าให้ตรงกับScale (Snap)",
+                    "description": "ปรับค่าให้เป็นขั้นตามค่าScaleที่กำหนด"
+                },
+                "PINGPONG": {
+                    "name": "การสะท้อนค่า (Ping-Pong)",
+                    "description": "เปลี่ยนค่ากลับไปกลับมาในช่วงที่กำหนด"
+                },
+                "SINE": {
+                    "name": "Math (Sine)",
+                    "description": "คำนวณค่า Sine ของมุม (เรเดียน)",
+                    "inputs": {
+                        "Value": "มุม (เรเดียน)"
+                    }
+                },
+                "COSINE": {
+                    "name": "โคไซน์ (Cosine)",
+                    "description": "ฟังก์ชันตรีโกณมิติโคไซน์"
+                },
+                "TANGENT": {
+                    "name": "แทนเจนต์ (Tangent)",
+                    "description": "ฟังก์ชันตรีโกณมิติแทนเจนต์"
+                },
+                "ARCSINE": {
+                    "name": "อาร์คไซน์ (Arcsine)",
+                    "description": "ฟังก์ชันผกผันไซน์"
+                },
+                "ARCCOSINE": {
+                    "name": "อาร์คโคไซน์ (Arccosine)",
+                    "description": "ฟังก์ชันผกผันโคไซน์"
+                },
+                "ARCTANGENT": {
+                    "name": "อาร์คแทนเจนต์ (Arctangent)",
+                    "description": "ฟังก์ชันผกผันแทนเจนต์"
+                },
+                "ARCTAN2": {
+                    "name": "อาร์คแทนเจนต์ 2 (Arctan2)",
+                    "description": "ฟังก์ชันอาร์คแทนเจนต์ 2 แบบระบุ X Y"
+                },
+                "SINH": {
+                    "name": "ไฮเปอร์โบลิกไซน์ (Hyperbolic Sine)",
+                    "description": "ฟังก์ชันไฮเปอร์โบลิกไซน์"
+                },
+                "COSH": {
+                    "name": "ไฮเปอร์โบลิกโคไซน์ (Hyperbolic Cosine)",
+                    "description": "ฟังก์ชันไฮเปอร์โบลิกโคไซน์"
+                },
+                "TANH": {
+                    "name": "ไฮเปอร์โบลิกแทนเจนต์ (Hyperbolic Tangent)",
+                    "description": "ฟังก์ชันไฮเปอร์โบลิกแทนเจนต์"
+                },
+                "RADIANS": {
+                    "name": "เรเดียน (Radians)",
+                    "description": "แปลงองศาเป็นเรเดียน"
+                },
+                "DEGREES": {
+                    "name": "องศา (Degrees)",
+                    "description": "แปลงเรเดียนเป็นองศา"
+                }
+            }
+        },
+        "dropdowns": {
+            "operation": [
+                "ADD",
+                "SUBTRACT",
+                "MULTIPLY",
+                "DIVIDE",
+                "MULTIPLY_ADD",
+                "POWER",
+                "LOGARITHM",
+                "SQRT",
+                "INVERSE_SQRT",
+                "ABSOLUTE",
+                "EXPONENT",
+                "MINIMUM",
+                "MAXIMUM",
+                "LESS_THAN",
+                "GREATER_THAN",
+                "SIGN",
+                "COMPARE",
+                "SMOOTH_MIN",
+                "SMOOTH_MAX",
+                "ROUND",
+                "FLOOR",
+                "CEIL",
+                "TRUNC",
+                "FRACT",
+                "MODULO",
+                "FLOORED_MODULO",
+                "WRAP",
+                "SNAP",
+                "PINGPONG",
+                "SINE",
+                "COSINE",
+                "TANGENT",
+                "ARCSINE",
+                "ARCCOSINE",
+                "ARCTANGENT",
+                "ARCTAN2",
+                "SINH",
+                "COSH",
+                "TANH",
+                "RADIANS",
+                "DEGREES"
+            ]
+        }
+    },
+    "ShaderNodeVectorCurve": {
+        "name": "Vector Curves",
+        "description": "หลักการ: ปรับแก้พิกัดหรือสี (Vector X, Y, Z) แบบแยกแกนได้อย่างอิสระตามกราฟเส้นโค้ง\nการประยุกษ์ใช้: ใช้ดัดแปลงความโค้งของเส้น หรือปรับจูนโทนสี RGB ในแต่ละแชนแนลให้กลมกลืนกัน",
+        "inputs": {},
+        "outputs": {}
+    },
+    "ShaderNodeVectorMath": {
+        "name": "Vector Math",
+        "description": "หลักการ: คำนวณคณิตศาสตร์สำหรับ Vector โดยเฉพาะ (บวกพิกัด, หาระยะทาง, Dot/Cross Product)\nการประยุกษ์ใช้: ใช้ผลักวัตถุไปตามทิศทาง Normal, หาระยะห่างระหว่างสองจุด หรือวัดความใกล้ชิด",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "operation": [
+                "ADD",
+                "SUBTRACT",
+                "MULTIPLY",
+                "DIVIDE",
+                "MULTIPLY_ADD",
+                "CROSS_PRODUCT",
+                "PROJECT",
+                "REFLECT",
+                "REFRACT",
+                "FACEFORWARD",
+                "DOT_PRODUCT",
+                "DISTANCE",
+                "LENGTH",
+                "SCALE",
+                "NORMALIZE",
+                "ABSOLUTE",
+                "POWER",
+                "SIGN",
+                "MINIMUM",
+                "MAXIMUM",
+                "ROUND",
+                "FLOOR",
+                "CEIL",
+                "FRACTION",
+                "MODULO",
+                "WRAP",
+                "SNAP",
+                "SINE",
+                "COSINE",
+                "TANGENT"
+            ]
+        },
+        "sub_types": {
+            "operation": {
+                "ADD": {
+                    "name": "การบวก (Add)",
+                    "description": "นำค่ามาบวกกัน"
+                },
+                "SUBTRACT": {
+                    "name": "การลบ (Subtract)",
+                    "description": "นำค่ามาลบกัน"
+                },
+                "MULTIPLY": {
+                    "name": "การคูณ (Multiply)",
+                    "description": "นำค่ามาคูณกัน"
+                },
+                "DIVIDE": {
+                    "name": "การหาร (Divide)",
+                    "description": "นำค่ามาหารกัน"
+                },
+                "MULTIPLY_ADD": {
+                    "name": "คูณและบวก (Multiply Add)",
+                    "description": "นำค่ามาคูณแล้วบวกด้วยอีกค่าหนึ่ง"
+                },
+                "CROSS_PRODUCT": {
+                    "name": "ครอสโปรดักส์ (Cross Product)",
+                    "description": "คำนวณหาVectorที่ตั้งฉากกับสองVector"
+                },
+                "PROJECT": {
+                    "name": "โพรเจกชัน (Project)",
+                    "description": "ฉายVectorหนึ่งไปบนอีกVector"
+                },
+                "REFLECT": {
+                    "name": "สะท้อน (Reflect)",
+                    "description": "คำนวณVectorสะท้อนมุมตกกระทบ"
+                },
+                "REFRACT": {
+                    "name": "หักเห (Refract)",
+                    "description": "คำนวณVectorหักเหผ่านตัวกลาง"
+                },
+                "FACEFORWARD": {
+                    "name": "พลิกหน้า (Faceforward)",
+                    "description": "ปรับทิศทางVectorให้ชี้ไปทางเดียวกับพื้นผิว"
+                },
+                "DOT_PRODUCT": {
+                    "name": "ดอตโปรดักส์ (Dot Product)",
+                    "description": "ผลคูณScaleาร์ระหว่างสองVector"
+                },
+                "DISTANCE": {
+                    "name": "ระยะทาง (Distance)",
+                    "description": "หาระยะทางระหว่างสองจุดหรือVector"
+                },
+                "LENGTH": {
+                    "name": "ความยาว (Length)",
+                    "description": "หาขนาดหรือความยาวของVector"
+                },
+                "SCALE": {
+                    "name": "Scale",
+                    "description": "ปรับขนาดVectorตามตัวคูณ"
+                },
+                "NORMALIZE": {
+                    "name": "ทำให้เป็นหนึ่งหน่วย (Normalize)",
+                    "description": "ปรับVectorให้มีความยาวเท่ากับ 1"
+                },
+                "ABSOLUTE": {
+                    "name": "ค่าสัมบูรณ์ (Absolute)",
+                    "description": "คืนค่าบวกของตัวเลขเสมอ"
+                },
+                "POWER": {
+                    "name": "ยกกำลัง (Power)",
+                    "description": "นำค่ามายกกำลังกัน"
+                },
+                "SIGN": {
+                    "name": "เครื่องหมาย (Sign)",
+                    "description": "คืนค่า -1, 0, หรือ 1 ตามเครื่องหมายของค่า"
+                },
+                "MINIMUM": {
+                    "name": "ค่าน้อยที่สุด (Minimum)",
+                    "description": "คืนค่าที่น้อยที่สุดจากสองค่า"
+                },
+                "MAXIMUM": {
+                    "name": "ค่ามากที่สุด (Maximum)",
+                    "description": "คืนค่าที่มากที่สุดจากสองค่า"
+                },
+                "ROUND": {
+                    "name": "ปัดเศษ (Round)",
+                    "description": "ปัดเศษFloatเป็นจำนวนเต็มที่ใกล้เคียงที่สุด"
+                },
+                "FLOOR": {
+                    "name": "ปัดเศษลง (Floor)",
+                    "description": "ปัดเศษลงเป็นจำนวนเต็มที่ใกล้ที่สุด"
+                },
+                "CEIL": {
+                    "name": "ปัดเศษขึ้น (Ceiling)",
+                    "description": "ปัดเศษขึ้นเป็นจำนวนเต็มที่ใกล้ที่สุด"
+                },
+                "FRACTION": {
+                    "name": "ส่วนFloat (Fraction)",
+                    "description": "คืนค่าเฉพาะส่วนที่เป็นFloat"
+                },
+                "MODULO": {
+                    "name": "หารเอาเศษ (Modulo)",
+                    "description": "คืนค่าเศษที่เหลือจากการหาร"
+                },
+                "WRAP": {
+                    "name": "การวนลูปค่า (Wrap)",
+                    "description": "วนลูปค่ากลับไปเริ่มต้นเมื่อเกินขีดจำกัด"
+                },
+                "SNAP": {
+                    "name": "การทำค่าให้ตรงกับScale (Snap)",
+                    "description": "ปรับค่าให้เป็นขั้นตามค่าScaleที่กำหนด"
+                },
+                "SINE": {
+                    "name": "ไซน์ (Sine)",
+                    "description": "ฟังก์ชันตรีโกณมิติไซน์"
+                },
+                "COSINE": {
+                    "name": "โคไซน์ (Cosine)",
+                    "description": "ฟังก์ชันตรีโกณมิติโคไซน์"
+                },
+                "TANGENT": {
+                    "name": "แทนเจนต์ (Tangent)",
+                    "description": "ฟังก์ชันตรีโกณมิติแทนเจนต์"
+                }
+            }
+        }
+    },
+    "ShaderNodeVectorRotate": {
+        "name": "Vector Rotate",
+        "description": "หลักการ: หมุนพิกัด 3 มิติรอบแกน หรือรอบจุดศูนย์กลางตามองศาที่ระบุ\nการประยุกษ์ใช้: ใช้หมุนทิศทางลม หมุนรูปแบบลวดลาย Texture หรือหมุนทิศทางการชี้ของวัตถุ",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "rotation_type": [
+                "AXIS_ANGLE",
+                "X_AXIS",
+                "Y_AXIS",
+                "Z_AXIS",
+                "EULER_XYZ"
+            ]
+        },
+        "sub_types": {
+            "rotation_type": {
+                "AXIS_ANGLE": {
+                    "name": "Vector Rotate (แกนและมุม (Axis Angle))",
+                    "description": "ตัวเลือกโหมด: แกนและมุม (Axis Angle)"
+                },
+                "X_AXIS": {
+                    "name": "Vector Rotate (แกน X (X Axis))",
+                    "description": "ตัวเลือกโหมด: แกน X (X Axis)"
+                },
+                "Y_AXIS": {
+                    "name": "Vector Rotate (แกน Y (Y Axis))",
+                    "description": "ตัวเลือกโหมด: แกน Y (Y Axis)"
+                },
+                "Z_AXIS": {
+                    "name": "Vector Rotate (แกน Z (Z Axis))",
+                    "description": "ตัวเลือกโหมด: แกน Z (Z Axis)"
+                },
+                "EULER_XYZ": {
+                    "name": "Vector Rotate (ออยเลอร์ XYZ (Euler XYZ))",
+                    "description": "ตัวเลือกโหมด: ออยเลอร์ XYZ (Euler XYZ)"
+                }
+            }
+        }
+    },
+    "FunctionNodeAlignRotationToVector": {
+        "name": "Align Rotation to Vector",
+        "description": "หลักการ: คำนวณมุมหมุนที่ต้องใช้เพื่อให้แกนของวัตถุพุ่งชี้ไปตามทิศทาง (Vector) ที่กำหนด\nการประยุกษ์ใช้: ใช้ทำให้ดอกทานตะวันหันหน้าเข้าหาดวงอาทิตย์ หรือให้จรวดเล็งหัวพุ่งไปที่เป้าหมาย",
+        "inputs": {},
+        "outputs": {},
+        "dropdowns": {
+            "axis": [
+                "X",
+                "Y",
+                "Z"
+            ],
+            "pivot_axis": [
+                "AUTO",
+                "X",
+                "Y",
+                "Z"
+            ]
+        },
+        "sub_types": {
+            "axis": {
+                "X": {
+                    "name": "Align Rotation to Vector (แกน X)",
+                    "description": "ตัวเลือกโหมด: แกน X"
+                },
+                "Y": {
+                    "name": "Align Rotation to Vector (แกน Y)",
+                    "description": "ตัวเลือกโหมด: แกน Y"
+                },
+                "Z": {
+                    "name": "Align Rotation to Vector (แกน Z)",
+                    "description": "ตัวเลือกโหมด: แกน Z"
+                }
+            },
+            "pivot_axis": {
+                "AUTO": {
+                    "name": "Align Rotation to Vector (อัตโนมัติ (Auto))",
+                    "description": "ตัวเลือกโหมด: อัตโนมัติ (Auto)"
+                },
+                "X": {
+                    "name": "Align Rotation to Vector (แกน X)",
+                    "description": "ตัวเลือกโหมด: แกน X"
+                },
+                "Y": {
+                    "name": "Align Rotation to Vector (แกน Y)",
+                    "description": "ตัวเลือกโหมด: แกน Y"
+                },
+                "Z": {
+                    "name": "Align Rotation to Vector (แกน Z)",
+                    "description": "ตัวเลือกโหมด: แกน Z"
+                }
+            }
+        }
+    }
+}
+
