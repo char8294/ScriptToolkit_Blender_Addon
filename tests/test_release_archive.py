@@ -25,6 +25,7 @@ def test_release_archive_includes_feature_modules(tmp_path):
         "features/biped_names.py",
         "features/hair_check.py",
         "features/empty_to_bone.py",
+        "features/fbx_import_export.py",
         "features/align_bones.py",
         "features/arp_retarget_preset.py",
         "features/kj_export.py",
@@ -52,6 +53,7 @@ def test_release_archive_includes_feature_modules(tmp_path):
     assert "script_toolkit/features/__init__.py" in names
     assert "script_toolkit/features/kj_export.py" in names
     assert "script_toolkit/features/root_motion.py" in names
+    assert "script_toolkit/features/fbx_import_export.py" in names
     assert "script_toolkit/features/turntable_camera.py" in names
     assert "script_toolkit/features/quick_render.py" in names
     assert "script_toolkit/features/learn_node_blender.py" in names

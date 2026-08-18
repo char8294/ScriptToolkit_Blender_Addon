@@ -1,10 +1,10 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 5, 0),
+    "version": (0, 6, 6),
     "blender": (5, 2, 0),
     "location": "3D View > Sidebar > Script Toolkit",
-    "description": "FBX batch tools in an isolated Blender worker plus selected-object cleanup tools.",
+    "description": "FBX import/export options plus batch tools and selected-object cleanup tools.",
     "category": "Import-Export",
 }
 
@@ -27,6 +27,7 @@ from .features import (
     arp_retarget_preset,
     biped_names,
     empty_to_bone,
+    fbx_import_export,
     hair_check,
     kj_export,
     learn_node_blender,
@@ -38,10 +39,45 @@ from .features import (
 if "bpy" in locals():
     import importlib
     if "unregister" in locals():
-        unregister()
+        try:
+            unregister()
+        except Exception as error:
+            print(f"[Script Toolkit] Previous registration cleanup warning: {error}")
+
+    # An older module version may have stopped unregistering halfway through.
+    # Keep direct references to its classes and remove them before reloading
+    # feature modules, whose CLASSES tuples will then contain new class objects.
+    _loaded_modules = (
+        globals().get("biped_names"),
+        globals().get("hair_check"),
+        globals().get("empty_to_bone"),
+        globals().get("fbx_import_export"),
+        globals().get("align_bones"),
+        globals().get("arp_retarget_preset"),
+        globals().get("kj_export"),
+        globals().get("root_motion"),
+        globals().get("turntable_camera"),
+        globals().get("quick_render"),
+        globals().get("learn_node_blender"),
+    )
+    for _module in _loaded_modules:
+        if _module is None:
+            continue
+        for _class in reversed(tuple(getattr(_module, "CLASSES", ()) or ())):
+            try:
+                bpy.utils.unregister_class(_class)
+            except (RuntimeError, TypeError):
+                pass
+    for _class in reversed(tuple(globals().get("CLASSES", ()) or ())):
+        try:
+            bpy.utils.unregister_class(_class)
+        except (RuntimeError, TypeError):
+            pass
+
     importlib.reload(biped_names)
     importlib.reload(hair_check)
     importlib.reload(empty_to_bone)
+    importlib.reload(fbx_import_export)
     importlib.reload(align_bones)
     importlib.reload(arp_retarget_preset)
     importlib.reload(kj_export)
@@ -51,6 +87,49 @@ if "bpy" in locals():
     importlib.reload(learn_node_blender)
 
 import bpy
+
+
+_FEATURE_MODULES = (
+    biped_names,
+    hair_check,
+    empty_to_bone,
+    fbx_import_export,
+    align_bones,
+    arp_retarget_preset,
+    kj_export,
+    root_motion,
+    turntable_camera,
+    quick_render,
+    learn_node_blender,
+)
+
+
+def _cleanup_stale_registered_classes():
+    """Remove classes left behind by a failed add-on reload."""
+    if hasattr(bpy.types.Scene, "script_toolkit"):
+        delattr(bpy.types.Scene, "script_toolkit")
+
+    classes = list(globals().get("CLASSES", ()))
+    for module in _FEATURE_MODULES:
+        for attr_name in ("CLASSES", "classes"):
+            classes.extend(getattr(module, attr_name, ()))
+
+    seen_names = set()
+    for cls in reversed(classes):
+        class_name = getattr(cls, "__name__", "")
+        if not class_name or class_name in seen_names:
+            continue
+        seen_names.add(class_name)
+        try:
+            bpy.utils.unregister_class(cls)
+        except (RuntimeError, TypeError):
+            registered_class = getattr(bpy.types, class_name, None)
+            if registered_class is None or registered_class is cls:
+                continue
+            try:
+                bpy.utils.unregister_class(registered_class)
+            except (RuntimeError, TypeError):
+                pass
 
 
 
@@ -96,6 +175,7 @@ def _tool_description(tool):
         "BIPED_NAMES": "เปลี่ยนชื่อ Biped bones/vertex groups เพื่อใช้ Symmetry และคืนชื่อเดิม ตามรูปแบบ Biped Names Helper เดิม.",
         "ALIGN_BONES": "เครื่องมือจัดเรียงแกนกระดูก, Snapping และแปลงแกนแบบ FBX",
         "EMPTY_TO_BONE": "เครื่องมือ Create Bones จาก Empty และ Armature พร้อมจัด Hierarchy",
+        "FBX_IMPORT_EXPORT": "เพิ่ม Universal Root Bone ใน Import > FBX และ Ignore Armature Node ใน Export > FBX; ตัวเลือกจริงอยู่ในหน้าต่าง FBX เดิมของ Blender.",
         "ARP_REMAP_PRESET": "สร้างรายการ mapping แบบหลายรายการและ export เป็น Auto-Rig Pro .bmap preset.",
         "KJ_EXPORT": "Batch export meshes with a pinned armature using the Better FBX exporter.",
         "ROOT_MOTION": "Create Root Motion helper shapes and pair selected bones with RM_ objects.",
@@ -147,6 +227,11 @@ class ST_Properties(PropertyGroup):
                 "EMPTY_TO_BONE",
                 "Create Bones",
                 "Convert empties and armature origins to bones",
+            ),
+            (
+                "FBX_IMPORT_EXPORT",
+                "FBX Import/Export Option",
+                "Add Universal Root Bone to FBX Import and Ignore Armature Node to FBX Export",
             ),
             ("ARP_REMAP_PRESET", "ARP Retarget Preset", "Build and export an Auto-Rig Pro mapping preset"),
             ("KJ_EXPORT", "KJ Export", "Batch export meshes with a pinned armature using Better FBX"),
@@ -819,6 +904,7 @@ class ST_OT_do_update(Operator):
                 "features/biped_names.py",
                 "features/hair_check.py",
                 "features/empty_to_bone.py",
+                "features/fbx_import_export.py",
                 "features/align_bones.py",
                 "features/arp_retarget_preset.py",
                 "features/kj_export.py",
@@ -906,6 +992,8 @@ class ST_PT_panel(Panel):
             align_bones.draw_ui(layout, context)
         elif props.tool == "EMPTY_TO_BONE":
             empty_to_bone.draw_ui(layout, context)
+        elif props.tool == "FBX_IMPORT_EXPORT":
+            fbx_import_export.draw_ui(layout, context)
         elif props.tool == "ARP_REMAP_PRESET":
             arp_retarget_preset.draw_ui(layout, context)
         elif props.tool == "KJ_EXPORT":
@@ -1000,10 +1088,15 @@ CLASSES = (
 
 def register():
     if hasattr(bpy.types.Scene, "script_toolkit"):
-        unregister()
+        try:
+            unregister()
+        except Exception as error:
+            print(f"[Script Toolkit] Registration cleanup warning: {error}")
+    _cleanup_stale_registered_classes()
     biped_names.register()
     hair_check.register()
     empty_to_bone.register()
+    fbx_import_export.register()
     align_bones.register()
     arp_retarget_preset.register()
     kj_export.register()
@@ -1017,19 +1110,31 @@ def register():
 
 
 def unregister():
-    del bpy.types.Scene.script_toolkit
+    if hasattr(bpy.types.Scene, "script_toolkit"):
+        delattr(bpy.types.Scene, "script_toolkit")
     for cls in reversed(CLASSES):
-        bpy.utils.unregister_class(cls)
-    learn_node_blender.unregister()
-    quick_render.unregister()
-    turntable_camera.unregister()
-    biped_names.unregister()
-    hair_check.unregister()
-    empty_to_bone.unregister()
-    align_bones.unregister()
-    root_motion.unregister()
-    kj_export.unregister()
-    arp_retarget_preset.unregister()
+        try:
+            bpy.utils.unregister_class(cls)
+        except (RuntimeError, TypeError) as error:
+            print(f"[Script Toolkit] Class cleanup warning ({cls.__name__}): {error}")
+
+    for module in (
+        learn_node_blender,
+        quick_render,
+        turntable_camera,
+        biped_names,
+        hair_check,
+        empty_to_bone,
+        fbx_import_export,
+        align_bones,
+        root_motion,
+        kj_export,
+        arp_retarget_preset,
+    ):
+        try:
+            module.unregister()
+        except Exception as error:
+            print(f"[Script Toolkit] Feature cleanup warning ({module.__name__}): {error}")
 
 
 if __name__ == "__main__":

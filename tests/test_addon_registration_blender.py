@@ -35,8 +35,17 @@ def reload_addon(addon):
 
 def run():
     addon = load_addon()
-    assert addon.bl_info["version"] == (0, 5, 0)
+    assert addon.bl_info["version"] == (0, 6, 6)
     assert addon.arp_retarget_preset._refresh_all_preset_items(SimpleNamespace()) == 0
+
+    # Reproduce the stale-class state caused by an older failed unregister.
+    addon.biped_names.register()
+    def failed_unregister():
+        raise RuntimeError("simulated old unregister failure")
+
+    addon.unregister = failed_unregister
+    addon = reload_addon(addon)
+
     addon.register()
     assert hasattr(bpy.types.Scene, "turntable_props")
     assert hasattr(bpy.types.Scene, "qvr_props")
