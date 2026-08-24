@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 6, 6),
+    "version": (0, 6, 7),
     "blender": (5, 2, 0),
     "location": "3D View > Sidebar > Script Toolkit",
     "description": "FBX import/export options plus batch tools and selected-object cleanup tools.",

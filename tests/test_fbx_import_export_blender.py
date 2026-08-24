@@ -63,8 +63,20 @@ def run():
     feature._EXPORT.fbx_data_from_scene = feature._ORIG["fbx_data_from_scene"]
     feature._UTILS.ObjectWrapper.fbx_object_matrix = feature._ORIG["fbx_object_matrix"]
     feature._patch_retry_timer()
+    fake_export_context = SimpleNamespace(
+        space_data=SimpleNamespace(
+            active_operator=SimpleNamespace(
+                bl_idname="EXPORT_SCENE_OT_fbx",
+                bl_rna=SimpleNamespace(identifier="Operator"),
+            )
+        )
+    )
+    assert feature.FILEBROWSER_PT_script_toolkit_fbx.poll(fake_export_context)
+    assert feature._patch_is_active()
     assert io_scene_fbx.export_panel_armature is feature._patched_export_panel_armature
     assert io_scene_fbx.ImportFBX.execute is feature._patched_import_execute
+    assert feature._EXPORT.save is feature._patched_save
+    assert feature._EXPORT.fbx_data_from_scene is feature._patched_fbx_data_from_scene
 
     arm_data = bpy.data.armatures.new("UniversalTestArmature")
     arm_obj = bpy.data.objects.new("UniversalTestArmature", arm_data)
@@ -113,6 +125,18 @@ def run():
     )
     assert export_result == {"FINISHED"}
     assert export_path.exists()
+    export_bytes = export_path.read_bytes()
+    assert source_obj.name.encode() not in export_bytes
+
+    scene.fbx_ignore_armature_node = False
+    ordinary_export_path = Path(tempfile.gettempdir()) / "script_toolkit_fbx_ordinary_export_test.fbx"
+    ordinary_export_result = bpy.ops.export_scene.fbx(
+        filepath=str(ordinary_export_path),
+        use_selection=True,
+        add_leaf_bones=False,
+    )
+    assert ordinary_export_result == {"FINISHED"}
+    assert source_obj.name.encode() in ordinary_export_path.read_bytes()
 
     scene.fbx_universal_root_enabled = True
     feature._KNOWN_OBJECT_NAMES = set(bpy.data.objects.keys())
@@ -129,6 +153,7 @@ def run():
     assert imported_armatures
     assert any(bone.name == "root" for bone in imported_armatures[0].data.bones)
     export_path.unlink(missing_ok=True)
+    ordinary_export_path.unlink(missing_ok=True)
 
     addon.unregister()
     assert not hasattr(bpy.types.Scene, "fbx_universal_root_enabled")

@@ -377,6 +377,19 @@ def _operator_identifier(context):
     return getattr(operator, "bl_idname", "")
 
 
+def _ensure_export_patch(operator_id):
+    """Re-apply the Python exporter patch before an export dialog is drawn."""
+    if operator_id not in {
+        "WM_OT_fbx_export",
+        "wm.fbx_export",
+        "EXPORT_SCENE_OT_fbx",
+        "export_scene.fbx",
+    }:
+        return
+    if not _patch_is_active():
+        _install_patches()
+
+
 def _schedule_pending_import_processing():
     try:
         if not bpy.app.timers.is_registered(_process_pending_imports_timer):
@@ -569,7 +582,9 @@ class FILEBROWSER_PT_script_toolkit_fbx(Panel):
 
     @classmethod
     def poll(cls, context):
-        return _operator_identifier(context) in {
+        operator_id = _operator_identifier(context)
+        _ensure_export_patch(operator_id)
+        return operator_id in {
             "WM_OT_fbx_import",
             "wm.fbx_import",
             "WM_OT_fbx_export",
@@ -584,6 +599,7 @@ class FILEBROWSER_PT_script_toolkit_fbx(Panel):
         layout.use_property_decorate = False
         scene = context.scene
         operator_id = _operator_identifier(context)
+        _ensure_export_patch(operator_id)
 
         if operator_id in {"WM_OT_fbx_import", "wm.fbx_import"}:
             layout.label(text="Universal Root Bone", icon="BONE_DATA")
