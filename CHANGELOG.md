@@ -1,5 +1,19 @@
 # Script Toolkit Changelog
 
+## v0.6.10
+
+- Added a top-level Rigify setup button to set `Meta_Armature_2` bones to Quaternion except both clavicles, then regenerate `RIG-Meta_Armature_2` using the existing Rigify target.
+
+## v0.6.9
+
+- Moved the Quaternion converter start control to the top of its panel and labeled it `Run`.
+
+## v0.6.8
+
+- Added Animation to Quaternion for `RIG-Meta_Armature_2`, with Active Action mode and a selectable Action list.
+- Added optional overwrite mode to replace the source Action in place without creating a `_QUAT` copy.
+- Conversion samples only existing rotation keyframe times and leaves the two clavicle controls as XYZ.
+
 ## v0.5.0
 
 - Added Turntable Camera, Quick Render, and Learn Node Blender to the top-level Tool dropdown.

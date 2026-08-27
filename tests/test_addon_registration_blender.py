@@ -35,7 +35,7 @@ def reload_addon(addon):
 
 def run():
     addon = load_addon()
-    assert addon.bl_info["version"] == (0, 6, 7)
+    assert addon.bl_info["version"] == (0, 6, 10)
     assert addon.arp_retarget_preset._refresh_all_preset_items(SimpleNamespace()) == 0
 
     # Reproduce the stale-class state caused by an older failed unregister.

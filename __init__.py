@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 6, 7),
+    "version": (0, 6, 10),
     "blender": (5, 2, 0),
     "location": "3D View > Sidebar > Script Toolkit",
     "description": "FBX import/export options plus batch tools and selected-object cleanup tools.",
@@ -24,6 +24,7 @@ from bpy.types import Operator, Panel, PropertyGroup
 
 from .features import (
     align_bones,
+    animation_quaternion,
     arp_retarget_preset,
     biped_names,
     empty_to_bone,
@@ -53,6 +54,7 @@ if "bpy" in locals():
         globals().get("empty_to_bone"),
         globals().get("fbx_import_export"),
         globals().get("align_bones"),
+        globals().get("animation_quaternion"),
         globals().get("arp_retarget_preset"),
         globals().get("kj_export"),
         globals().get("root_motion"),
@@ -79,6 +81,7 @@ if "bpy" in locals():
     importlib.reload(empty_to_bone)
     importlib.reload(fbx_import_export)
     importlib.reload(align_bones)
+    importlib.reload(animation_quaternion)
     importlib.reload(arp_retarget_preset)
     importlib.reload(kj_export)
     importlib.reload(root_motion)
@@ -95,6 +98,7 @@ _FEATURE_MODULES = (
     empty_to_bone,
     fbx_import_export,
     align_bones,
+    animation_quaternion,
     arp_retarget_preset,
     kj_export,
     root_motion,
@@ -179,6 +183,7 @@ def _tool_description(tool):
         "ARP_REMAP_PRESET": "สร้างรายการ mapping แบบหลายรายการและ export เป็น Auto-Rig Pro .bmap preset.",
         "KJ_EXPORT": "Batch export meshes with a pinned armature using the Better FBX exporter.",
         "ROOT_MOTION": "Create Root Motion helper shapes and pair selected bones with RM_ objects.",
+        "ANIMATION_QUATERNION": "สร้าง Action ใหม่ท้าย _QUAT จาก Animation ของ RIG-Meta_Armature_2 โดยใช้เฉพาะ keyframe เดิมและแปลง control เป็น Quaternion",
         "TURNTABLE_CAMERA": "Turntable Camera controls integrated into the Script Toolkit panel.",
         "QUICK_RENDER": "Quick Render controls integrated into the Script Toolkit panel.",
         "LEARN_NODE": "Learn Node runs in the Node Editor; this entry only explains where to find it.",
@@ -239,6 +244,11 @@ class ST_Properties(PropertyGroup):
                 "ROOT_MOTION",
                 "Create Root Motion",
                 "Create helper shapes and pair selected bones with RM_ objects",
+            ),
+            (
+                "ANIMATION_QUATERNION",
+                "Animation to Quaternion",
+                "Create _QUAT Actions for RIG-Meta_Armature_2",
             ),
             ("TURNTABLE_CAMERA", "Turntable Camera", "Create turntable camera or model rotation animations"),
             ("QUICK_RENDER", "Quick Render", "Render visible or selected objects with saved settings"),
@@ -906,6 +916,7 @@ class ST_OT_do_update(Operator):
                 "features/empty_to_bone.py",
                 "features/fbx_import_export.py",
                 "features/align_bones.py",
+                "features/animation_quaternion.py",
                 "features/arp_retarget_preset.py",
                 "features/kj_export.py",
                 "features/root_motion.py",
@@ -990,6 +1001,8 @@ class ST_PT_panel(Panel):
             biped_names.draw_ui(layout, context)
         elif props.tool == "ALIGN_BONES":
             align_bones.draw_ui(layout, context)
+        elif props.tool == "ANIMATION_QUATERNION":
+            animation_quaternion.draw_ui(layout, context)
         elif props.tool == "EMPTY_TO_BONE":
             empty_to_bone.draw_ui(layout, context)
         elif props.tool == "FBX_IMPORT_EXPORT":
@@ -1098,6 +1111,7 @@ def register():
     empty_to_bone.register()
     fbx_import_export.register()
     align_bones.register()
+    animation_quaternion.register()
     arp_retarget_preset.register()
     kj_export.register()
     root_motion.register()
@@ -1127,6 +1141,7 @@ def unregister():
         empty_to_bone,
         fbx_import_export,
         align_bones,
+        animation_quaternion,
         root_motion,
         kj_export,
         arp_retarget_preset,
