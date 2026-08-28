@@ -1,5 +1,13 @@
 # Script Toolkit Changelog
 
+## v0.6.16
+
+- Better FBX Unity Export now temporarily forces FBX Unit to `m` as well as the non-optimized export path, preventing Unity's `100,100,100` import scale when a preset uses centimeters.
+
+## v0.6.15
+
+- Added a Better FBX Unity Export Tool with the `Bake Mesh Rotation/Scale for Unity` option, which temporarily bakes mesh transforms during export (and disables Better's optimized path for that export when necessary) so Unity imports mesh nodes with rotation `0,0,0` and scale `1,1,1` while leaving bones and the source Blender scene unchanged.
+
 ## v0.6.14
 
 - Made deferred Action-list refresh use `bpy.data.scenes` instead of restricted `bpy.context.scene`, so add-on registration remains safe in Blender's Preferences context.

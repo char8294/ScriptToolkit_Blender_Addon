@@ -26,9 +26,11 @@ def load_addon():
 def run():
     addon = load_addon()
     feature = addon.fbx_import_export
+    better_feature = addon.better_fbx_export
     addon.register()
 
     assert hasattr(bpy.types.Scene, "fbx_ignore_armature_node")
+    assert hasattr(bpy.types.Scene, "better_fbx_bake_mesh_transforms")
     assert hasattr(bpy.types.Scene, "fbx_universal_root_enabled")
     assert feature._ORIG
     assert io_scene_fbx.export_panel_armature is feature._patched_export_panel_armature
@@ -52,6 +54,51 @@ def run():
         )
     )
     assert feature.FILEBROWSER_PT_script_toolkit_fbx.poll(fake_c_import_context)
+    fake_better_export_context = SimpleNamespace(
+        space_data=SimpleNamespace(
+            active_operator=SimpleNamespace(
+                bl_idname="BETTER_EXPORT_OT_fbx",
+                bl_rna=SimpleNamespace(identifier="Operator"),
+            )
+        )
+    )
+    assert not feature.FILEBROWSER_PT_script_toolkit_fbx.poll(fake_better_export_context)
+    assert better_feature.FILEBROWSER_PT_script_toolkit_better_fbx.poll(
+        fake_better_export_context
+    )
+    if better_feature._BETTER is not None:
+        assert better_feature._better_patch_is_active()
+
+    bake_arm_data = bpy.data.armatures.new("BetterBakeTestArmature")
+    bake_arm = bpy.data.objects.new("BetterBakeTestArmature", bake_arm_data)
+    bpy.context.collection.objects.link(bake_arm)
+    bake_mesh_data = bpy.data.meshes.new("BetterBakeTestMesh")
+    bake_mesh_data.from_pydata(
+        [(0.0, 0.0, 0.0), (0.0, 1.0, 0.0), (1.0, 0.0, 0.0)],
+        [],
+        [(0, 1, 2)],
+    )
+    bake_mesh = bpy.data.objects.new("BetterBakeTestMesh", bake_mesh_data)
+    bpy.context.collection.objects.link(bake_mesh)
+    bake_mesh.parent = bake_arm
+    bake_mesh.vertex_groups.new(name="root")
+    bake_modifier = bake_mesh.modifiers.new(name="Armature", type="ARMATURE")
+    bake_modifier.object = bake_arm
+    original_bake_data = bake_mesh.data
+    original_bake_basis = bake_mesh.matrix_basis.copy()
+    original_bake_vertex = bake_mesh.data.vertices[1].co.copy()
+    bake_state = better_feature._bake_better_mesh_transforms((bake_mesh,))
+    assert round(bake_mesh.rotation_euler.x, 6) == round(3.141592653589793 / 2, 6)
+    assert tuple(round(value, 6) for value in bake_mesh.scale) == (1.0, 1.0, 1.0)
+    assert bake_mesh.data != original_bake_data
+    assert bake_mesh.data.vertices[1].co != original_bake_vertex
+    better_feature._restore_better_mesh_transforms(bake_state)
+    assert bake_mesh.data == original_bake_data
+    assert bake_mesh.matrix_basis == original_bake_basis
+    bpy.data.objects.remove(bake_mesh, do_unlink=True)
+    bpy.data.meshes.remove(bake_mesh_data)
+    bpy.data.objects.remove(bake_arm, do_unlink=True)
+    bpy.data.armatures.remove(bake_arm_data)
 
     io_scene_fbx.export_panel_armature = feature._ORIG["export_panel_armature"]
     io_scene_fbx.ImportFBX.execute = feature._ORIG["import_execute"]
@@ -157,6 +204,7 @@ def run():
 
     addon.unregister()
     assert not hasattr(bpy.types.Scene, "fbx_universal_root_enabled")
+    assert not hasattr(bpy.types.Scene, "better_fbx_bake_mesh_transforms")
     print("FBX_IMPORT_EXPORT_PATCH_OK")
 
 

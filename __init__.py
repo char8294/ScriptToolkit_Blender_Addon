@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 6, 14),
+    "version": (0, 6, 16),
     "blender": (5, 2, 0),
     "location": "3D View > Sidebar > Script Toolkit",
     "description": "FBX import/export options plus batch tools and selected-object cleanup tools.",
@@ -26,6 +26,7 @@ from .features import (
     align_bones,
     animation_quaternion,
     arp_retarget_preset,
+    better_fbx_export,
     biped_names,
     empty_to_bone,
     fbx_import_export,
@@ -56,6 +57,7 @@ if "bpy" in locals():
         globals().get("align_bones"),
         globals().get("animation_quaternion"),
         globals().get("arp_retarget_preset"),
+        globals().get("better_fbx_export"),
         globals().get("kj_export"),
         globals().get("root_motion"),
         globals().get("turntable_camera"),
@@ -83,6 +85,7 @@ if "bpy" in locals():
     importlib.reload(align_bones)
     importlib.reload(animation_quaternion)
     importlib.reload(arp_retarget_preset)
+    importlib.reload(better_fbx_export)
     importlib.reload(kj_export)
     importlib.reload(root_motion)
     importlib.reload(turntable_camera)
@@ -100,6 +103,7 @@ _FEATURE_MODULES = (
     align_bones,
     animation_quaternion,
     arp_retarget_preset,
+    better_fbx_export,
     kj_export,
     root_motion,
     turntable_camera,
@@ -180,6 +184,7 @@ def _tool_description(tool):
         "ALIGN_BONES": "เครื่องมือจัดเรียงแกนกระดูก, Snapping และแปลงแกนแบบ FBX",
         "EMPTY_TO_BONE": "เครื่องมือ Create Bones จาก Empty และ Armature พร้อมจัด Hierarchy",
         "FBX_IMPORT_EXPORT": "เพิ่ม Universal Root Bone ใน Import > FBX และ Ignore Armature Node ใน Export > FBX; ตัวเลือกจริงอยู่ในหน้าต่าง FBX เดิมของ Blender.",
+        "BETTER_FBX_EXPORT": "ตัวเลือกเฉพาะ Better FBX สำหรับ bake rotation/scale ของ mesh ให้ Unity โดยไม่แก้กระดูกหรือ scene ต้นฉบับ.",
         "ARP_REMAP_PRESET": "สร้างรายการ mapping แบบหลายรายการและ export เป็น Auto-Rig Pro .bmap preset.",
         "KJ_EXPORT": "Batch export meshes with a pinned armature using the Better FBX exporter.",
         "ROOT_MOTION": "Create Root Motion helper shapes and pair selected bones with RM_ objects.",
@@ -237,6 +242,11 @@ class ST_Properties(PropertyGroup):
                 "FBX_IMPORT_EXPORT",
                 "FBX Import/Export Option",
                 "Add Universal Root Bone to FBX Import and Ignore Armature Node to FBX Export",
+            ),
+            (
+                "BETTER_FBX_EXPORT",
+                "Better FBX Unity Export",
+                "Bake mesh rotation/scale for Unity during Better FBX export",
             ),
             ("ARP_REMAP_PRESET", "ARP Retarget Preset", "Build and export an Auto-Rig Pro mapping preset"),
             ("KJ_EXPORT", "KJ Export", "Batch export meshes with a pinned armature using Better FBX"),
@@ -915,6 +925,7 @@ class ST_OT_do_update(Operator):
                 "features/hair_check.py",
                 "features/empty_to_bone.py",
                 "features/fbx_import_export.py",
+                "features/better_fbx_export.py",
                 "features/align_bones.py",
                 "features/animation_quaternion.py",
                 "features/arp_retarget_preset.py",
@@ -1007,6 +1018,8 @@ class ST_PT_panel(Panel):
             empty_to_bone.draw_ui(layout, context)
         elif props.tool == "FBX_IMPORT_EXPORT":
             fbx_import_export.draw_ui(layout, context)
+        elif props.tool == "BETTER_FBX_EXPORT":
+            better_fbx_export.draw_ui(layout, context)
         elif props.tool == "ARP_REMAP_PRESET":
             arp_retarget_preset.draw_ui(layout, context)
         elif props.tool == "KJ_EXPORT":
@@ -1110,6 +1123,7 @@ def register():
     hair_check.register()
     empty_to_bone.register()
     fbx_import_export.register()
+    better_fbx_export.register()
     align_bones.register()
     animation_quaternion.register()
     arp_retarget_preset.register()
@@ -1140,6 +1154,7 @@ def unregister():
         hair_check,
         empty_to_bone,
         fbx_import_export,
+        better_fbx_export,
         align_bones,
         animation_quaternion,
         root_motion,

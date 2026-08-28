@@ -10,6 +10,7 @@ A collection of handy scripts and utilities for Rigging, Animation, and Workflow
 - **ARP Retarget Preset**: Build complete source/target bone mappings, multi-select rows by clicking, swap or mirror mappings, and import/export Auto-Rig Pro `.bmap` presets.
 - **KJ Export**: Batch export selected meshes with a pinned armature through the Better FBX exporter, including presets, smooth shading, Biped name restoration, and per-mesh unused-bone removal.
 - **FBX Import/Export Option**: Add a Script Toolkit panel to Blender's current FBX Import/Export options with Universal Root Bone controls and Ignore Armature Node.
+- **Better FBX Unity Export Tool**: Add a Better FBX-only Tool and File Browser option that bakes mesh rotation/scale during export so Unity imports mesh nodes at rotation `0,0,0` and scale `1,1,1`, temporarily using the non-optimized path and meter units when necessary without modifying bones or the source scene.
 - **Align Bones**: Snap selected tails to nearby selected heads or point them along a World Axis, and convert selected bone axes with FBX-style Primary/Secondary source and target settings while preserving the current pose.
 - **Clear Custom Properties**: Strip all custom properties/metadata from selected objects to clean up imported models (like from 3ds Max/Maya).
 - **Create Root Motion**: Create colored helper Shapes for multiple selected bones, open Blender's native Bake Action dialog, and add Copy Location/Rotation constraints by matching bones to `RM_` Object names.
