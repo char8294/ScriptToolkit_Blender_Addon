@@ -10,6 +10,7 @@ import json
 from collections import defaultdict
 
 import bpy
+from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, CollectionProperty, EnumProperty, IntProperty, StringProperty
 from bpy.types import Operator, PropertyGroup, UIList, UI_UL_list
 from mathutils import Euler
@@ -30,6 +31,35 @@ INTERNAL_PREFIXES = (
     "ORG-",
     "MCH-",
     "VIS_",
+)
+NLA_STRIP_PROPERTIES = (
+    "frame_start",
+    "frame_end",
+    "action_frame_start",
+    "action_frame_end",
+    "scale",
+    "repeat",
+    "blend_type",
+    "extrapolation",
+    "influence",
+    "strip_time",
+    "use_auto_blend",
+    "use_animated_influence",
+    "use_animated_time",
+    "use_animated_time_cyclic",
+    "use_reverse",
+    "use_sync_length",
+)
+NLA_TRACK_PROPERTIES = (
+    "mute",
+    "is_solo",
+    "select",
+    "lock",
+)
+ANIMATION_DATA_PROPERTIES = (
+    "use_nla",
+    "use_pin",
+    "use_tweak_mode",
 )
 
 
@@ -96,6 +126,286 @@ def _restore_context(context, state):
         context.scene.frame_set(state["frame"])
     except (AttributeError, RuntimeError):
         pass
+
+
+def _safe_get(owner, property_name, default=None):
+    try:
+        return getattr(owner, property_name)
+    except (AttributeError, ReferenceError, RuntimeError):
+        return default
+
+
+def _try_set(owner, property_name, value):
+    try:
+        setattr(owner, property_name, value)
+        return True
+    except (AttributeError, ReferenceError, RuntimeError, TypeError, ValueError):
+        return False
+
+
+def _slot_state(owner):
+    slot = _safe_get(owner, "action_slot")
+    return {
+        "identifier": _safe_get(slot, "identifier"),
+        "handle": _safe_get(owner, "action_slot_handle"),
+    }
+
+
+def _capture_nla_strip(strip):
+    state = {
+        "name": strip.name,
+        "action": strip.action,
+        "slot": _slot_state(strip),
+        "properties": {},
+        "fcurves": [],
+    }
+    for property_name in NLA_STRIP_PROPERTIES:
+        value = _safe_get(strip, property_name)
+        if value is not None:
+            state["properties"][property_name] = value
+
+    for fcurve in _safe_get(strip, "fcurves", ()) or ():
+        fcurve_state = {
+            "data_path": fcurve.data_path,
+            "array_index": int(fcurve.array_index),
+            "extrapolation": _safe_get(fcurve, "extrapolation"),
+            "keyframes": [],
+        }
+        for point in fcurve.keyframe_points:
+            point_state = {
+                "frame": float(point.co[0]),
+                "value": float(point.co[1]),
+                "interpolation": _safe_get(point, "interpolation"),
+                "easing": _safe_get(point, "easing"),
+                "handle_left_type": _safe_get(point, "handle_left_type"),
+                "handle_right_type": _safe_get(point, "handle_right_type"),
+            }
+            left = _safe_get(point, "handle_left")
+            right = _safe_get(point, "handle_right")
+            if left is not None:
+                point_state["handle_left"] = tuple(left)
+            if right is not None:
+                point_state["handle_right"] = tuple(right)
+            fcurve_state["keyframes"].append(point_state)
+        state["fcurves"].append(fcurve_state)
+    return state
+
+
+def _capture_animation_data(obj):
+    """Capture animation assignments that Rigify Generate clears."""
+    animation_data = obj.animation_data if obj else None
+    if animation_data is None:
+        return None
+
+    active_track = _safe_get(animation_data.nla_tracks, "active")
+    state = {
+        "action": animation_data.action,
+        "action_slot": _slot_state(animation_data),
+        "properties": {
+            property_name: _safe_get(animation_data, property_name)
+            for property_name in ANIMATION_DATA_PROPERTIES
+        },
+        "active_track_name": _safe_get(active_track, "name"),
+        "nla_tracks": [],
+    }
+    for track in animation_data.nla_tracks:
+        track_state = {
+            "name": track.name,
+            "properties": {
+                property_name: _safe_get(track, property_name)
+                for property_name in NLA_TRACK_PROPERTIES
+            },
+            "strips": [_capture_nla_strip(strip) for strip in track.strips],
+        }
+        state["nla_tracks"].append(track_state)
+    return state
+
+
+def _set_action_slot(owner, action, object_name, slot_identifier=None, slot_handle=None):
+    slots = _safe_get(action, "slots")
+    if slots is None or len(slots) == 0:
+        return False
+
+    chosen = None
+    if slot_identifier:
+        chosen = next(
+            (
+                slot
+                for slot in slots
+                if _safe_get(slot, "identifier") == slot_identifier
+            ),
+            None,
+        )
+    if chosen is None and slot_handle is not None:
+        chosen = next(
+            (
+                slot
+                for slot in slots
+                if _safe_get(slot, "handle") == slot_handle
+            ),
+            None,
+        )
+    if chosen is None:
+        expected_identifier = f"OB{object_name}"
+        chosen = next(
+            (
+                slot
+                for slot in slots
+                if _safe_get(slot, "identifier") == expected_identifier
+            ),
+            None,
+        )
+    chosen = chosen or slots[0]
+
+    if _try_set(owner, "action_slot", chosen):
+        return True
+    handle = _safe_get(chosen, "handle")
+    return handle is not None and _try_set(owner, "action_slot_handle", handle)
+
+
+def _restore_nla_strip_fcurves(strip, fcurve_states):
+    for fcurve_state in fcurve_states:
+        try:
+            fcurve = strip.fcurves.new(
+                data_path=fcurve_state["data_path"],
+                index=fcurve_state["array_index"],
+            )
+        except (AttributeError, RuntimeError, TypeError, ValueError):
+            continue
+        extrapolation = fcurve_state.get("extrapolation")
+        if extrapolation is not None:
+            _try_set(fcurve, "extrapolation", extrapolation)
+        for point_state in fcurve_state["keyframes"]:
+            try:
+                point = fcurve.keyframe_points.insert(
+                    point_state["frame"],
+                    point_state["value"],
+                    options={"FAST"},
+                )
+            except (RuntimeError, TypeError, ValueError):
+                continue
+            for property_name in (
+                "interpolation",
+                "easing",
+                "handle_left_type",
+                "handle_right_type",
+            ):
+                value = point_state.get(property_name)
+                if value is not None:
+                    _try_set(point, property_name, value)
+            for property_name in ("handle_left", "handle_right"):
+                value = point_state.get(property_name)
+                if value is not None:
+                    _try_set(point, property_name, value)
+        try:
+            fcurve.update()
+        except (AttributeError, RuntimeError):
+            pass
+
+
+def _restore_animation_data(obj, state):
+    """Restore Active Action and NLA data after Rigify regenerates the rig."""
+    result = {
+        "active_action": False,
+        "nla_strips": 0,
+        "missing_actions": 0,
+    }
+    if obj is None or state is None:
+        return result
+
+    animation_data = obj.animation_data_create()
+    for track in list(animation_data.nla_tracks):
+        animation_data.nla_tracks.remove(track)
+
+    action = state.get("action")
+    live_action = bpy.data.actions.get(action.name) if action else None
+    if live_action is not None:
+        slot = state.get("action_slot", {})
+        _restore_action_slot(
+            animation_data,
+            live_action,
+            obj.name,
+            slot_identifier=slot.get("identifier"),
+            slot_handle=slot.get("handle"),
+        )
+        result["active_action"] = True
+    else:
+        _try_set(animation_data, "action", None)
+
+    for track_state in state.get("nla_tracks", ()):
+        track = animation_data.nla_tracks.new()
+        _try_set(track, "name", track_state.get("name", "NLA Track"))
+
+        for strip_state in track_state.get("strips", ()):
+            source_action = strip_state.get("action")
+            live_action = (
+                bpy.data.actions.get(source_action.name)
+                if source_action
+                else None
+            )
+            if live_action is None:
+                result["missing_actions"] += 1
+                continue
+
+            properties = strip_state.get("properties", {})
+            strip = track.strips.new(
+                strip_state.get("name", live_action.name),
+                0,
+                live_action,
+            )
+
+            # Disable sync while restoring exact frame boundaries, then put it
+            # back to the source value after all timing properties are copied.
+            if "use_sync_length" in properties:
+                _try_set(strip, "use_sync_length", False)
+            for property_name in (
+                "action_frame_start",
+                "action_frame_end",
+                "frame_start",
+                "frame_end",
+                "scale",
+                "repeat",
+                "blend_type",
+                "extrapolation",
+                "influence",
+                "strip_time",
+                "use_auto_blend",
+                "use_animated_influence",
+                "use_animated_time",
+                "use_animated_time_cyclic",
+                "use_reverse",
+            ):
+                if property_name in properties:
+                    _try_set(strip, property_name, properties[property_name])
+            if "use_sync_length" in properties:
+                _try_set(strip, "use_sync_length", properties["use_sync_length"])
+
+            slot = strip_state.get("slot", {})
+            _set_action_slot(
+                strip,
+                live_action,
+                obj.name,
+                slot_identifier=slot.get("identifier"),
+                slot_handle=slot.get("handle"),
+            )
+            _restore_nla_strip_fcurves(strip, strip_state.get("fcurves", ()))
+            result["nla_strips"] += 1
+
+        for property_name in NLA_TRACK_PROPERTIES:
+            value = track_state.get("properties", {}).get(property_name)
+            if value is not None:
+                _try_set(track, property_name, value)
+
+    active_track_name = state.get("active_track_name")
+    if active_track_name:
+        active_track = animation_data.nla_tracks.get(active_track_name)
+        if active_track is not None:
+            _try_set(animation_data.nla_tracks, "active", active_track)
+    for property_name in ANIMATION_DATA_PROPERTIES:
+        value = state.get("properties", {}).get(property_name)
+        if value is not None:
+            _try_set(animation_data, property_name, value)
+    return result
 
 
 def _set_metarig_rotation_modes(metarig):
@@ -245,25 +555,21 @@ def _resolve_rotation_modes(scene, rig, actions):
     return modes, fallback_names
 
 
-def _restore_action_slot(animation_data, action, object_name):
+def _restore_action_slot(
+    animation_data,
+    action,
+    object_name,
+    slot_identifier=None,
+    slot_handle=None,
+):
     animation_data.action = action
-    slots = getattr(action, "slots", None)
-    if slots is None or len(slots) == 0:
-        return
-
-    expected_identifier = f"OB{object_name}"
-    chosen = next(
-        (slot for slot in slots if getattr(slot, "identifier", None) == expected_identifier),
-        None,
+    _set_action_slot(
+        animation_data,
+        action,
+        object_name,
+        slot_identifier=slot_identifier,
+        slot_handle=slot_handle,
     )
-    chosen = chosen or slots[0]
-    try:
-        animation_data.action_slot = chosen
-    except Exception:
-        try:
-            animation_data.action_slot_handle = chosen.handle
-        except Exception:
-            pass
 
 
 def _remove_fcurve(channelbag, action, fcurve):
@@ -414,6 +720,46 @@ def _sync_action_items(scene, rig, preserve_selection=True):
     return len(items)
 
 
+def _tag_redraw():
+    for window in bpy.context.window_manager.windows:
+        screen = window.screen
+        if screen is None:
+            continue
+        for area in screen.areas:
+            area.tag_redraw()
+
+
+def _refresh_current_file_action_list(preserve_selection=False):
+    scene = bpy.context.scene
+    if scene is None or not hasattr(scene, "rigify_quat_action_items"):
+        return 0
+    rig = _target_rig()
+    count = _sync_action_items(scene, rig, preserve_selection=preserve_selection) if rig else 0
+    if hasattr(scene, "rigify_quat_status"):
+        scene.rigify_quat_status = (
+            f"พบ {count} Action ที่มี Euler control ให้แปลง" if count else ""
+        )
+    _tag_redraw()
+    return count
+
+
+@persistent
+def _rigify_quat_load_post(_dummy):
+    try:
+        _refresh_current_file_action_list(preserve_selection=False)
+    except Exception as error:
+        print(f"ScriptToolkit Quaternion Converter load refresh failed: {error}")
+
+
+def _remove_load_post_handler():
+    for handler in list(bpy.app.handlers.load_post):
+        if (
+            getattr(handler, "__name__", None) == "_rigify_quat_load_post"
+            and getattr(handler, "__module__", None) == __name__
+        ):
+            bpy.app.handlers.load_post.remove(handler)
+
+
 class AQ_ActionItem(PropertyGroup):
     action_name: StringProperty(name="Action")
     selected: BoolProperty(name="Convert", default=False)
@@ -482,6 +828,7 @@ class AQ_OT_set_meta_quaternion_and_regenerate(Operator):
             return {"CANCELLED"}
 
         state = _capture_context(context)
+        animation_state = _capture_animation_data(target_rig)
         try:
             if context.object and context.object.mode != "OBJECT":
                 if bpy.ops.object.mode_set.poll():
@@ -505,18 +852,52 @@ class AQ_OT_set_meta_quaternion_and_regenerate(Operator):
             if "FINISHED" not in result:
                 raise RuntimeError(f"Rigify Generate คืนค่า {result}")
         except Exception as error:
+            recovery_rig = _target_rig()
+            try:
+                _restore_animation_data(recovery_rig, animation_state)
+                if recovery_rig is not None:
+                    _sync_action_items(context.scene, recovery_rig)
+            except Exception as restore_error:
+                print(f"ScriptToolkit Quaternion Converter recovery failed: {restore_error}")
+            _tag_redraw()
             _restore_context(context, state)
             self.report({"ERROR"}, f"ตั้งค่า Meta/Generate Rig ไม่สำเร็จ: {error}")
             return {"CANCELLED"}
 
+        generated_rig = _live_object(_safe_get(metarig.data, "rigify_target_rig"))
+        generated_rig = generated_rig or _target_rig()
+        if generated_rig is None:
+            _restore_context(context, state)
+            self.report({"ERROR"}, f"Rigify Generate แล้วไม่พบ {RIG_NAME}")
+            return {"CANCELLED"}
+
+        restored_animation = _restore_animation_data(generated_rig, animation_state)
+        list_count = _sync_action_items(
+            context.scene,
+            generated_rig,
+            preserve_selection=True,
+        )
+        _tag_redraw()
         _restore_context(context, state)
-        generated_rig = metarig.data.rigify_target_rig
         generated_name = generated_rig.name if generated_rig else RIG_NAME
+        animation_note = (
+            f"คืน Active Action: {'สำเร็จ' if restored_animation['active_action'] else 'ไม่มีข้อมูล'}; "
+            f"คืน NLA {restored_animation['nla_strips']} strip"
+        )
+        if restored_animation["missing_actions"]:
+            animation_note += (
+                f"; ข้าม {restored_animation['missing_actions']} strip "
+                "เพราะไม่พบ Action ต้นฉบับ"
+            )
+        context.scene.rigify_quat_status = (
+            f"Generate สำเร็จ; {animation_note}; พบ {list_count} Action"
+        )
         self.report(
             {"INFO"},
             f"ตั้ง {quaternion_count} bones เป็น Quaternion, "
             f"ยกเว้น clavicle {clavicle_count} bones เป็น XYZ; "
-            f"Rigify Generate สำเร็จ: {generated_name}",
+            f"Rigify Generate สำเร็จ: {generated_name}; {animation_note}; "
+            f"พบ {list_count} Action",
         )
         return {"FINISHED"}
 
@@ -784,6 +1165,7 @@ CLASSES = (
 
 
 def register():
+    _remove_load_post_handler()
     for cls in CLASSES:
         bpy.utils.register_class(cls)
     bpy.types.Scene.rigify_quat_action_items = CollectionProperty(type=AQ_ActionItem)
@@ -803,9 +1185,12 @@ def register():
         default="",
         options={"HIDDEN"},
     )
+    _refresh_current_file_action_list(preserve_selection=False)
+    bpy.app.handlers.load_post.append(_rigify_quat_load_post)
 
 
 def unregister():
+    _remove_load_post_handler()
     for property_name in (
         "rigify_quat_status",
         "rigify_quat_overwrite_source",

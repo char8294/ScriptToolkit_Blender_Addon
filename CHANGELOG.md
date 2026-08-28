@@ -1,5 +1,10 @@
 # Script Toolkit Changelog
 
+## v0.6.11
+
+- Preserved the generated Rig's Active Action and NLA tracks/strips when the Rigify Quaternion setup regenerates the rig.
+- Refreshed the Quaternion Action list automatically after Rigify Generate and when opening a Blender file.
+
 ## v0.6.10
 
 - Added a top-level Rigify setup button to set `Meta_Armature_2` bones to Quaternion except both clavicles, then regenerate `RIG-Meta_Armature_2` using the existing Rigify target.
