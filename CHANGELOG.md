@@ -1,5 +1,10 @@
 # Script Toolkit Changelog
 
+## v0.6.12
+
+- Removed Action-list synchronization from the Panel draw callback to avoid Blender 5.2's read-only UI draw context error.
+- Kept Action-list refresh in load, Generate, registration, and the explicit Refresh operator paths.
+
 ## v0.6.11
 
 - Preserved the generated Rig's Active Action and NLA tracks/strips when the Rigify Quaternion setup regenerates the rig.

@@ -1105,9 +1105,6 @@ def draw_ui(layout, context):
     active_row = box.row()
     active_row.label(text=f"Active: {active_name}", icon="PLAY")
 
-    if not scene.rigify_quat_action_items:
-        _sync_action_items(scene, rig, preserve_selection=False)
-
     options = box.column(align=True)
     options.prop(scene, "rigify_quat_active_only", text="Run Active Action Only")
     options.prop(
