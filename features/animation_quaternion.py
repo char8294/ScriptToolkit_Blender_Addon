@@ -721,7 +721,10 @@ def _sync_action_items(scene, rig, preserve_selection=True):
 
 
 def _tag_redraw():
-    for window in bpy.context.window_manager.windows:
+    window_manager = getattr(bpy.context, "window_manager", None)
+    if window_manager is None:
+        return
+    for window in window_manager.windows:
         screen = window.screen
         if screen is None:
             continue
@@ -730,17 +733,36 @@ def _tag_redraw():
 
 
 def _refresh_current_file_action_list(preserve_selection=False):
-    scene = bpy.context.scene
-    if scene is None or not hasattr(scene, "rigify_quat_action_items"):
-        return 0
     rig = _target_rig()
-    count = _sync_action_items(scene, rig, preserve_selection=preserve_selection) if rig else 0
-    if hasattr(scene, "rigify_quat_status"):
-        scene.rigify_quat_status = (
-            f"พบ {count} Action ที่มี Euler control ให้แปลง" if count else ""
+    scenes = tuple(
+        scene
+        for scene in bpy.data.scenes
+        if hasattr(scene, "rigify_quat_action_items")
+    )
+    if rig is None or not scenes:
+        return 0
+    counts = []
+    for scene in scenes:
+        count = _sync_action_items(
+            scene,
+            rig,
+            preserve_selection=preserve_selection,
         )
+        counts.append(count)
+        if hasattr(scene, "rigify_quat_status"):
+            scene.rigify_quat_status = (
+                f"พบ {count} Action ที่มี Euler control ให้แปลง" if count else ""
+            )
     _tag_redraw()
-    return count
+    return counts[0] if len(counts) == 1 else sum(counts)
+
+
+def _deferred_refresh_action_list():
+    try:
+        _refresh_current_file_action_list(preserve_selection=False)
+    except Exception as error:
+        print(f"ScriptToolkit Quaternion Converter deferred refresh failed: {error}")
+    return None
 
 
 @persistent
@@ -1182,8 +1204,11 @@ def register():
         default="",
         options={"HIDDEN"},
     )
-    _refresh_current_file_action_list(preserve_selection=False)
     bpy.app.handlers.load_post.append(_rigify_quat_load_post)
+    try:
+        bpy.app.timers.register(_deferred_refresh_action_list, first_interval=0.1)
+    except (AttributeError, RuntimeError, TypeError):
+        pass
 
 
 def unregister():

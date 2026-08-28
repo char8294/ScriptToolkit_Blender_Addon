@@ -1,5 +1,13 @@
 # Script Toolkit Changelog
 
+## v0.6.14
+
+- Made deferred Action-list refresh use `bpy.data.scenes` instead of restricted `bpy.context.scene`, so add-on registration remains safe in Blender's Preferences context.
+
+## v0.6.13
+
+- Deferred Quaternion Action-list refresh during add-on registration so Blender's restricted Preferences context can enable the add-on safely.
+
 ## v0.6.12
 
 - Removed Action-list synchronization from the Panel draw callback to avoid Blender 5.2's read-only UI draw context error.
