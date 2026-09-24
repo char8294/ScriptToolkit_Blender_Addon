@@ -14,6 +14,7 @@ A collection of handy scripts and utilities for Rigging, Animation, and Workflow
 - **Align Bones**: Snap selected tails to nearby selected heads or point them along a World Axis, and convert selected bone axes with FBX-style Primary/Secondary source and target settings while preserving the current pose.
 - **Clear Custom Properties**: Strip all custom properties/metadata from selected objects to clean up imported models (like from 3ds Max/Maya).
 - **Create Root Motion**: Create colored helper Shapes for multiple selected bones, open Blender's native Bake Action dialog, and add Copy Location/Rotation constraints by matching bones to `RM_` Object names.
+- **Transfer Shape Key Animation**: Copy matching Shape Key animation curves between mesh Actions while leaving bone animation curves intact.
 - **Turntable Camera**: Create camera or model turntable animations from the Script Toolkit panel.
 - **Quick Render**: Render viewport-visible or selected objects with camera, engine, resolution, output, and batch controls.
 - **Learn Node Blender**: The Learn Node HUD runs continuously in the Geometry Node Editor; the Script Toolkit entry points to its Node page.

@@ -1,5 +1,17 @@
 # Script Toolkit Changelog
 
+## v0.6.19
+
+- Fixed Better FBX animated-scale export so mesh transforms are not baked into vertices and applied again by animation curves.
+
+## v0.6.18
+
+- Create a Shape Key Action slot when transferring to an empty Action or one without a `KEY` slot.
+
+## v0.6.17
+
+- Added Transfer Shape Key Animation to the Script Toolkit tool selector for copying matching Shape Key animation curves between mesh Actions while preserving bone animation curves.
+
 ## v0.6.16
 
 - Better FBX Unity Export now temporarily forces FBX Unit to `m` as well as the non-optimized export path, preventing Unity's `100,100,100` import scale when a preset uses centimeters.

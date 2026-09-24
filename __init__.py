@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 6, 16),
+    "version": (0, 6, 19),
     "blender": (5, 2, 0),
     "location": "3D View > Sidebar > Script Toolkit",
     "description": "FBX import/export options plus batch tools and selected-object cleanup tools.",
@@ -36,6 +36,7 @@ from .features import (
     root_motion,
     quick_render,
     turntable_camera,
+    transfer_shape_key_animation,
 )
 
 if "bpy" in locals():
@@ -63,6 +64,7 @@ if "bpy" in locals():
         globals().get("turntable_camera"),
         globals().get("quick_render"),
         globals().get("learn_node_blender"),
+        globals().get("transfer_shape_key_animation"),
     )
     for _module in _loaded_modules:
         if _module is None:
@@ -91,6 +93,7 @@ if "bpy" in locals():
     importlib.reload(turntable_camera)
     importlib.reload(quick_render)
     importlib.reload(learn_node_blender)
+    importlib.reload(transfer_shape_key_animation)
 
 import bpy
 
@@ -109,6 +112,7 @@ _FEATURE_MODULES = (
     turntable_camera,
     quick_render,
     learn_node_blender,
+    transfer_shape_key_animation,
 )
 
 
@@ -192,6 +196,7 @@ def _tool_description(tool):
         "TURNTABLE_CAMERA": "Turntable Camera controls integrated into the Script Toolkit panel.",
         "QUICK_RENDER": "Quick Render controls integrated into the Script Toolkit panel.",
         "LEARN_NODE": "Learn Node runs in the Node Editor; this entry only explains where to find it.",
+        "TRANSFER_SHAPE_KEY_ANIMATION": "Transfer matching Shape Key animation curves between meshes and Actions without changing bone animation curves.",
     }[tool]
 
 
@@ -263,6 +268,11 @@ class ST_Properties(PropertyGroup):
             ("TURNTABLE_CAMERA", "Turntable Camera", "Create turntable camera or model rotation animations"),
             ("QUICK_RENDER", "Quick Render", "Render visible or selected objects with saved settings"),
             ("LEARN_NODE", "Learn Node Blender", "Learn Node runs continuously in the Node Editor"),
+            (
+                "TRANSFER_SHAPE_KEY_ANIMATION",
+                "Transfer Shape Key Animation",
+                "Copy matching Shape Key animation curves to another mesh Action",
+            ),
         ],
         default="REEXPORT",
     )
@@ -1034,6 +1044,8 @@ class ST_PT_panel(Panel):
             box = layout.box()
             box.label(text="Add-on นี้อยู่ในหน้า Node", icon="NODETREE")
             box.label(text="Add-on ทำงานตลอดเวลา", icon="INFO")
+        elif props.tool == "TRANSFER_SHAPE_KEY_ANIMATION":
+            transfer_shape_key_animation.draw_ui(layout, context)
 
         if props.tool in STATUS_TOOLS:
             status = layout.box()
@@ -1132,6 +1144,7 @@ def register():
     turntable_camera.register()
     quick_render.register()
     learn_node_blender.register()
+    transfer_shape_key_animation.register()
     for cls in CLASSES:
         bpy.utils.register_class(cls)
     bpy.types.Scene.script_toolkit = bpy.props.PointerProperty(type=ST_Properties)
@@ -1147,6 +1160,7 @@ def unregister():
             print(f"[Script Toolkit] Class cleanup warning ({cls.__name__}): {error}")
 
     for module in (
+        transfer_shape_key_animation,
         learn_node_blender,
         quick_render,
         turntable_camera,

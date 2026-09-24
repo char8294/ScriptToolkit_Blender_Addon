@@ -33,10 +33,11 @@ def _register_scene_properties():
         BoolProperty(
             name="Bake Mesh Rotation/Scale for Unity",
             description=(
-                "Bake mesh rotation/scale into the mesh data so Unity imports "
-                "mesh nodes at rotation 0,0,0 and scale 1,1,1. When needed, "
-                "Optimize For Game Engine is disabled and FBX Unit is set to m "
-                "temporarily for this export. Bones are unchanged."
+                "Bake static mesh rotation/scale into the mesh data. Meshes "
+                "with animated object scale keep their transforms on the FBX "
+                "node so mesh size stays consistent through the animation. "
+                "When needed, Optimize For Game Engine is disabled and FBX "
+                "Unit is temporarily set to m. Bones are unchanged."
             ),
             default=False,
         ),
@@ -95,6 +96,63 @@ def _is_skinned_mesh(obj):
         obj.parent
         and obj.parent.type == "ARMATURE"
         and len(obj.vertex_groups) > 0
+    )
+
+
+def _action_has_scale_curves(action, action_slot=None):
+    """Return whether an action animates object scale for the given slot."""
+    if action is None:
+        return False
+
+    # Blender versions with legacy actions expose F-curves directly.
+    action_fcurves = getattr(action, "fcurves", None)
+    if action_fcurves is not None:
+        return any(curve.data_path == "scale" for curve in action_fcurves)
+
+    # Layered actions store curves in a channel bag for each action slot.
+    for layer in getattr(action, "layers", ()):
+        for strip in getattr(layer, "strips", ()):
+            for channelbag in getattr(strip, "channelbags", ()):
+                if (
+                    action_slot is not None
+                    and getattr(channelbag, "slot", None) != action_slot
+                ):
+                    continue
+                if any(
+                    curve.data_path == "scale"
+                    for curve in getattr(channelbag, "fcurves", ())
+                ):
+                    return True
+    return False
+
+
+def _object_scale_is_animated(obj):
+    """Detect scale animation in actions, NLA strips, or drivers."""
+    animation_data = getattr(obj, "animation_data", None)
+    if animation_data is None:
+        return False
+
+    if _action_has_scale_curves(
+        getattr(animation_data, "action", None),
+        getattr(animation_data, "action_slot", None),
+    ):
+        return True
+
+    for track in getattr(animation_data, "nla_tracks", ()):
+        if getattr(track, "mute", False):
+            continue
+        for strip in getattr(track, "strips", ()):
+            if getattr(strip, "mute", False):
+                continue
+            if _action_has_scale_curves(
+                getattr(strip, "action", None),
+                getattr(strip, "action_slot", None),
+            ):
+                return True
+
+    return any(
+        getattr(driver, "data_path", "") == "scale"
+        for driver in getattr(animation_data, "drivers", ())
     )
 
 
@@ -162,6 +220,13 @@ def _bake_better_mesh_transforms(mesh_objects):
                 original_scale,
             )
         )
+
+        if _object_scale_is_animated(obj):
+            # Baking the current scale into mesh vertices while also exporting
+            # its scale animation applies the current scale twice. Keep the
+            # animated object's transform on the FBX node to preserve its size
+            # at every animation frame.
+            continue
 
         original_rotation_scale = _matrix_without_translation(original_basis)
         target_rotation_scale = (
