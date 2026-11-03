@@ -34,6 +34,13 @@ def test_release_archive_includes_feature_modules(tmp_path):
         "features/turntable_camera.py",
         "features/quick_render.py",
         "features/learn_node_blender.py",
+        "features/rigify_export/__init__.py",
+        "features/rigify_export/core.py",
+        "features/rigify_export/LICENSE",
+        "features/rigify_export/README.md",
+        "features/rigify_export/properties.py",
+        "features/rigify_export/standalone.py",
+        "features/rigify_export/ui.py",
         "features/learn_node_data/curve_nodes.json",
         "features/learn_node_data/geometry_nodes.json",
         "features/learn_node_data/input_nodes.json",
@@ -59,4 +66,11 @@ def test_release_archive_includes_feature_modules(tmp_path):
     assert "script_toolkit/features/turntable_camera.py" in names
     assert "script_toolkit/features/quick_render.py" in names
     assert "script_toolkit/features/learn_node_blender.py" in names
+    assert "script_toolkit/features/rigify_export/__init__.py" in names
+    assert "script_toolkit/features/rigify_export/core.py" in names
+    assert "script_toolkit/features/rigify_export/LICENSE" in names
+    assert "script_toolkit/features/rigify_export/README.md" in names
+    assert "script_toolkit/features/rigify_export/properties.py" in names
+    assert "script_toolkit/features/rigify_export/standalone.py" in names
+    assert "script_toolkit/features/rigify_export/ui.py" in names
     assert "script_toolkit/features/learn_node_data/misc_nodes.json" in names

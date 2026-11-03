@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Script Toolkit",
     "author": "Smart Office + Codex",
-    "version": (0, 6, 19),
+    "version": (0, 6, 21),
     "blender": (5, 2, 0),
     "location": "3D View > Sidebar > Script Toolkit",
     "description": "FBX import/export options plus batch tools and selected-object cleanup tools.",
@@ -35,6 +35,7 @@ from .features import (
     learn_node_blender,
     root_motion,
     quick_render,
+    rigify_export,
     turntable_camera,
     transfer_shape_key_animation,
 )
@@ -65,6 +66,7 @@ if "bpy" in locals():
         globals().get("quick_render"),
         globals().get("learn_node_blender"),
         globals().get("transfer_shape_key_animation"),
+        globals().get("rigify_export"),
     )
     for _module in _loaded_modules:
         if _module is None:
@@ -94,6 +96,14 @@ if "bpy" in locals():
     importlib.reload(quick_render)
     importlib.reload(learn_node_blender)
     importlib.reload(transfer_shape_key_animation)
+    for _module in (
+        rigify_export.properties,
+        rigify_export.core,
+        rigify_export.standalone,
+        rigify_export.ui,
+    ):
+        importlib.reload(_module)
+    importlib.reload(rigify_export)
 
 import bpy
 
@@ -113,6 +123,7 @@ _FEATURE_MODULES = (
     quick_render,
     learn_node_blender,
     transfer_shape_key_animation,
+    rigify_export,
 )
 
 
@@ -197,6 +208,7 @@ def _tool_description(tool):
         "QUICK_RENDER": "Quick Render controls integrated into the Script Toolkit panel.",
         "LEARN_NODE": "Learn Node runs in the Node Editor; this entry only explains where to find it.",
         "TRANSFER_SHAPE_KEY_ANIMATION": "Transfer matching Shape Key animation curves between meshes and Actions without changing bone animation curves.",
+        "RIGIFY_EXPORT": "Preview Rigify deform-bone hierarchies and save export profiles; Action Export remains in the Item tab.",
     }[tool]
 
 
@@ -272,6 +284,11 @@ class ST_Properties(PropertyGroup):
                 "TRANSFER_SHAPE_KEY_ANIMATION",
                 "Transfer Shape Key Animation",
                 "Copy matching Shape Key animation curves to another mesh Action",
+            ),
+            (
+                "RIGIFY_EXPORT",
+                "Rigify Export",
+                "Preview Rigify deform bones and configure export profiles; Action Export is in the Item tab",
             ),
         ],
         default="REEXPORT",
@@ -944,6 +961,12 @@ class ST_OT_do_update(Operator):
                 "features/turntable_camera.py",
                 "features/quick_render.py",
                 "features/learn_node_blender.py",
+                "features/rigify_export/__init__.py",
+                "features/rigify_export/core.py",
+                "features/rigify_export/LICENSE",
+                "features/rigify_export/properties.py",
+                "features/rigify_export/standalone.py",
+                "features/rigify_export/ui.py",
                 "features/learn_node_data/curve_nodes.json",
                 "features/learn_node_data/geometry_nodes.json",
                 "features/learn_node_data/input_nodes.json",
@@ -992,15 +1015,16 @@ class ST_PT_panel(Panel):
         tool_row = layout.row(align=True)
         tool_row.prop(props, "tool")
         tool_row.operator("script_toolkit.check_update", text="", icon="WORLD")
-        help_box = layout.box()
-        description_lines = textwrap.wrap(
-            _tool_description(props.tool),
-            width=48,
-            break_long_words=False,
-            break_on_hyphens=False,
-        ) or [""]
-        for index, line in enumerate(description_lines):
-            help_box.label(text=line, icon="INFO" if index == 0 else "BLANK1")
+        if props.tool != "RIGIFY_EXPORT":
+            help_box = layout.box()
+            description_lines = textwrap.wrap(
+                _tool_description(props.tool),
+                width=48,
+                break_long_words=False,
+                break_on_hyphens=False,
+            ) or [""]
+            for index, line in enumerate(description_lines):
+                help_box.label(text=line, icon="INFO" if index == 0 else "BLANK1")
 
         if props.tool in BATCH_TOOLS:
             self._draw_batch(layout, props)
@@ -1046,6 +1070,8 @@ class ST_PT_panel(Panel):
             box.label(text="Add-on ทำงานตลอดเวลา", icon="INFO")
         elif props.tool == "TRANSFER_SHAPE_KEY_ANIMATION":
             transfer_shape_key_animation.draw_ui(layout, context)
+        elif props.tool == "RIGIFY_EXPORT":
+            rigify_export.draw_ui(layout, context)
 
         if props.tool in STATUS_TOOLS:
             status = layout.box()
@@ -1145,6 +1171,7 @@ def register():
     quick_render.register()
     learn_node_blender.register()
     transfer_shape_key_animation.register()
+    rigify_export.register()
     for cls in CLASSES:
         bpy.utils.register_class(cls)
     bpy.types.Scene.script_toolkit = bpy.props.PointerProperty(type=ST_Properties)
@@ -1161,6 +1188,7 @@ def unregister():
 
     for module in (
         transfer_shape_key_animation,
+        rigify_export,
         learn_node_blender,
         quick_render,
         turntable_camera,

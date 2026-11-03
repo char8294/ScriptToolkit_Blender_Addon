@@ -34,6 +34,12 @@ REQUIRED_RUNTIME_FILES = (
     "features/turntable_camera.py",
     "features/quick_render.py",
     "features/learn_node_blender.py",
+    "features/rigify_export/__init__.py",
+    "features/rigify_export/core.py",
+    "features/rigify_export/LICENSE",
+    "features/rigify_export/properties.py",
+    "features/rigify_export/standalone.py",
+    "features/rigify_export/ui.py",
     "features/learn_node_data/curve_nodes.json",
     "features/learn_node_data/geometry_nodes.json",
     "features/learn_node_data/input_nodes.json",
@@ -308,7 +314,10 @@ def build_release_archive(
                     path
                     for path in package_dir.rglob("*")
                     if path.is_file()
-                    and path.suffix.casefold() in {".py", ".json"}
+                    and (
+                        path.suffix.casefold() in {".py", ".json", ".md"}
+                        or path.name.upper() == "LICENSE"
+                    )
                 )
             )
     data_dir = source_dir / "data"
