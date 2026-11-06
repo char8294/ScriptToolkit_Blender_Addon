@@ -241,6 +241,35 @@ def run():
     assert selected_layout.box_calls == 1
     assert not any(label.startswith("Preview Rigify") for label in selected_layout.labels)
 
+    # Test re-saving over a profile when preview_object is None (e.g. edited name or meshes)
+    save_profile.name = "SaveTargetRenamed"
+    result = bpy.ops.rex.save_profile(profile_uid=save_uid)
+    assert "FINISHED" in result
+    assert any(
+        entry["name"] == "SaveTargetRenamed"
+        for entry in addon.rigify_export.standalone.embedded_profile_entries()
+    )
+
+    # Test batch action toggling and clearing
+    item_a = save_profile.action_items.add()
+    item_a.user_added = True
+    item_a.enabled = True
+    item_b = save_profile.action_items.add()
+    item_b.user_added = True
+    item_b.enabled = True
+
+    result = bpy.ops.rex.toggle_all_actions(profile_uid=save_uid, enable=False)
+    assert "FINISHED" in result
+    assert all(not a.enabled for a in save_profile.action_items)
+
+    result = bpy.ops.rex.toggle_all_actions(profile_uid=save_uid, enable=True)
+    assert "FINISHED" in result
+    assert all(a.enabled for a in save_profile.action_items)
+
+    result = bpy.ops.rex.clear_all_actions(profile_uid=save_uid)
+    assert "FINISHED" in result
+    assert len(save_profile.action_items) == 0
+
     # Test Action name restore resilience when temporary actions were removed
     source_act = bpy.data.actions.new("source_conflict_action")
     temp_act = bpy.data.actions.new("temp_baked_action")

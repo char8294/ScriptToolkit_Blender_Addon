@@ -5,7 +5,7 @@ import uuid
 
 import bpy
 from bpy.app.handlers import persistent
-from bpy.props import IntProperty, StringProperty
+from bpy.props import BoolProperty, IntProperty, StringProperty
 
 from . import core
 from . import standalone
@@ -171,6 +171,9 @@ def _draw_action_bakery(layout, profile):
     remove_row.enabled = bool(visible)
     remove = remove_row.operator("rex.remove_action_item", text="", icon="REMOVE")
     remove.profile_uid = profile.uid
+    menu_row = controls.row()
+    menu_row.enabled = bool(visible)
+    menu_row.menu("REX_MT_action_specials", text="", icon="DOWNARROW_HLT")
     controls.separator()
     up_row = controls.row()
     up_row.enabled = bool(visible)
@@ -648,7 +651,16 @@ class REX_OT_save_profile(bpy.types.Operator):
             rig.rex_profile_index = profile_index
             rig.rex_profile_dropdown = profile.uid
         context.scene.rex_main_profile_uid = profile.uid
-        self.report({"INFO"}, f"Saved {len(profile.export_bones)} DEF bones to the Item tab and embedded the exporter.")
+        if preview:
+            self.report(
+                {"INFO"},
+                f"Saved {len(profile.export_bones)} DEF bones to the Item tab and embedded the exporter.",
+            )
+        else:
+            self.report(
+                {"INFO"},
+                f"Updated profile '{profile.name}' ({len(profile.export_bones)} DEF bones, {len(profile.mesh_items)} mesh(es)) in the Item tab and embedded the exporter.",
+            )
         return {"FINISHED"}
 
 
@@ -817,6 +829,103 @@ class REX_OT_move_action_item(bpy.types.Operator):
         profile.action_items.move(source_index, target_index)
         profile.action_index = target_index
         return {"FINISHED"}
+
+
+class REX_OT_toggle_all_actions(bpy.types.Operator):
+    bl_idname = "rex.toggle_all_actions"
+    bl_label = "Toggle All Animations"
+    bl_description = "Enable or disable all Animations in this profile for export"
+    bl_options = {"UNDO"}
+
+    profile_uid: StringProperty()
+    enable: BoolProperty(name="Enable", default=True)
+
+    @classmethod
+    def poll(cls, context):
+        rig = _control_rig_for_context(context)
+        return bool(rig and rig.rex_profiles)
+
+    def execute(self, context):
+        profile_rig, profile = _profile_for_uid(self.profile_uid)
+        rig = profile_rig or _control_rig_for_context(context)
+        profile = profile or _selected_profile(rig)
+        if not profile:
+            self.report({"ERROR"}, "Export profile not found.")
+            return {"CANCELLED"}
+        toggled = 0
+        for item in profile.action_items:
+            if item.user_added:
+                item.enabled = self.enable
+                toggled += 1
+        state_label = "Selected" if self.enable else "Deselected"
+        self.report({"INFO"}, f"{state_label} {toggled} Animation(s).")
+        return {"FINISHED"}
+
+
+class REX_OT_clear_all_actions(bpy.types.Operator):
+    bl_idname = "rex.clear_all_actions"
+    bl_label = "Clear All Animations"
+    bl_description = "Remove all Action items from this export profile"
+    bl_options = {"UNDO"}
+
+    profile_uid: StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        rig = _control_rig_for_context(context)
+        return bool(rig and rig.rex_profiles)
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_confirm(self, event)
+
+    def execute(self, context):
+        profile_rig, profile = _profile_for_uid(self.profile_uid)
+        rig = profile_rig or _control_rig_for_context(context)
+        profile = profile or _selected_profile(rig)
+        if not profile:
+            self.report({"ERROR"}, "Export profile not found.")
+            return {"CANCELLED"}
+        count = sum(1 for item in profile.action_items if item.user_added)
+        profile.action_items.clear()
+        profile.action_index = 0
+        self.report({"INFO"}, f"Cleared {count} Animation(s) from the list.")
+        return {"FINISHED"}
+
+
+class REX_MT_action_specials(bpy.types.Menu):
+    bl_idname = "REX_MT_action_specials"
+    bl_label = "Action Specials"
+
+    def draw(self, context):
+        layout = self.layout
+        rig = _control_rig_for_context(context)
+        profile = _selected_profile(rig)
+        profile_uid = profile.uid if profile else ""
+
+        op = layout.operator(
+            "rex.toggle_all_actions",
+            text="Select All",
+            icon="CHECKBOX_HLT",
+        )
+        op.profile_uid = profile_uid
+        op.enable = True
+
+        op = layout.operator(
+            "rex.toggle_all_actions",
+            text="Deselect All",
+            icon="CHECKBOX_DEHLT",
+        )
+        op.profile_uid = profile_uid
+        op.enable = False
+
+        layout.separator()
+
+        op = layout.operator(
+            "rex.clear_all_actions",
+            text="Clear All",
+            icon="TRASH",
+        )
+        op.profile_uid = profile_uid
 
 
 class REX_OT_add_selected_meshes(bpy.types.Operator):
@@ -1175,10 +1284,10 @@ class REX_PT_profiles(bpy.types.Panel):
             icon="ARMATURE_DATA",
         )
         generate.profile_uid = profile.uid
-        if preview:
+        if preview or (rig and _configuration_is_current(rig, profile)):
             save_to_ui = layout.operator("rex.save_profile", text="Save to UI", icon="FILE_TICK")
             save_to_ui.profile_uid = profile.uid
-        elif rig and _configuration_is_current(rig, profile):
+        if not preview and rig and _configuration_is_current(rig, profile):
             status = layout.row()
             status.enabled = False
             status.label(text="Profile is available in the Item tab.", icon="CHECKMARK")
@@ -1285,6 +1394,9 @@ _BASE_CLASSES = (
     REX_OT_add_actions,
     REX_OT_remove_action_item,
     REX_OT_move_action_item,
+    REX_OT_toggle_all_actions,
+    REX_OT_clear_all_actions,
+    REX_MT_action_specials,
     REX_OT_add_selected_meshes,
     REX_OT_add_bound_meshes,
     REX_OT_remove_mesh_item,

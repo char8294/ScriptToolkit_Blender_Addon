@@ -6,6 +6,9 @@
 - Added robust `ReferenceError` handling in Action conflict restoration and temporary datablock cleanup.
 - Ensured mesh name restoration and transform/scene restoration always run even if earlier cleanup steps fail.
 - Fixed Rigify Export profile Control Rig selection displaying "Failed to set value" warning by deferring old draft/container removal to the next event loop tick via `bpy.app.timers`.
+- Fixed New Profile dialog input field to always start completely blank on invoke.
+- Enabled "Save to UI" button on already-saved profiles so users can save over changes to profile name and mesh list without regenerating the Game Rig.
+- Added an Action list specials dropdown button (`v` / `DOWNARROW_HLT`) in the Item tab to Select All, Deselect All, or Clear All Actions from the export list.
 
 ## v0.6.21
 
