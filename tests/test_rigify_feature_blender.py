@@ -241,6 +241,21 @@ def run():
     assert selected_layout.box_calls == 1
     assert not any(label.startswith("Preview Rigify") for label in selected_layout.labels)
 
+    # Test Action name restore resilience when temporary actions were removed
+    source_act = bpy.data.actions.new("source_conflict_action")
+    temp_act = bpy.data.actions.new("temp_baked_action")
+    conflict_state = (source_act, "source_conflict_action")
+    temp_actions = [temp_act]
+    bpy.data.actions.remove(temp_act)
+    # Must not raise ReferenceError
+    addon.rigify_export.core._restore_action_name_conflict(
+        conflict_state, temp_actions, export_succeeded=True
+    )
+    assert source_act.name == "source_conflict_action"
+    addon.rigify_export.core._remove_temporary([], actions=temp_actions)
+    if source_act.name in bpy.data.actions:
+        bpy.data.actions.remove(source_act)
+
     addon.unregister()
     print("RIGIFY_FEATURE_INTEGRATION_OK")
 

@@ -1065,15 +1065,21 @@ def _restore_export_mesh_names(name_pairs, export_succeeded):
 
 def _remove_temporary(objects, data_blocks=(), actions=()):
     for obj in objects:
-        if obj and bpy.data.objects.get(obj.name) == obj:
-            data = obj.data
-            bpy.data.objects.remove(obj, do_unlink=True)
-            if data and data.users == 0:
-                if isinstance(data, bpy.types.Armature):
-                    bpy.data.armatures.remove(data)
+        try:
+            if obj and bpy.data.objects.get(obj.name) == obj:
+                data = obj.data
+                bpy.data.objects.remove(obj, do_unlink=True)
+                if data and data.users == 0:
+                    if isinstance(data, bpy.types.Armature):
+                        bpy.data.armatures.remove(data)
+        except (ReferenceError, RuntimeError):
+            pass
     for action in actions:
-        if action and action.users == 0 and action.name in bpy.data.actions:
-            bpy.data.actions.remove(action)
+        try:
+            if action and action.users == 0 and action.name in bpy.data.actions:
+                bpy.data.actions.remove(action)
+        except (ReferenceError, RuntimeError):
+            pass
 
 
 def _temporarily_free_action_name(name):
@@ -1097,19 +1103,28 @@ def _restore_action_name_conflict(conflict_state, temporary_actions, export_succ
     if not conflict_state:
         return
     conflict, original_name = conflict_state
-    if bpy.data.actions.get(conflict.name) != conflict:
+    try:
+        if bpy.data.actions.get(conflict.name) != conflict:
+            return
+    except ReferenceError:
         return
 
     for action in temporary_actions:
-        if (
-            action
-            and action != conflict
-            and bpy.data.actions.get(action.name) == action
-            and action.name == original_name
-        ):
-            suffix = "_REX_EXPORT_TEMP" if export_succeeded else "_REX_EXPORT_FAILED"
-            action.name = original_name + suffix
-    conflict.name = original_name
+        try:
+            if (
+                action
+                and action != conflict
+                and bpy.data.actions.get(action.name) == action
+                and action.name == original_name
+            ):
+                suffix = "_REX_EXPORT_TEMP" if export_succeeded else "_REX_EXPORT_FAILED"
+                action.name = original_name + suffix
+        except ReferenceError:
+            continue
+    try:
+        conflict.name = original_name
+    except ReferenceError:
+        pass
 
 
 def export_static_fbx(context, source_rig, profile):
@@ -1182,19 +1197,37 @@ def export_static_fbx(context, source_rig, profile):
         return filepath
     finally:
         if export_succeeded:
-            _remove_temporary(temporary_objects)
-        _cleanup_empty_export_collection()
-        _restore_export_mesh_names(mesh_name_pairs, export_succeeded)
-        source_rig.matrix_world = original_rig_matrix
-        context.scene.frame_set(previous_frame)
-        bpy.ops.object.select_all(action="DESELECT")
-        for obj in previous_selected:
-            if bpy.data.objects.get(obj.name) == obj:
-                obj.select_set(True)
-        if previous_active and bpy.data.objects.get(previous_active.name) == previous_active:
-            context.view_layer.objects.active = previous_active
-            if previous_mode in {"POSE", "EDIT"} and previous_active.mode != previous_mode:
-                bpy.ops.object.mode_set(mode=previous_mode)
+            try:
+                _remove_temporary(temporary_objects)
+            except Exception:
+                pass
+        try:
+            _cleanup_empty_export_collection()
+        except Exception:
+            pass
+        try:
+            _restore_export_mesh_names(mesh_name_pairs, export_succeeded)
+        except Exception:
+            pass
+        try:
+            source_rig.matrix_world = original_rig_matrix
+        except Exception:
+            pass
+        try:
+            context.scene.frame_set(previous_frame)
+        except Exception:
+            pass
+        try:
+            bpy.ops.object.select_all(action="DESELECT")
+            for obj in previous_selected:
+                if bpy.data.objects.get(obj.name) == obj:
+                    obj.select_set(True)
+            if previous_active and bpy.data.objects.get(previous_active.name) == previous_active:
+                context.view_layer.objects.active = previous_active
+                if previous_mode in {"POSE", "EDIT"} and previous_active.mode != previous_mode:
+                    bpy.ops.object.mode_set(mode=previous_mode)
+        except Exception:
+            pass
 
 
 def export_one_action(
@@ -1315,26 +1348,53 @@ def export_one_action(
         return filepath
     finally:
         for key_data, key_state in reversed(temporary_key_states):
-            _restore_source_action(key_data, key_state)
+            try:
+                _restore_source_action(key_data, key_state)
+            except Exception:
+                pass
+        try:
+            _restore_action_name_conflict(
+                action_name_conflict, temporary_actions, export_succeeded
+            )
+        except Exception:
+            pass
         if export_succeeded:
-            _remove_temporary(temporary_objects, actions=temporary_actions)
-        _restore_action_name_conflict(
-            action_name_conflict, temporary_actions, export_succeeded
-        )
-        _cleanup_empty_export_collection()
-        _restore_export_mesh_names(mesh_name_pairs, export_succeeded)
-        context.scene.name = previous_scene_name
-        source_rig.matrix_world = original_rig_matrix
-        context.scene.frame_start, context.scene.frame_end = previous_frame_range
-        context.scene.frame_set(previous_frame)
-        bpy.ops.object.select_all(action="DESELECT")
-        for obj in previous_selected:
-            if bpy.data.objects.get(obj.name) == obj:
-                obj.select_set(True)
-        if previous_active and bpy.data.objects.get(previous_active.name) == previous_active:
-            context.view_layer.objects.active = previous_active
-            if previous_mode in {"POSE", "EDIT"} and previous_active.mode != previous_mode:
-                bpy.ops.object.mode_set(mode=previous_mode)
+            try:
+                _remove_temporary(temporary_objects, actions=temporary_actions)
+            except Exception:
+                pass
+        try:
+            _cleanup_empty_export_collection()
+        except Exception:
+            pass
+        try:
+            _restore_export_mesh_names(mesh_name_pairs, export_succeeded)
+        except Exception:
+            pass
+        try:
+            context.scene.name = previous_scene_name
+        except Exception:
+            pass
+        try:
+            source_rig.matrix_world = original_rig_matrix
+        except Exception:
+            pass
+        try:
+            context.scene.frame_start, context.scene.frame_end = previous_frame_range
+            context.scene.frame_set(previous_frame)
+        except Exception:
+            pass
+        try:
+            bpy.ops.object.select_all(action="DESELECT")
+            for obj in previous_selected:
+                if bpy.data.objects.get(obj.name) == obj:
+                    obj.select_set(True)
+            if previous_active and bpy.data.objects.get(previous_active.name) == previous_active:
+                context.view_layer.objects.active = previous_active
+                if previous_mode in {"POSE", "EDIT"} and previous_active.mode != previous_mode:
+                    bpy.ops.object.mode_set(mode=previous_mode)
+        except Exception:
+            pass
 
 
 def export_actions_packed_nla(context, source_rig, profile, action_items):
@@ -1572,18 +1632,39 @@ def export_actions_packed_nla(context, source_rig, profile, action_items):
         return filepath
     finally:
         if export_succeeded:
-            _remove_temporary(temporary_objects, actions=temporary_actions)
-        _cleanup_empty_export_collection()
-        _restore_export_mesh_names(mesh_name_pairs, export_succeeded)
-        context.scene.name = previous_scene_name
-        source_rig.matrix_world = original_rig_matrix
-        context.scene.frame_start, context.scene.frame_end = previous_frame_range
-        context.scene.frame_set(previous_frame)
-        bpy.ops.object.select_all(action="DESELECT")
-        for obj in previous_selected:
-            if bpy.data.objects.get(obj.name) == obj:
-                obj.select_set(True)
-        if previous_active and bpy.data.objects.get(previous_active.name) == previous_active:
-            context.view_layer.objects.active = previous_active
-            if previous_mode in {"POSE", "EDIT"} and previous_active.mode != previous_mode:
-                bpy.ops.object.mode_set(mode=previous_mode)
+            try:
+                _remove_temporary(temporary_objects, actions=temporary_actions)
+            except Exception:
+                pass
+        try:
+            _cleanup_empty_export_collection()
+        except Exception:
+            pass
+        try:
+            _restore_export_mesh_names(mesh_name_pairs, export_succeeded)
+        except Exception:
+            pass
+        try:
+            context.scene.name = previous_scene_name
+        except Exception:
+            pass
+        try:
+            source_rig.matrix_world = original_rig_matrix
+        except Exception:
+            pass
+        try:
+            context.scene.frame_start, context.scene.frame_end = previous_frame_range
+            context.scene.frame_set(previous_frame)
+        except Exception:
+            pass
+        try:
+            bpy.ops.object.select_all(action="DESELECT")
+            for obj in previous_selected:
+                if bpy.data.objects.get(obj.name) == obj:
+                    obj.select_set(True)
+            if previous_active and bpy.data.objects.get(previous_active.name) == previous_active:
+                context.view_layer.objects.active = previous_active
+                if previous_mode in {"POSE", "EDIT"} and previous_active.mode != previous_mode:
+                    bpy.ops.object.mode_set(mode=previous_mode)
+        except Exception:
+            pass

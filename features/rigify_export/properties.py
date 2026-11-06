@@ -309,6 +309,13 @@ def _sync_embedded_profiles(scene):
         print(f"[Rigify Export] Could not sync embedded profiles after Control Rig change: {error}")
 
 
+def _defer_or_call(cleanup_fn):
+    if getattr(bpy.app, "background", False):
+        cleanup_fn()
+    else:
+        bpy.app.timers.register(cleanup_fn, first_interval=0.0)
+
+
 def _update_profile_control_rig(profile, context):
     guard_key = profile.uid or str(profile.as_pointer())
     if guard_key in _PROFILE_CONTROL_RIG_UPDATE_GUARD:
@@ -338,12 +345,43 @@ def _update_profile_control_rig(profile, context):
             target_profile = target_rig.rex_profiles.add()
             _copy_profile(profile, target_profile)
             _invalidate_profile_configuration(target_profile)
+            profile_uid = profile.uid
             if owner_rig:
                 selected_uid = owner_rig.rex_profile_dropdown
-                owner_rig.rex_profiles.remove(owner_index)
-                _repair_rig_profile_selection(owner_rig, owner_index, selected_uid)
+
+                def _cleanup_owner():
+                    idx = next(
+                        (
+                            i
+                            for i, p in enumerate(getattr(owner_rig, "rex_profiles", ()))
+                            if p.uid == profile_uid
+                        ),
+                        -1,
+                    )
+                    if idx >= 0:
+                        owner_rig.rex_profiles.remove(idx)
+                        _repair_rig_profile_selection(owner_rig, idx, selected_uid)
+                    return None
+
+                _defer_or_call(_cleanup_owner)
             elif draft_scene:
-                draft_scene.rex_draft_profiles.remove(draft_index)
+
+                def _cleanup_draft():
+                    idx = next(
+                        (
+                            i
+                            for i, p in enumerate(
+                                getattr(draft_scene, "rex_draft_profiles", ())
+                            )
+                            if p.uid == profile_uid
+                        ),
+                        -1,
+                    )
+                    if idx >= 0:
+                        draft_scene.rex_draft_profiles.remove(idx)
+                    return None
+
+                _defer_or_call(_cleanup_draft)
 
             target_rig.rex_profile_index = len(target_rig.rex_profiles) - 1
             target_rig.rex_profile_dropdown = target_profile.uid
@@ -367,8 +405,23 @@ def _update_profile_control_rig(profile, context):
         draft_profile = scene.rex_draft_profiles.add()
         _copy_profile(profile, draft_profile)
         _invalidate_profile_configuration(draft_profile)
-        owner_rig.rex_profiles.remove(owner_index)
-        _repair_rig_profile_selection(owner_rig, owner_index, selected_uid)
+        profile_uid = profile.uid
+
+        def _cleanup_unassigned():
+            idx = next(
+                (
+                    i
+                    for i, p in enumerate(getattr(owner_rig, "rex_profiles", ()))
+                    if p.uid == profile_uid
+                ),
+                -1,
+            )
+            if idx >= 0:
+                owner_rig.rex_profiles.remove(idx)
+                _repair_rig_profile_selection(owner_rig, idx, selected_uid)
+            return None
+
+        _defer_or_call(_cleanup_unassigned)
         if getattr(context, "scene", None):
             context.scene.rex_control_rig = None
             context.scene.rex_main_profile_uid = draft_profile.uid

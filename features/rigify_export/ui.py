@@ -365,6 +365,7 @@ class REX_OT_new_profile(bpy.types.Operator):
         self.layout.prop(self, "profile_name", text="Name")
 
     def invoke(self, context, event):
+        self.profile_name = ""
         return context.window_manager.invoke_props_dialog(self, width=320)
 
     def execute(self, context):

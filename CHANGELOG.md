@@ -1,5 +1,16 @@
 # Script Toolkit Changelog
 
+## v0.6.22
+
+- Fixed Rigify Export individual Action export cleanup order where deleting temporary actions before restoring names caused `ReferenceError: StructRNA of type Action has been removed` and corrupted mesh/action names to `REX_EXPORT_SOURCE_...`.
+- Added robust `ReferenceError` handling in Action conflict restoration and temporary datablock cleanup.
+- Ensured mesh name restoration and transform/scene restoration always run even if earlier cleanup steps fail.
+- Fixed Rigify Export profile Control Rig selection displaying "Failed to set value" warning by deferring old draft/container removal to the next event loop tick via `bpy.app.timers`.
+
+## v0.6.21
+
+- Bundled Rigify Export feature into Script Toolkit with standalone exporter embedding, Action bakery, and Better FBX export integration.
+
 ## v0.6.19
 
 - Fixed Better FBX animated-scale export so mesh transforms are not baked into vertices and applied again by animation curves.
